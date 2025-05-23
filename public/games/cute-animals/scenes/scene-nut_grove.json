@@ -1,0 +1,11 @@
+{
+  "id": "nut_grove",
+  "location": "Nut Grove",
+  "locationImage": "nut_grove.jpg",
+  "text": "Hazel finds a grove full of nuts, but also sees a hungry hedgehog.",
+  "isRequired": false,
+  "actions": ["share_nuts"],
+  "choices": [
+    { "text": "Return to the clearing", "nextNodeId": "intro" }
+  ]
+} 

@@ -1,0 +1,62 @@
+/* globals.css */
+
+/* 1. Remove default browser padding/margin and set full height */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  min-height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  background: #181818; /* fallback background */
+  color: #222;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  /* Prevent scroll bounce on Mac */
+  overscroll-behavior: none;
+}
+
+/* 2. Set box-sizing globally */
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+/* 3. Remove tap highlight on mobile for a more app-like feel */
+body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 4. Remove outline on buttons/inputs except when focused for accessibility */
+button, input, textarea, select {
+  outline: none;
+}
+button:focus, input:focus, textarea:focus, select:focus {
+  outline: 2px solid #bfae99;
+  outline-offset: 2px;
+}
+
+/* 5. Smooth font rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 6. Optional: Custom scrollbar for immersion */
+::-webkit-scrollbar {
+  width: 8px;
+  background: #ece5db;
+}
+::-webkit-scrollbar-thumb {
+  background: #bfae99;
+  border-radius: 4px;
+}
+
+/* 7. Utility for runic font if you use it */
+.font-runic {
+  font-family: 'IM Fell English SC', serif;
+  letter-spacing: 0.04em;
+}
+
+/* 8. Prevent unwanted horizontal scroll */
+html, body {
+  overflow-x: hidden;
+} 

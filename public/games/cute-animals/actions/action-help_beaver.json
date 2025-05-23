@@ -1,0 +1,20 @@
+{
+  "id": "help_beaver",
+  "trigger": "onEnter",
+  "conditions": [],
+  "outcomes": [
+    {
+      "description": "The beaver asks if you have a stick to help with the dam.",
+      "choices": [
+        {
+          "text": "Give the beaver a stick (if you have one)",
+          "nextAction": "give_stick"
+        },
+        {
+          "text": "Apologize and watch the beaver work",
+          "nextAction": "watch_beaver"
+        }
+      ]
+    }
+  ]
+} 

@@ -1,0 +1,16 @@
+{
+  "id": "give_stick",
+  "trigger": "onChoice",
+  "conditions": [
+    { "type": "hasItem", "item": "stick" }
+  ],
+  "outcomes": [
+    {
+      "description": "You give the beaver a stick. The beaver is thrilled and invites you to visit anytime.",
+      "stateChanges": [
+        { "type": "removeItem", "item": "stick" },
+        { "type": "setFlag", "key": "friend_beaver" }
+      ]
+    }
+  ]
+} 

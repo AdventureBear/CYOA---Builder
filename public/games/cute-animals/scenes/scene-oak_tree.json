@@ -1,0 +1,11 @@
+{
+  "id": "oak_tree",
+  "location": "Under the Oak Tree",
+  "locationImage": "oak_tree.jpg",
+  "text": "Hazel finds a baby bird on the ground, chirping for help.",
+  "isRequired": false,
+  "actions": ["help_bird"],
+  "choices": [
+    { "text": "Return to the clearing", "nextNodeId": "intro" }
+  ]
+} 

@@ -1,0 +1,19 @@
+{
+  "id": "help_bird",
+  "trigger": "onEnter",
+  "conditions": [],
+  "outcomes": [
+    {
+      "description": "You help the baby bird back to its nest. The mother bird chirps gratefully.",
+      "stateChanges": [
+        { "type": "setFlag", "key": "helped_bird" }
+      ],
+      "choices": [
+        {
+          "text": "Check the nest for more eggs",
+          "nextAction": "check_nest"
+        }
+      ]
+    }
+  ]
+} 

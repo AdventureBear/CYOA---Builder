@@ -1,0 +1,12 @@
+{
+  "id": "check_nest",
+  "trigger": "onChoice",
+  "outcomes": [
+    {
+      "description": "You find another egg in the nest. You carefully tuck it under the mother bird.",
+      "stateChanges": [
+        { "type": "addItem", "item": "gratitude_token" }
+      ]
+    }
+  ]
+} 

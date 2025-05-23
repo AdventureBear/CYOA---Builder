@@ -1,0 +1,48 @@
+{
+  "intro": {
+    "id": "intro",
+    "location": "Forest Clearing",
+    "locationImage": "forest_clearing.jpg",
+    "text": "Hazel the squirrel wakes up to a bright morning in the forest. What will she do today?",
+    "isRequired": true,
+    "actions": [],
+    "choices": [
+      { "text": "Go to the oak tree", "nextNodeId": "oak_tree" },
+      { "text": "Go to the nut grove", "nextNodeId": "nut_grove" },
+      { "text": "Visit the riverbank", "nextNodeId": "riverbank" }
+    ]
+  },
+  "oak_tree": {
+    "id": "oak_tree",
+    "location": "Under the Oak Tree",
+    "locationImage": "oak_tree.jpg",
+    "text": "Hazel finds a baby bird on the ground, chirping for help.",
+    "isRequired": false,
+    "actions": ["help_bird"],
+    "choices": [
+      { "text": "Return to the clearing", "nextNodeId": "intro" }
+    ]
+  },
+  "nut_grove": {
+    "id": "nut_grove",
+    "location": "Nut Grove",
+    "locationImage": "nut_grove.jpg",
+    "text": "Hazel finds a grove full of nuts, but also sees a hungry hedgehog.",
+    "isRequired": false,
+    "actions": ["share_nuts"],
+    "choices": [
+      { "text": "Return to the clearing", "nextNodeId": "intro" }
+    ]
+  },
+  "riverbank": {
+    "id": "riverbank",
+    "location": "Riverbank",
+    "locationImage": "riverbank.jpg",
+    "text": "Hazel arrives at the riverbank and sees a beaver trying to build a dam.",
+    "isRequired": false,
+    "actions": ["help_beaver"],
+    "choices": [
+      { "text": "Return to the clearing", "nextNodeId": "intro" }
+    ]
+  }
+} 
