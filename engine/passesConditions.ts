@@ -34,6 +34,27 @@ export interface ConditionReport {
               msg: `👜 hasItem • ${choice.key}=${state.inventory[choice.key!] ?? 0} / need ${choice.value ?? 1} (${pass ? "PASS" : "FAIL"})`,
             };
           }
+          case "doesNotHaveItem": {
+            const pass = !checkHasItem(choice, state);
+            return {
+              pass,
+              msg: `👜 doesNotHaveItem • ${choice.key}=${state.inventory[choice.key!] ?? 0} / need ${choice.value ?? 1} (${pass ? "PASS" : "FAIL"})`,
+            };
+          }
+          case "flagSet": {
+            const pass = state.flags[choice.key!] == true;
+            return {
+              pass,
+              msg: `🚩 flagSet • ${choice.key}=${state.flags[choice.key!]} → ${pass ? "PASS" : "FAIL"}`,
+            };
+          }
+        case "flagNotSet": {
+          const pass = state.flags[choice.key!] == undefined || state.flags[choice.key!] == false;
+          return {
+            pass,
+            msg: `🚩 flagNotSet • ${choice.key}=${state.flags[choice.key!]} → ${pass ? "PASS" : "FAIL"}`,
+          };
+        }
         case "random": {
           const chance = choice.chance ?? 1;
           const roll   = Math.random();

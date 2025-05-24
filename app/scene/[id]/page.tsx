@@ -2,12 +2,12 @@
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useRef, useEffect, useState, useMemo } from 'react'
-import SceneComponent from '@/components/Scene'
+import SceneComponent from '@/components/Game/Scene'
 import { useGameStore } from '@/store/gameStore'
 import { runActions } from '@/engine/actionRunner'
-import DeadEndScene from '@/components/DeadEndScene'
+import DeadEndScene from '@/components/Game/DeadEndScene'
 import { initialGameState } from '@/lib/gameState'
-import AddScene from '@/components/AddScene'
+import AddScene from '@/components/Dev/AddScene'
 import { Scene } from '@/app/types'
 
 
@@ -88,7 +88,7 @@ export default function Page() {
   const game = searchParams?.get('game') || 'cute-animals';
 
 
-  console.log('actions in component', actions);
+  // console.log('actions in component', actions);
   useEffect(() => {
     (async () => {
       try {
@@ -137,14 +137,16 @@ export default function Page() {
   }, [currentScene, gameState, actions])
 
   const handleChoice = (choice: Choice) => {
-    if (
-      currentScene.actions &&
-      actions &&
-      Object.keys(actions).length > 0
-    ) {
+    if (!currentScene) return;
+    if (choice.nextAction && actions && Object.keys(actions).length > 0) {
+      runActions([choice.nextAction], "onChoice", gameState, actions);
+    }
+    if (currentScene.actions && actions && Object.keys(actions).length > 0) {
       runActions(currentScene.actions, "onExit", gameState, actions);
     }
-    router.push(`/scene/${choice.nextNodeId}`);
+    if (choice.nextNodeId) {
+      router.push(`/scene/${choice.nextNodeId}`);
+    }
   }
 
   if (loading) {

@@ -38,6 +38,7 @@ export function createInitialGameState(options: InitialGameStateOptions): GameSt
     flags: {},
     reputation: {},
     health: options.initialHealth ?? 10,
+    timeOfDay: 'morning',
   };
 }
 

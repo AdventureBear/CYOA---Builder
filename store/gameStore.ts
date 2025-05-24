@@ -9,12 +9,14 @@ interface GameStore {
   setGameState: (newState: GameState) => void;
   updateGameState: (patch: Partial<GameState>) => void;
   // saveGame: () => string;
-  loadGame: (saveKey: string) => void;
+  // loadGame: (saveKey: string) => void;
   resetGame: () => void;
   actions: Record<string, Action> | null;
   scenes: Record<string, Scene> | null;
   setActions: (actions: Record<string, Action>) => void;
   setScenes: (scenes: Record<string, Scene>) => void;
+  setTimeOfDay: (time: 'morning' | 'afternoon' | 'dusk' | 'night') => void;
+  advanceTime: () => void;
 }
 
 // Fun random save key generator
@@ -45,22 +47,29 @@ const storeImpl: StateCreator<GameStore, [], [], GameStore> = (set) => ({
   //   localStorage.setItem(`cyoa-save-${saveKey}`, JSON.stringify(saveData));
   //   return saveKey;
   // },
-  loadGame: (saveKey: string) => {
-    if (typeof window === 'undefined') return;
-    const saveData = localStorage.getItem(`cyoa-save-${saveKey}`);
-    if (saveData) {
-      const { gameState } = JSON.parse(saveData);
-      set({ gameState });
-    }
-  },
+  // loadGame: (saveKey: string) => {
+  //   if (typeof window === 'undefined') return;
+  //   const saveData = localStorage.getItem(`cyoa-save-${saveKey}`);
+  //   if (saveData) {
+  //     const { gameState } = JSON.parse(saveData);
+  //     set({ gameState });
+  //   }
+  // },
   resetGame: () => set({ gameState: initialGameState }),
   actions: null,
   scenes: null,
   setActions: (actions) => {
-    console.log('setActions called', actions);
+    // console.log('setActions called', actions);
     set({ actions });
   },
   setScenes: (scenes) => set({ scenes }),
+  setTimeOfDay: (time) => set((state) => ({ gameState: { ...state.gameState, timeOfDay: time } })),
+  advanceTime: () => set((state) => {
+    const order: Array<'morning' | 'afternoon' | 'dusk' | 'night'> = ['morning', 'afternoon', 'dusk', 'night'];
+    const idx = order.indexOf(state.gameState.timeOfDay);
+    const next: 'morning' | 'afternoon' | 'dusk' | 'night' = order[(idx + 1) % order.length];
+    return { gameState: { ...state.gameState, timeOfDay: next } };
+  }),
 });
 
 const isServer = typeof window === 'undefined';
@@ -82,5 +91,5 @@ export const createGameStore = (persisted = true) =>
       )
     : create(storeImpl);
 
-export const useGameStore = createGameStore(true);
+export const useGameStore = createGameStore(false);
 

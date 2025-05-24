@@ -1,5 +1,3 @@
-
-
 export enum Alignment {
     Ljosbearer = "Ljosbearer",
     Skuggasmith = "Skuggasmith",
@@ -27,7 +25,7 @@ export interface Choice {
 export interface Scene {
     id: string;
     name: string;
-    text: string;
+    description: string;
     location: string;
     season: string;
     storyPhase: StoryPhase;
@@ -53,6 +51,7 @@ export interface GameState {
     reputation: Record<string, number>;
     health: number;
     npcs: Record<string, NPC>;
+    timeOfDay: 'morning' | 'afternoon' | 'dusk' | 'night';
 }
 
 export interface NpcRelationship {
@@ -142,7 +141,7 @@ export interface Outcome {
 
 
   export interface Condition {
-    type: "hasItem" | "flag" | "random" | "reputation" | "alignment";
+    type: "hasItem" | "flagSet" | "flagNotSet" | "random" | "reputation" | "doesNotHaveItem";
     key?:   string;        // item name, flag id, etc.
     value?: ConditionValue;           // expected value (true, 3+, etc.)
     chance?: number;       // 0–1 for random rolls

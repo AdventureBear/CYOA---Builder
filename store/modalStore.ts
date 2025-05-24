@@ -1,15 +1,21 @@
 'use client';
 import { create } from 'zustand';
+import { StateChange } from '@/app/types';
 
 export interface ModalChoice {
   text: string;
   nextAction?: string;        // optional follow‑up action id
+  resultMessage?: string;     // optional narrative feedback after choice
+  stateChanges?: StateChange[];
+  resultButtonText?: string;  // optional custom button label for result modals
 }
 
 export interface ModalData {
   id: string;                 // "gift_from_elder/outcome0"
   description: string;
   choices?: ModalChoice[];    // if undefined → simple "Dismiss"
+  type?: 'inline' | 'popover'; // Optional: controls modal display style
+  buttonText?: string;         // Optional: custom button label
 }
 
 interface ModalStore {

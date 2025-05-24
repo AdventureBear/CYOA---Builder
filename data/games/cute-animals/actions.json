@@ -1,17 +1,74 @@
 {
-  "help_bird": {
-    "id": "help_bird",
+  "find_message": {
+    "id": "find_message",
     "trigger": "onEnter",
+    "conditions": [
+      { "type": "flagSet", "key": "robin_asked" },
+      { "type": "flagNotSet", "key": "found_message" }
+    ],
     "outcomes": [
       {
-        "description": "You help the baby bird back to its nest. The mother bird chirps gratefully.",
+        "description": "You spot a tiny note wedged in the bark. It's from Robin's cousin!",
         "stateChanges": [
-          { "type": "setFlag", "key": "helped_bird" }
+          { "type": "setFlag", "key": "found_message" }
         ],
         "choices": [
           {
+            "text": "Read the message",
+            "resultMessage": "The note says: 'Meet me at the meadow at dusk.'",
+            "resultButtonText": "Put the note away"
+          }
+        ]
+      }
+    ]
+  },
+  "help_bird": {
+    "id": "help_bird",
+    "trigger": "onEnter",
+    "conditions": [
+      { "type": "flagNotSet", "key": "helped_bird" }
+    ],
+    "failMessage": "The birds are happy and safe in their nest.",
+    "outcomes": [
+      {
+        "description": "You hear a baby bird chirping for help, and mama bird seems anxious.",
+    
+        "choices": [
+          {
+            "text": "Help the baby bird",
+            "resultMessage": "You help the baby bird back to its nest. The mother bird chirps gratefully.",
+            "resultButtonText": "Leave the nest",
+            "stateChanges": [
+              { "type": "setFlag", "key": "helped_bird" }
+            ]
+          },
+          {
             "text": "Check the nest for more eggs",
-            "nextAction": "check_nest"
+            "resultMessage": "You find another egg and carefully tuck it under the mother bird.",
+            "resultButtonText": "Leave the nest"
+          }
+        ]
+      }
+    ]
+  },
+  "find_stick": {
+    "id": "find_stick",
+    "trigger": "onEnter",
+    "conditions": [
+      { "type": "flagSet", "key": "helped_beaver" },
+      { "type": "doesNotHaveItem", "key": "stick" }
+    ],
+    "outcomes": [
+      {
+        "description": "You find a sturdy stick lying at the base of the tree.",
+        "stateChanges": [
+          { "type": "addItem", "key": "stick" }
+        ],
+        "choices": [
+          {
+            "text": "Take the stick",
+            "resultMessage": "You pick up the stick. It might come in handy later.",
+            "resultButtonText": "Continue"
           }
         ]
       }
@@ -34,19 +91,23 @@
     "trigger": "onEnter",
     "outcomes": [
       {
-        "description": "You offer some nuts to the hedgehog.",
+        "description": "The hedgehog is busy cleaning some shiny pebbles.",
         "choices": [
           {
-            "text": "The hedgehog is delighted and gives you a shiny pebble.",
+            "text": "Offer nuts for a pebble",
             "stateChanges": [
               { "type": "addItem", "key": "shiny_pebble" }
-            ]
+            ],
+            "resultMessage": "The hedgehog gives you his shiniest pebble and scurries away.",
+            "resultButtonText": "Thank the hedgehog"
           },
           {
-            "text": "The hedgehog thanks you and scurries off happily.",
+            "text": "Help the hedgehog clean pebbles",
             "stateChanges": [
               { "type": "setFlag", "key": "helped_hedgehog" }
-            ]
+            ],
+            "resultMessage": "The hedgehog is grateful for your help.",
+            "resultButtonText": "Return to the grove"
           }
         ]
       }
@@ -61,7 +122,10 @@
         "choices": [
           {
             "text": "Give the beaver a stick (if you have one)",
-            "nextAction": "give_stick"
+            "nextAction": "give_stick",
+            "stateChanges": [
+              { "type": "setFlag", "key": "helped_beaver" }
+            ]
           },
           {
             "text": "Apologize and watch the beaver work",
@@ -95,6 +159,79 @@
       {
         "description": "You watch the beaver work. It's impressive!",
         "stateChanges": []
+      }
+    ]
+  },
+  "meet_robin_in_meadow": {
+    "id": "meet_robin_in_meadow",
+    "trigger": "onEnter",
+    "conditions": [
+      { "type": "flagSet", "key": "found_message" },
+      { "type": "timeOfDay", "value": "dusk" }
+    ],
+    "outcomes": [
+      {
+        "description": "Robin is waiting for you in the meadow as the sun sets. 'You made it!' he says.",
+        "stateChanges": [
+          { "type": "setFlag", "key": "met_robin_at_dusk" }
+        ],
+        "choices": [
+          {
+            "text": "Talk to Robin",
+            "resultMessage": "You and Robin share stories as the stars come out.",
+            "resultButtonText": "End the day"
+          }
+        ]
+      }
+    ]
+  }, 
+  "find_flower": {
+    "id": "find_flower",
+    "trigger": "onEnter",
+    "conditions": [
+      { "type": "flagNotSet", "key": "found_flower" }
+    ],
+    "outcomes": [
+      {
+        "description": "You spot a rare blue flower among the grass.",
+        "stateChanges": [
+          { "type": "setFlag", "key": "found_flower" }
+        ],
+        "choices": [
+          {
+            "text": "Pick the flower",
+            "resultMessage": "You pick the flower and tuck it behind your ear.",
+            "resultButtonText": "Smell the flower"
+          }
+        ]
+      }
+    ]
+  },
+  "robin_asks_for_help": {
+    "id": "robin_asks_for_help",
+    "trigger": "onEnter",
+    "conditions": [
+      { "type": "flagNotSet", "key": "robin_helped" },
+      { "type": "flagSet", "key": "helped_hedgehog" }
+    ],
+    "outcomes": [
+      {
+        "description": "Robin the mouse says, 'Hazel, could you check the oak tree for a message from my cousin?'",
+        "choices": [
+          {
+            "text": "Agree to help Robin",
+            "stateChanges": [
+              { "type": "setFlag", "key": "robin_asked" }
+            ],
+            "resultMessage": "You promise Robin you'll check the oak tree.",
+            "resultButtonText": "Head to the oak tree"
+          },
+          {
+            "text": "Decline politely",
+            "resultMessage": "Robin looks disappointed, but understands.",
+            "resultButtonText": "Return to the clearing"
+          }
+        ]
       }
     ]
   }
