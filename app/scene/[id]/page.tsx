@@ -18,7 +18,7 @@ export default function Page() {
   const params = useParams()
   const router = useRouter()
   const id = params?.id as string
-  const { gameState, resetGame, actions, setActions } = useGameStore()
+  const { gameState, resetGame, actions, setActions, setLastChoice, pushChoice, resetChoiceStack } = useGameStore()
   const [showAddScene, setShowAddScene] = useState(false);
   const searchParams = useSearchParams();
   const isPlaytest = searchParams?.get('playtest') === '1';
@@ -71,6 +71,9 @@ useEffect(() => {
   }, [currentScene, gameState, actions])
 
   const handleChoice = (choice: Choice) => {
+    setLastChoice(choice.text);
+    resetChoiceStack();
+    pushChoice(choice.text);
     if (!currentScene) return;
     if (choice.nextAction && actions && Object.keys(actions).length > 0) {
       runActions([choice.nextAction], "onChoice", gameState, actions);
@@ -84,8 +87,8 @@ useEffect(() => {
     }
   }
 
-  if (loading) {
-    return <div style={{ color: 'white', background: '#1a1a1a', minHeight: '100vh', padding: 32 }}>Loading scene...</div>;
+  if (loading || !currentScene) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#ece5db] text-[#3d2c1a]">Loading...</div>;
   }
   if (!currentScene) {
     if (showAddScene) {
@@ -102,7 +105,6 @@ useEffect(() => {
   }
   return (
     <div className="w-full min-h-screen bg-[#1a1a1a] text-amber-50">
-  
       <SceneComponent scene={currentScene} onChoice={handleChoice} />
     </div>
   );

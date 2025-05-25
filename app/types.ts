@@ -17,7 +17,6 @@ export enum StoryPhase {
 
 export interface Choice {
     text: string;
-    alignment: Alignment;
     nextScene?: string;
     nextAction?: string;
 }

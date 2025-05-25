@@ -19,6 +19,12 @@ interface GameStore {
   setTimeOfDay: (time: 'morning' | 'afternoon' | 'dusk' | 'night') => void;
   advanceTime: () => void;
   updateBreadcrumbs: (newSceneId: string) => void;
+  lastChoice?: string;
+  setLastChoice: (choiceText: string) => void;
+  choiceStack: string[];
+  pushChoice: (choiceText: string) => void;
+  popChoice: () => void;
+  resetChoiceStack: () => void;
 }
 
 
@@ -52,8 +58,13 @@ const storeImpl: StateCreator<GameStore, [], [], GameStore> = (set, get) => ({
       ...gameState,
       breadcrumbs: newBreadcrumbs,
     }})
-  }
-    
+  },
+  lastChoice: undefined,
+  setLastChoice: (choiceText) => set({ lastChoice: choiceText }),
+  choiceStack: [],
+  pushChoice: (choiceText) => set((state) => ({ choiceStack: [...state.choiceStack, choiceText] })),
+  popChoice: () => set((state) => ({ choiceStack: state.choiceStack.slice(0, -1) })),
+  resetChoiceStack: () => set({ choiceStack: [] }),
 });
 
 const isServer = typeof window === 'undefined';

@@ -58,17 +58,19 @@ export default function SceneComponent({ scene, onChoice }: SceneProps) {
   }
   const timeStyle = getTimeOfDayStyle(timeOfDay);
 
-  // Check if the description is actually truncated (overflows 3 lines)
+  // Check if the description is actually truncated (overflows 5 lines)
   useEffect(() => {
     if (descTextRef.current && !descExpanded) {
       const el = descTextRef.current;
       const lineHeight = parseFloat(getComputedStyle(el).lineHeight || '20');
-      const maxHeight = lineHeight * 3.2; // add buffer for 3 lines
+      const maxHeight = lineHeight * 5.2; // 5 lines, add a small buffer
       setIsTruncated(el.scrollHeight > maxHeight + 2); // +2 for rounding
     } else {
       setIsTruncated(false);
     }
   }, [scene.description, descExpanded]);
+
+  const choiceStack = useGameStore((state) => state.choiceStack);
 
   if (!scene) return <div>Scene not found.</div>
 
@@ -84,7 +86,7 @@ export default function SceneComponent({ scene, onChoice }: SceneProps) {
   const choices = scene.choices || [];
   // const actions = scene.actions || [];
 
-  if (!mounted) return null;
+  // if (!mounted) return null;
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#1a1a1a] text-[#3d2c1a]">
       {/* Virtual aspect ratio container */}
@@ -137,6 +139,19 @@ export default function SceneComponent({ scene, onChoice }: SceneProps) {
               </button>
             )}
           </div>
+
+          {/* Single, left-aligned choiceStack breadcrumb above the panel */}
+          {choiceStack.length > 0 && (
+            <div className="w-full flex items-center justify-start mb-2 px-4">
+              <div className="text-xs text-[#bfae99] font-semibold italic">
+                {choiceStack.map((c, i) => (
+                  <span key={i}>
+                    {i === 0 ? 'You chose: ' : ''}<span className="font-bold text-[#5a4632]">{c}</span>{i < choiceStack.length - 1 && <span> &raquo; </span>}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Inline Game Modal */}
           <InlineGameModal />

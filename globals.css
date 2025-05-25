@@ -8,9 +8,9 @@ html, body {
   min-height: 100%;
   width: 100%;
   box-sizing: border-box;
-  background: #181818; /* fallback background */
+  background-color: #ece5db;
   color: #222;
-  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  font-family: 'Runic', 'Segoe UI', Arial, sans-serif;
   /* Prevent scroll bounce on Mac */
   overscroll-behavior: none;
 }
