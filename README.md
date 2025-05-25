@@ -138,3 +138,87 @@ Each action is an object with the following structure:
 4. Run the app—your new adventure is ready!
 
 See the `data/` directory for example files.
+
+## Modal System and Game State
+
+### Centralized Modal Store
+The game uses a global modal store (with Zustand) to manage the stack of modals. This means:
+- There is a single source of truth for what modal(s) are currently open.
+- Components can **push** (open) or **pop** (close) modals from anywhere in the app.
+
+#### Typical Modal Store API
+- `push(modalData)`: Adds a new modal to the stack (shows it).
+- `pop()`: Removes the top modal from the stack (closes it).
+- `current()`: Returns the current (top) modal, or `null` if none.
+
+### How Modals Are Triggered in Game Flow
+- When an action or choice is made (e.g., player selects a choice, enters a scene, triggers an event), your game logic may want to show a modal (for a result, outcome, or message).
+- The code will call `useModalStore.getState().push(modalData)` to show a modal.
+- The modal data includes things like:
+  - `description` (text to show)
+  - `choices` (buttons/options)
+  - `buttonText` (for a single button)
+  - `type` (inline or popover, if you support both)
+
+**Example:**
+```js
+useModalStore.getState().push({
+  id: 'some-unique-id',
+  description: 'You found a treasure!',
+  buttonText: 'Continue',
+});
+```
+
+### How Modals Are Closed
+- When the player clicks a button or makes a choice, you call `useModalStore.getState().pop()`.
+- This removes the current modal from the stack.
+- If there are more modals underneath, the next one is shown; if not, no modal is shown.
+
+**Example:**
+```js
+// On button click:
+useModalStore.getState().pop();
+```
+
+### How This Relates to Game State
+- Modals are used to display outcomes, results, or choices that are the result of game state changes.
+- Sometimes, when a modal is closed (popped), you may want to trigger further game logic (e.g., advance to the next scene, apply state changes, etc.).
+- This is often handled in the button/choice handler, which may:
+  - Apply state changes to the game state.
+  - Push another modal (for chained events).
+  - Or just pop the modal to return to the main game UI.
+
+### Example Flow
+1. Player makes a choice.
+2. Game logic applies state changes (e.g., adds an item, sets a flag).
+3. Game logic pushes a modal to show the result:
+   ```js
+   useModalStore.getState().push({
+     id: 'result-1',
+     description: 'You found a key!',
+     buttonText: 'Continue',
+   });
+   ```
+4. Player clicks "Continue".
+5. Modal is popped:
+   ```js
+   useModalStore.getState().pop();
+   ```
+6. Game continues, possibly with new state or another modal.
+
+### Chaining Modals
+- You can push multiple modals in sequence (e.g., for a series of results).
+- Each time the player clicks, you pop the current modal, and the next one (if any) is shown.
+
+### Where to Look in the Code
+- The modal store is likely in `store/modalStore.ts`.
+- Look for functions like `push`, `pop`, and `current`.
+- The modal rendering logic (e.g., `InlineGameModal`) will use `useModalStore((state) => state.current())` to get the current modal to display.
+
+### Summary Table
+
+| Action                | What Happens                                 |
+|-----------------------|----------------------------------------------|
+| `push(modalData)`     | Shows a new modal (adds to stack)            |
+| `pop()`               | Closes the current modal (removes from stack)|
+| `current()`           | Gets the current modal to display            |

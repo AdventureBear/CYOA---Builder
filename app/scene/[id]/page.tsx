@@ -8,105 +8,39 @@ import { runActions } from '@/engine/actionRunner'
 import DeadEndScene from '@/components/Game/DeadEndScene'
 import { initialGameState } from '@/lib/gameState'
 import AddScene from '@/components/Dev/AddScene'
-import { Scene } from '@/app/types'
+import { Scene, Choice } from '@/app/types'
+import Breadcrumbs from '@/components/Game/Breadcrumbs'
+// import scenesData from '@/data/games/cute-animals/scenes.json'
 
 
-// function generateScenePrompt(sceneName: string, storyMetrics: StoryMetrics, existingScenes: SceneInfo[]): string {
-//   const formattedExistingScenes = existingScenes.map(scene => `${scene.id}: ${scene.name}`).join(", ");
-//   const completionLikelihood = calculateCompletionLikelihood(storyMetrics);
-//   const maxNewScenes = Math.max(1, Math.floor(20 - storyMetrics.totalScenes / 5)); // Decrease max new scenes as total scenes increase
-
-//   return `Create a scene "${sceneName}" for the Viking Alignment Adventure:
-
-// Current State:
-// - Phase: ${storyMetrics.currentPhase}
-// - Completion: ${storyMetrics.completionPercentage.toFixed(0)}%
-// - Total Scenes: ${storyMetrics.totalScenes}
-
-// Existing scenes: ${formattedExistingScenes}
-
-// Instructions:
-// 1. Brief setting description (50 words max)
-// 2. Location in Norse world
-// 3. Season and year
-// 4. Story phase (PEACEFUL_BEGINNINGS, FIRST_RAIDS, EXPANSION, SETTLEMENT, CONFLICT, or RESOLUTION)
-// 5. Is it required for main storyline? (true/false)
-// 6. Two to four choices (Ljosbearer, Skuggasmith, Solheart, Myrkrider)
-
-// Important:
-// - You have a ${(completionLikelihood * 100).toFixed(0)}% chance to connect each choice to an existing scene.
-// - You can create up to ${maxNewScenes} new scene(s) if needed.
-// - Prioritize connecting to existing scenes that advance the story timeline.
-// - If creating a new scene, use a descriptive name that fits the story context.
-
-// Format:
-// {
-//   "id": "${sceneName}",
-//   "text": "Scene description",
-//   "location": "Location",
-//   "season": "Season and year",
-//   "storyPhase": "PHASE",
-//   "isRequired": boolean,
-//   "choices": [
-//     {
-//       "text": "Choice text",
-//       "alignment": "Alignment",
-//       "nextScene": "Existing scene ID or new scene name"
-//     },
-//     // 1 to 3 more choices
-//   ]
-// }
-
-// Ensure the scene fits the Viking Age setting and advances the story.`
-// }
-
-// function formatOpenLoops(openLoops: OpenLoop[]): string {
-//   if (openLoops.length === 0) {
-//     return "No open loops.";
-//   }
-//
-//   return openLoops.slice(0, 3).map((loop, index) =>
-//       `Open Loop ${index + 1}: "${loop.choice.text}" (from "${loop.sceneId}")`
-//   ).join('\n');
-// }
-
-// Define Scene and Action types for this file
-interface Choice {
-  text: string;
-  nextNodeId?: string;
-  nextAction?: string;
-}
 
 export default function Page() {
   const params = useParams()
   const router = useRouter()
   const id = params?.id as string
-  const { gameState, resetGame, actions, scenes, setActions, setScenes } = useGameStore()
+  const { gameState, resetGame, actions, setActions } = useGameStore()
   const [showAddScene, setShowAddScene] = useState(false);
   const searchParams = useSearchParams();
   const isPlaytest = searchParams?.get('playtest') === '1';
   const game = searchParams?.get('game') || 'cute-animals';
+  console.log('breadcrumbs', gameState.breadcrumbs);
 
-
-  // console.log('actions in component', actions);
-  useEffect(() => {
-    (async () => {
-      try {
-        const scenesRes = await fetch(`/api/listScenes?game=${game}`);
-        const actionsRes = await fetch(`/api/listActions?game=${game}`);
-        if (!scenesRes.ok || !actionsRes.ok) {
-          throw new Error("Missing scenes or actions for this game.");
-        }
-        const scenesObj = await scenesRes.json();
-        const actionsObj = await actionsRes.json();
-        setScenes(scenesObj);
-        setActions(actionsObj);
-      } catch (err) {
-        setScenes({});
-        setActions({});
-      }
-    })();
-  }, [game, isPlaytest, setActions, setScenes]);
+  const scenes = useGameStore((state) => state.scenes);
+  const setScenes = useGameStore((state) => state.setScenes);
+// 
+useEffect(() => {
+ 
+  async function fetchScenes() {
+    console.log('fetching scenes from within playtest');
+    const res = await fetch(`/api/games/${game}/`);
+    const { scenes, actions } = await res.json()
+    setScenes(scenes);
+    setActions(actions);
+    
+  };
+  if (!scenes && game) fetchScenes();
+ 
+}, [game]);
 
   const loading = !scenes;
   
@@ -145,6 +79,7 @@ export default function Page() {
       runActions(currentScene.actions, "onExit", gameState, actions);
     }
     if (choice.nextNodeId) {
+      useGameStore.getState().updateBreadcrumbs(choice.nextNodeId);
       router.push(`/scene/${choice.nextNodeId}`);
     }
   }
@@ -167,6 +102,7 @@ export default function Page() {
   }
   return (
     <div className="w-full min-h-screen bg-[#1a1a1a] text-amber-50">
+  
       <SceneComponent scene={currentScene} onChoice={handleChoice} />
     </div>
   );

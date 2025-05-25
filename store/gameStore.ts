@@ -1,5 +1,6 @@
 import { GameState, Scene, Action } from '@/app/types';
 import { initialGameState } from '@/lib/gameState';
+import { updateBreadcrumbs } from '@/lib/updateBreadcrumbs';
 import { create, StateCreator } from 'zustand';
 import { persist, createJSONStorage, PersistOptions } from 'zustand/middleware';
 
@@ -17,44 +18,17 @@ interface GameStore {
   setScenes: (scenes: Record<string, Scene>) => void;
   setTimeOfDay: (time: 'morning' | 'afternoon' | 'dusk' | 'night') => void;
   advanceTime: () => void;
+  updateBreadcrumbs: (newSceneId: string) => void;
 }
 
-// Fun random save key generator
-// function generateSaveKey(): string {
-//   const adjectives = ['Mighty', 'Brave', 'Wise', 'Swift', 'Bold', 'Fierce', 'Noble', 'Valiant'];
-//   const nouns = ['Hero', 'Adventurer', 'Saga', 'Quest', 'Journey', 'Voyage', 'Tale', 'Legend'];
-//   const randomNum = Math.floor(Math.random() * 1000);
-//   const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-//   const noun = nouns[Math.floor(Math.random() * nouns.length)];
-//   return `${adj}${noun}${randomNum}`;
-// }
 
-const storeImpl: StateCreator<GameStore, [], [], GameStore> = (set) => ({
+const storeImpl: StateCreator<GameStore, [], [], GameStore> = (set, get) => ({
   gameState: initialGameState,
   setGameState: (newState: GameState) => set({ gameState: newState }),
   updateGameState: (patch: Partial<GameState>) =>
     set((state: GameStore) => ({
       gameState: { ...state.gameState, ...patch } as GameState,
     })),
-  // saveGame: () => {
-  //   // Only works in browser
-  //   if (typeof window === 'undefined') return '';
-  //   const saveKey = generateSaveKey();
-  //   const saveData = {
-  //     gameState: get().gameState,
-  //     timestamp: new Date().toISOString(),
-  //   };
-  //   localStorage.setItem(`cyoa-save-${saveKey}`, JSON.stringify(saveData));
-  //   return saveKey;
-  // },
-  // loadGame: (saveKey: string) => {
-  //   if (typeof window === 'undefined') return;
-  //   const saveData = localStorage.getItem(`cyoa-save-${saveKey}`);
-  //   if (saveData) {
-  //     const { gameState } = JSON.parse(saveData);
-  //     set({ gameState });
-  //   }
-  // },
   resetGame: () => set({ gameState: initialGameState }),
   actions: null,
   scenes: null,
@@ -70,6 +44,16 @@ const storeImpl: StateCreator<GameStore, [], [], GameStore> = (set) => ({
     const next: 'morning' | 'afternoon' | 'dusk' | 'night' = order[(idx + 1) % order.length];
     return { gameState: { ...state.gameState, timeOfDay: next } };
   }),
+  updateBreadcrumbs: (newSceneId: string)  => {
+    const {gameState, scenes} = get();
+    if (!scenes) return;
+    const newBreadcrumbs = updateBreadcrumbs(gameState.breadcrumbs, newSceneId, scenes);
+    set ({gameState: {
+      ...gameState,
+      breadcrumbs: newBreadcrumbs,
+    }})
+  }
+    
 });
 
 const isServer = typeof window === 'undefined';

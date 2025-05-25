@@ -34,6 +34,7 @@ export interface Scene {
     imageUrl?: string;
     choices: Choice[];
     actions?: string[];
+    parentSceneId?: string;
 }
 
 export interface NPC {
@@ -43,16 +44,21 @@ export interface NPC {
 
 export interface GameState {
     currentSceneId: string;
-    alignmentScores: Record<Alignment, number>;
     completedScenes: string[];
-    currentStoryPhase: StoryPhase;
     inventory: Record<string, number>;
     flags: Record<string, boolean>;
     reputation: Record<string, number>;
     health: number;
     npcs: Record<string, NPC>;
     timeOfDay: 'morning' | 'afternoon' | 'dusk' | 'night';
+    breadcrumbs: string[];
 }
+
+export interface Choice {
+    text: string;
+    nextNodeId?: string;
+    nextAction?: string;
+  }
 
 export interface NpcRelationship {
     npcId: string;

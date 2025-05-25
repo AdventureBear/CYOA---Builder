@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
-import { Scene } from '@/lib/scenes'
+import { Scene } from '@/app/types'
+
 
 export async function POST(request: Request) {
     const scene: Scene = await request.json()
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
 }
 
 async function persistDynamicallyGeneratedScene(scene: Scene) {
-    const filePath = path.join(process.cwd(), 'data', 'scenes.ts')
+    const filePath = path.join(process.cwd(), 'data', 'games', 'cute-animals', 'scenes.json')
 
     try {
         let content = await fs.readFile(filePath, 'utf8')
@@ -31,15 +32,16 @@ async function persistDynamicallyGeneratedScene(scene: Scene) {
         const sceneString = `
   ${scene.id}: {
     id: '${scene.id}',
-    text: ${JSON.stringify(scene.text)},
+    description: ${JSON.stringify(scene.description)},
     location: ${JSON.stringify(scene.location)},
     season: ${JSON.stringify(scene.season)},
-    storyPhase: StoryPhase.${scene.storyPhase},
     isRequired: ${scene.isRequired},
+    actions: [
+      ${(scene.actions || []).map(action => action).join(',')}
+    ],
     choices: [
       ${scene.choices.map(choice => `{
         text: ${JSON.stringify(choice.text)},
-        alignment: '${choice.alignment}',
         nextScene: '${choice.nextScene}'
       }`).join(',\n      ')}
     ]
@@ -62,7 +64,7 @@ async function persistDynamicallyGeneratedScene(scene: Scene) {
         content = content.slice(0, insertIndex) + sceneString + content.slice(insertIndex)
 
         await fs.writeFile(filePath, content, 'utf8')
-        console.log(`Scene '${scene.id}' has been persisted to scenes.ts`)
+        console.log(`Scene '${scene.id}' has been saved to scenes.json`)
     } catch (error) {
         console.error('Error persisting scene:', error)
         throw error

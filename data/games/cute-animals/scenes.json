@@ -1,59 +1,177 @@
 {
-  "intro": {
-    "id": "intro",
+  "forest_clearing": {
+    "id": "forest_clearing",
     "location": "Forest Clearing",
     "description": "Hazel the squirrel wakes up to a bright morning in the forest. What will she do today?",
     "actions": [],
     "choices": [
-      { "text": "Go to the oak tree", "nextNodeId": "oak_tree" },
-      { "text": "Visit the riverbank", "nextNodeId": "riverbank" },
-      { "text": "Explore the nut grove", "nextNodeId": "nut_grove" },
-      { "text": "Wander into the meadow", "nextNodeId": "meadow" }
+      {
+        "text": "Go to the oak tree",
+        "nextNodeId": "oak_tree"
+      },
+      {
+        "text": "Visit the riverbank",
+        "nextNodeId": "riverbank"
+      },
+      {
+        "text": "Explore the nut grove",
+        "nextNodeId": "nut_grove"
+      },
+      {
+        "text": "Wander into the meadow",
+        "nextNodeId": "meadow"
+      }
     ]
   },
   "oak_tree": {
     "id": "oak_tree",
+    "parentSceneId": "forest_clearing",
     "location": "Under the Oak Tree",
-    "description": "You return to the familiar oak tree. The branches sway gently in the breeze.",
-    "actions": ["find_message", "help_bird", "find_stick", "find_pebble"],
+    "description": "You return to the familiar oak tree. The branches sway gently in the breeze. You hear singing birds chirping in the tree. ",
+    "actions": [
+      "find_message",
+      "find_stick",
+      "find_pebble"
+    ],
     "choices": [
-      { "text": "Return to the clearing", "nextNodeId": "intro" }
+      {
+        "text": "Climb the tree",
+        "nextNodeId": "birds_nest"
+      },
+      {
+        "text": "Rummage through the leaves at the base of the tree",
+        "nextNodeId": "rummage_leaves"
+      },
+      {
+        "text": "Climb to the top of the tree",
+        "nextNodeId": "top_of_tree"
+      },
+      {
+        "text": "Return to the clearing",
+        "nextNodeId": "forest_clearing"
+      }
     ]
   },
   "birds_nest": {
     "id": "birds_nest",
+    "parentSceneId": "oak_tree",
     "location": "Birds' Nest",
-    "description": "You climb up to the birds' nest. The mother bird chirps anxiously.",
-    "actions": ["help_bird"],
+    "description": "You climb up to the birds' nest. The mother bird chirps anxiously as you see a baby bird that has fallen out of the nest.",
+    "actions": [
+      "help_bird"
+    ],
     "choices": [
-      { "text": "Return to the clearing", "nextNodeId": "intro" }
+      {
+        "text": "Return to the clearing",
+        "nextNodeId": "forest_clearing"
+      }
     ]
   },
   "nut_grove": {
     "id": "nut_grove",
+    "parentSceneId": "forest_clearing",
     "location": "Nut Grove",
     "description": "Hazel finds a grove full of nuts, but also sees a hungry hedgehog.",
-    "actions": ["share_nuts"],
+    "actions": [
+      "share_nuts"
+    ],
     "choices": [
-      { "text": "Return to the clearing", "nextNodeId": "intro" }
+      {
+        "text": "Return to the clearing",
+        "nextNodeId": "forest_clearing"
+      }
     ]
   },
   "riverbank": {
     "id": "riverbank",
+    "parentSceneId": "forest_clearing",
     "location": "Riverbank",
-    "description": "Hazel arrives at the riverbank. Robin the mouse is here, looking worried. The beaver is busy with his dam.",
-    "actions": ["robin_asks_for_help", "help_beaver"],
+    "description": "Hazel arrives at the riverbank. Robin the mouse is here, looking worried. The beaver is busy with his dam. The river is flowing fast, and you notice a sturdy wooden footbridge crossing the river.",
+    "actions": [
+      "robin_asks_for_help",
+      "help_beaver"
+    ],
     "choices": [
-      { "text": "Return to the clearing", "nextNodeId": "intro" }
+      {
+        "text": "Go to the bridge",
+        "nextNodeId": "bridge"
+      },
+      {
+        "text": "Return to the clearing",
+        "nextNodeId": "forest_clearing"
+      }
     ]
   },
   "meadow": {
     "id": "meadow",
+    "parentSceneId": "forest_clearing",
     "location": "Sunny Meadow",
     "description": "The meadow is full of wildflowers and butterflies. It feels peaceful here.",
-    "actions": ["find_flower"],
+    "actions": [
+      "find_flower"
+    ],
     "choices": [
-      { "text": "Return to the clearing", "nextNodeId": "intro" }
+      {
+        "text": "Return to the clearing",
+        "nextNodeId": "forest_clearing"
+      }
+    ]
+  },
+  "bridge": {
+    "id": "bridge",
+    "parentSceneId": "riverbank",
+    "location": "Wooden Foot Bridge",
+    "description": "The bridge is a wooden structure spanning the river. It looks sturdy.",
+    "actions": [
+      "try_fishing",
+      "toss_a_pebble"
+    ],
+    "choices": [
+      {
+        "text": "Cross the bridge",
+        "nextNodeId": "meadow"
+      },
+      {
+        "text": "Return to the riverbank",
+        "nextNodeId": "riverbank"
+      }
+    ]
+  },
+  "rummage_leaves": {
+    "id": "rummage_leaves",
+    "location": "Leaf Pile",
+    "description": "You rummage through the leaves, and find many acorns!  Too many to carry.  You need to find a way to carry them all.",
+    "actions": ["stash_acorns"],
+    "parentSceneId": "oak_tree",
+    "choices": [
+      {
+        "text": "Go back to the Oak Tree.",
+        "nextNodeId": "oak_tree"
+      }
+    ]
+  },
+  "top_of_tree": {
+    "id": "top_of_tree",
+    "location": "TODO: Add location name",
+    "description": "TODO: Add scene description.",
+    "actions": [],
+    "choices": [
+      {
+        "text": "TODO: Add choice text.",
+        "nextNodeId": "TODO: Add next scene id."
+      }
+    ]
+  },
+  "TODO: Add jump to scene.": {
+    "id": "TODO: Add jump to scene.",
+    "location": "TODO: Add location name",
+    "description": "TODO: Add scene description.",
+    "actions": [],
+    "choices": [
+      {
+        "text": "TODO: Add choice text.",
+        "nextNodeId": "TODO: Add next scene id."
+      }
     ]
   }
-} 
+}

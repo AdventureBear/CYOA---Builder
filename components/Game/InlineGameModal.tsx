@@ -3,11 +3,16 @@ import { ModalChoice } from "@/store/modalStore";
 
 import { useModalStore } from "@/store/modalStore";
 import { Button } from "../ui/button";
+import { useEffect } from "react";
 
 function InlineGameModal() {
     const currentModal = useModalStore((state) => state.current());
     const pop = useModalStore((state) => state.pop);
   
+    useEffect(() => {
+        console.log('InlineGameModal rendered');
+      }, []);
+      
     if (!currentModal) return null;
   
     const handleChoice = (choice: ModalChoice) => {

@@ -3,14 +3,23 @@
     "id": "find_message",
     "trigger": "onEnter",
     "conditions": [
-      { "type": "flagSet", "key": "robin_asked" },
-      { "type": "flagNotSet", "key": "found_message" }
+      {
+        "type": "flagSet",
+        "key": "robin_asked"
+      },
+      {
+        "type": "flagNotSet",
+        "key": "found_message"
+      }
     ],
     "outcomes": [
       {
         "description": "You spot a tiny note wedged in the bark. It's from Robin's cousin!",
         "stateChanges": [
-          { "type": "setFlag", "key": "found_message" }
+          {
+            "type": "setFlag",
+            "key": "found_message"
+          }
         ],
         "choices": [
           {
@@ -26,20 +35,25 @@
     "id": "help_bird",
     "trigger": "onEnter",
     "conditions": [
-      { "type": "flagNotSet", "key": "helped_bird" }
+      {
+        "type": "flagNotSet",
+        "key": "helped_bird"
+      }
     ],
     "failMessage": "The birds are happy and safe in their nest.",
     "outcomes": [
       {
         "description": "You hear a baby bird chirping for help, and mama bird seems anxious.",
-    
         "choices": [
           {
             "text": "Help the baby bird",
             "resultMessage": "You help the baby bird back to its nest. The mother bird chirps gratefully.",
             "resultButtonText": "Leave the nest",
             "stateChanges": [
-              { "type": "setFlag", "key": "helped_bird" }
+              {
+                "type": "setFlag",
+                "key": "helped_bird"
+              }
             ]
           },
           {
@@ -55,14 +69,23 @@
     "id": "find_stick",
     "trigger": "onEnter",
     "conditions": [
-      { "type": "flagSet", "key": "helped_beaver" },
-      { "type": "doesNotHaveItem", "key": "stick" }
+      {
+        "type": "flagSet",
+        "key": "helped_beaver"
+      },
+      {
+        "type": "doesNotHaveItem",
+        "key": "stick"
+      }
     ],
     "outcomes": [
       {
         "description": "You find a sturdy stick lying at the base of the tree.",
         "stateChanges": [
-          { "type": "addItem", "key": "stick" }
+          {
+            "type": "addItem",
+            "key": "stick"
+          }
         ],
         "choices": [
           {
@@ -81,7 +104,10 @@
       {
         "description": "You find another egg in the nest. You carefully tuck it under the mother bird.",
         "stateChanges": [
-          { "type": "addItem", "key": "gratitude_token" }
+          {
+            "type": "addItem",
+            "key": "gratitude_token"
+          }
         ]
       }
     ]
@@ -96,7 +122,10 @@
           {
             "text": "Offer nuts for a pebble",
             "stateChanges": [
-              { "type": "addItem", "key": "shiny_pebble" }
+              {
+                "type": "addItem",
+                "key": "shiny_pebble"
+              }
             ],
             "resultMessage": "The hedgehog gives you his shiniest pebble and scurries away.",
             "resultButtonText": "Thank the hedgehog"
@@ -104,7 +133,10 @@
           {
             "text": "Help the hedgehog clean pebbles",
             "stateChanges": [
-              { "type": "setFlag", "key": "helped_hedgehog" }
+              {
+                "type": "setFlag",
+                "key": "helped_hedgehog"
+              }
             ],
             "resultMessage": "The hedgehog is grateful for your help.",
             "resultButtonText": "Return to the grove"
@@ -124,7 +156,10 @@
             "text": "Give the beaver a stick (if you have one)",
             "nextAction": "give_stick",
             "stateChanges": [
-              { "type": "setFlag", "key": "helped_beaver" }
+              {
+                "type": "setFlag",
+                "key": "helped_beaver"
+              }
             ]
           },
           {
@@ -139,15 +174,24 @@
     "id": "give_stick",
     "trigger": "onChoice",
     "conditions": [
-      { "type": "hasItem", "key": "stick" }
+      {
+        "type": "hasItem",
+        "key": "stick"
+      }
     ],
     "failMessage": "You don't have a stick to give the beaver. Maybe you can find one in the forest.helpe",
     "outcomes": [
       {
         "description": "You give the beaver a stick. The beaver is thrilled and invites you to visit anytime.",
         "stateChanges": [
-          { "type": "removeItem", "key": "stick" },
-          { "type": "setFlag", "key": "friend_beaver" }
+          {
+            "type": "removeItem",
+            "key": "stick"
+          },
+          {
+            "type": "setFlag",
+            "key": "friend_beaver"
+          }
         ]
       }
     ]
@@ -166,14 +210,23 @@
     "id": "meet_robin_in_meadow",
     "trigger": "onEnter",
     "conditions": [
-      { "type": "flagSet", "key": "found_message" },
-      { "type": "timeOfDay", "value": "dusk" }
+      {
+        "type": "flagSet",
+        "key": "found_message"
+      },
+      {
+        "type": "timeOfDay",
+        "value": "dusk"
+      }
     ],
     "outcomes": [
       {
         "description": "Robin is waiting for you in the meadow as the sun sets. 'You made it!' he says.",
         "stateChanges": [
-          { "type": "setFlag", "key": "met_robin_at_dusk" }
+          {
+            "type": "setFlag",
+            "key": "met_robin_at_dusk"
+          }
         ],
         "choices": [
           {
@@ -184,18 +237,24 @@
         ]
       }
     ]
-  }, 
+  },
   "find_flower": {
     "id": "find_flower",
     "trigger": "onEnter",
     "conditions": [
-      { "type": "flagNotSet", "key": "found_flower" }
+      {
+        "type": "flagNotSet",
+        "key": "found_flower"
+      }
     ],
     "outcomes": [
       {
         "description": "You spot a rare blue flower among the grass.",
         "stateChanges": [
-          { "type": "setFlag", "key": "found_flower" }
+          {
+            "type": "setFlag",
+            "key": "found_flower"
+          }
         ],
         "choices": [
           {
@@ -211,8 +270,14 @@
     "id": "robin_asks_for_help",
     "trigger": "onEnter",
     "conditions": [
-      { "type": "flagNotSet", "key": "robin_helped" },
-      { "type": "flagSet", "key": "helped_hedgehog" }
+      {
+        "type": "flagNotSet",
+        "key": "robin_helped"
+      },
+      {
+        "type": "flagSet",
+        "key": "helped_hedgehog"
+      }
     ],
     "outcomes": [
       {
@@ -221,7 +286,10 @@
           {
             "text": "Agree to help Robin",
             "stateChanges": [
-              { "type": "setFlag", "key": "robin_asked" }
+              {
+                "type": "setFlag",
+                "key": "robin_asked"
+              }
             ],
             "resultMessage": "You promise Robin you'll check the oak tree.",
             "resultButtonText": "Head to the oak tree"
@@ -234,5 +302,142 @@
         ]
       }
     ]
+  },
+  "find_pebble": {
+    "id": "find_pebble",
+    "trigger": "onChoice",
+    "conditions": [
+      {
+        "type": "TODO: Add condition type.",
+        "key": "TODO: Add condition key."
+      }
+    ],
+    "outcomes": [
+      {
+        "description": "TODO: Add outcome description.",
+        "stateChanges": [
+          {
+            "type": "TODO: Add state change type.",
+            "key": "TODO: Add state change key."
+          }
+        ],
+        "choices": [
+          {
+            "text": "TODO: Add choice text.",
+            "nextAction": "TODO: Add next action.",
+            "resultMessage": "TODO: Add result message.",
+            "resultButtonText": "TODO: Add result button text."
+          },
+          {
+            "text": "TODO: Add choice text.",
+            "nextScene": "TODO: Add jump to scene.",
+            "resultMessage": "TODO: Add result message.",
+            "resultButtonText": "TODO: Add result button text."
+          }
+        ]
+      }
+    ]
+  },
+  "try_fishing": {
+    "id": "try_fishing",
+    "trigger": "onChoice",
+    "conditions": [
+      {
+        "type": "TODO: Add condition type.",
+        "key": "TODO: Add condition key."
+      }
+    ],
+    "outcomes": [
+      {
+        "description": "TODO: Add outcome description.",
+        "stateChanges": [
+          {
+            "type": "TODO: Add state change type.",
+            "key": "TODO: Add state change key."
+          }
+        ],
+        "choices": [
+          {
+            "text": "TODO: Add choice text.",
+            "nextAction": "TODO: Add next action.",
+            "resultMessage": "TODO: Add result message.",
+            "resultButtonText": "TODO: Add result button text."
+          },
+          {
+            "text": "TODO: Add choice text.",
+            "nextScene": "TODO: Add jump to scene.",
+            "resultMessage": "TODO: Add result message.",
+            "resultButtonText": "TODO: Add result button text."
+          }
+        ]
+      }
+    ]
+  },
+  "toss_a_pebble": {
+    "id": "toss_a_pebble",
+    "trigger": "onChoice",
+    "conditions": [
+      {
+        "type": "TODO: Add condition type.",
+        "key": "TODO: Add condition key."
+      }
+    ],
+    "outcomes": [
+      {
+        "description": "TODO: Add outcome description.",
+        "stateChanges": [
+          {
+            "type": "TODO: Add state change type.",
+            "key": "TODO: Add state change key."
+          }
+        ],
+        "choices": [
+          {
+            "text": "TODO: Add choice text.",
+            "nextAction": "TODO: Add next action.",
+            "resultMessage": "TODO: Add result message.",
+            "resultButtonText": "TODO: Add result button text."
+          },
+          {
+            "text": "TODO: Add choice text.",
+            "nextScene": "TODO: Add jump to scene.",
+            "resultMessage": "TODO: Add result message.",
+            "resultButtonText": "TODO: Add result button text."
+          }
+        ]
+      }
+    ]
+  },
+  "stash_acorns": {
+    "id": "stash_acorns",
+    "trigger": "onChoice",
+    "conditions": [
+      {
+        "type": "hasItem",
+        "key": "backpack"
+      }
+    ],
+    "failMessage": "You don't have a backpack to stash the acorns in.  Maybe you can find one in the forest somewhre. I saw a troll with a backpack under the bridge.",
+    "outcomes": [
+      {
+        "description": "You stash the acorns in your backpack.",
+        "stateChanges": [
+          {
+            "type": "setFlag",
+            "key": "stashed_acorns"
+          }
+        ],
+        "choices": [
+          {
+            "text": "Go back to the Oak Tree.",
+            "nextScene": "oak_tree"
+          },
+          {
+            "text": "Look for more acorns",
+            "nextScene": "rummage_leaves"
+          }
+        ]
+      }
+    ]
   }
-} 
+}
