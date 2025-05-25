@@ -59,7 +59,14 @@
           {
             "text": "Check the nest for more eggs",
             "resultMessage": "You find another egg and carefully tuck it under the mother bird.",
-            "resultButtonText": "Leave the nest"
+            "nextNodeId": "oak_tree",
+            "resultButtonText": "Leave the nest and climb back down the tree",
+            "stateChanges": [
+              {
+                "type": "addItem",
+                "key": "gratitude_token"
+              }
+            ]
           }
         ]
       }
@@ -344,16 +351,16 @@
     "conditions": [
       {
         "type": "TODO: Add condition type.",
-        "key": "TODO: Add condition key."
+        "key": "shoelace"
       }
     ],
     "outcomes": [
       {
-        "description": "TODO: Add outcome description.",
+        "description": "You dangle an acorn from a piece if rope you found in the birds nest and catch a fish!",
         "stateChanges": [
           {
-            "type": "TODO: Add state change type.",
-            "key": "TODO: Add state change key."
+            "type": "addItem",
+            "key": "fish"
           }
         ],
         "choices": [
@@ -371,7 +378,8 @@
           }
         ]
       }
-    ]
+    ],
+    "failMessage": "You need to find some bait and a fishing line somewhere!  "
   },
   "toss_a_pebble": {
     "id": "toss_a_pebble",

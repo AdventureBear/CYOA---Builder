@@ -1,24 +1,9 @@
-export enum Alignment {
-    Ljosbearer = "Ljosbearer",
-    Skuggasmith = "Skuggasmith",
-    Solheart = "Solheart",
-    Myrkrider = "Myrkrider",
-
-}
-
-export enum StoryPhase {
-    PEACEFUL_BEGINNINGS = "PEACEFUL_BEGINNINGS",
-    FIRST_VENTURES = "FIRST_VENTURES",
-    EXPANSION = "EXPANSION",
-    CONFLICT = "CONFLICT",
-    SETTLEMENT = "SETTLEMENT",
-    LEGACY = "LEGACY"
-}
-
 export interface Choice {
     text: string;
     nextScene?: string;
     nextAction?: string;
+    resultMessage?: string;
+    resultButtonText?: string;
 }
 
 export interface Scene {
@@ -27,13 +12,13 @@ export interface Scene {
     description: string;
     location: string;
     season: string;
-    storyPhase: StoryPhase;
     isRequired: boolean;
     isDynamicallyGenerated?: boolean;
     imageUrl?: string;
     choices: Choice[];
     actions?: string[];
     parentSceneId?: string;
+    locationImage?: string;
 }
 
 export interface NPC {
@@ -63,20 +48,20 @@ export interface NpcRelationship {
     npcId: string;
     name: string;
     affinity: number;
-    alignment: Alignment;
+   
 }
 
 export interface PlayerCharacter {
     name: string;
-    dominantAlignment: Alignment;
+
     relationships: NpcRelationship[];
 }
 
 export interface ProgressTrackerProps {
-    currentPhase: StoryPhase;
+    
     phaseProgress: number;
     totalPhases: number;
-    dominantAlignment: Alignment;
+ 
     keyDecisions: string[];
 }
 
@@ -94,14 +79,7 @@ export interface NpcRelationshipTrackerProps {
     relationships: NpcRelationship[];
 }
 
-export interface AlignmentTrackerComponentProps {
-    alignmentScores: Record<Alignment, number>;
-}
 
-export interface StoryProgressTrackerComponentProps {
-    completedScenes: string[];
-    currentPhase: StoryPhase;
-}
 
 export interface SceneComponentProps {
     scene: Scene;
@@ -142,7 +120,7 @@ export interface Outcome {
     failMessage?: string;         // optional message to show if conditions fail
 }
 
-  type ConditionValue = string | number | boolean | Alignment;
+  type ConditionValue = string | number | boolean;
 
 
   export interface Condition {
@@ -152,8 +130,6 @@ export interface Outcome {
     chance?: number;       // 0–1 for random rolls
     comparator?: "gte" | "eq" | "lte" | "neq";
   }
-
-
 
   
   export interface StateChange {
