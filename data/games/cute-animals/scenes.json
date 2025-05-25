@@ -4,7 +4,7 @@
     "location": "Forest Clearing",
     "description": "Hazel the squirrel wakes up to a bright morning in the forest. What will she do today?",
     "actions": [
-      "find_mission"
+  
     ],
     "choices": [
       {
@@ -31,9 +31,7 @@
     "location": "Under the Oak Tree",
     "description": "You return to the familiar oak tree. The branches sway gently in the breeze. You hear singing birds chirping in the tree. ",
     "actions": [
-      "find_message",
-      "find_stick",
-      "find_pebble"
+      "find_stick"
     ],
     "choices": [
       {
@@ -60,7 +58,7 @@
     "location": "Birds' Nest",
     "description": "You climb up to the birds' nest. The mother bird chirps anxiously as you see a baby bird that has fallen out of the nest.",
     "actions": [
-      "help_bird"
+      "help_bird",   "find_message"
     ],
     "choices": [
       {
@@ -75,7 +73,8 @@
     "location": "Nut Grove",
     "description": "Hazel finds a grove full of nuts, but also sees a hungry hedgehog.",
     "actions": [
-      "share_nuts"
+      "share_nuts",
+      "find_shoelace"
     ],
     "choices": [
       {
@@ -110,7 +109,7 @@
     "location": "Sunny Meadow",
     "description": "The meadow is full of wildflowers and butterflies. It feels peaceful here.",
     "actions": [
-      "find_flower"
+      "find_flower", "meet_robin_in_meadow"
     ],
     "choices": [
       {
@@ -142,11 +141,12 @@
   "rummage_leaves": {
     "id": "rummage_leaves",
     "location": "Leaf Pile",
-    "description": "You rummage through the leaves, and find many acorns!  Too many to carry.  You need to find a way to carry them all.",
+    "parentSceneId": "oak_tree",
+    "description": "You find a big pile of fall leaves that smell like autumn. As you rummage through the leaves, you find a few acorns.",
     "actions": [
       "stash_acorns"
     ],
-    "parentSceneId": "oak_tree",
+   
     "choices": [
       {
         "text": "Go back to the Oak Tree.",
@@ -157,6 +157,7 @@
   "top_of_tree": {
     "id": "top_of_tree",
     "location": "Tree Top",
+    "parentSceneId": "oak_tree",
     "description": "You climb to the top of the tree.  You see a beautiful view of the forest below. The wind is blowing strong, and you feel a bit dizzy.",
     "actions": [],
     "choices": [

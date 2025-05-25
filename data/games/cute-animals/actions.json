@@ -10,11 +10,14 @@
       {
         "type": "flagNotSet",
         "key": "found_message"
+      },{
+        "type": "flagSet",
+        "key": "helped_bird"
       }
     ],
     "outcomes": [
       {
-        "description": "You spot a tiny note wedged in the bark. It's from Robin's cousin!",
+        "description": "You spot a tiny note wedged in the the birds nest. It's from Robin's cousin!",
         "stateChanges": [
           {
             "type": "setFlag",
@@ -155,6 +158,12 @@
   "help_beaver": {
     "id": "help_beaver",
     "trigger": "onEnter",
+    "conditions": [
+      {
+        "type": "flagNotSet",
+        "key": "helped_beaver"
+      }
+    ],
     "outcomes": [
       {
         "description": "The beaver asks if you have a stick to help with the dam.",
@@ -220,10 +229,9 @@
       {
         "type": "flagSet",
         "key": "found_message"
-      },
-      {
-        "type": "timeOfDay",
-        "value": "dusk"
+      }, {
+        "type": "flagSet",
+        "key": "found_flower"
       }
     ],
     "outcomes": [
@@ -279,16 +287,12 @@
     "conditions": [
       {
         "type": "flagNotSet",
-        "key": "robin_helped"
-      },
-      {
-        "type": "flagSet",
-        "key": "helped_hedgehog"
+        "key": "robin_asked"
       }
     ],
     "outcomes": [
       {
-        "description": "Robin the mouse says, 'Hazel, could you check the oak tree for a message from my cousin?'",
+        "description": "Robin the mouse says, 'Hazel, could you check the oak tree for a message from my cousin? She said she left it on my doorstep, and a bird flew away with it! Maybe she used it to build her nest?'",
         "choices": [
           {
             "text": "Agree to help Robin",
@@ -312,34 +316,20 @@
   },
   "find_pebble": {
     "id": "find_pebble",
-    "trigger": "onChoice",
+    "trigger": "onEnter",
     "conditions": [
       {
-        "type": "TODO: Add condition type.",
-        "key": "TODO: Add condition key."
+        "type": "flagSet",
+        "key": "found_flower"
       }
     ],
     "outcomes": [
       {
-        "description": "TODO: Add outcome description.",
+        "description": "You find a big pile of shiny pebbles.",
         "stateChanges": [
           {
-            "type": "TODO: Add state change type.",
-            "key": "TODO: Add state change key."
-          }
-        ],
-        "choices": [
-          {
-            "text": "TODO: Add choice text.",
-            "nextAction": "TODO: Add next action.",
-            "resultMessage": "TODO: Add result message.",
-            "resultButtonText": "TODO: Add result button text."
-          },
-          {
-            "text": "TODO: Add choice text.",
-            "nextScene": "TODO: Add jump to scene.",
-            "resultMessage": "TODO: Add result message.",
-            "resultButtonText": "TODO: Add result button text."
+            "type": "addItem",
+            "key": "shiny_pebble"
           }
         ]
       }
@@ -347,11 +337,17 @@
   },
   "try_fishing": {
     "id": "try_fishing",
-    "trigger": "onChoice",
+    "trigger": "onEnter",
     "conditions": [
       {
-        "type": "TODO: Add condition type.",
+        "type": "hasItem",
         "key": "shoelace"
+      }, {
+        "type": "flagNotSet",
+        "key": "fish_caught"
+      },{
+        "type": "hasItem",
+        "key": "acorn"
       }
     ],
     "outcomes": [
@@ -361,20 +357,6 @@
           {
             "type": "addItem",
             "key": "fish"
-          }
-        ],
-        "choices": [
-          {
-            "text": "TODO: Add choice text.",
-            "nextAction": "TODO: Add next action.",
-            "resultMessage": "TODO: Add result message.",
-            "resultButtonText": "TODO: Add result button text."
-          },
-          {
-            "text": "TODO: Add choice text.",
-            "nextScene": "TODO: Add jump to scene.",
-            "resultMessage": "TODO: Add result message.",
-            "resultButtonText": "TODO: Add result button text."
           }
         ]
       }
@@ -443,6 +425,27 @@
           {
             "text": "Look for more acorns",
             "nextScene": "rummage_leaves"
+          }
+        ]
+      }
+    ]
+  },
+  "find_shoelace": {
+    "id": "find_shoelace",
+    "trigger": "onEnter",
+    "conditions": [
+      {
+        "type": "flagNotSet",
+        "key": "found_shoelace"
+      }
+    ],
+    "outcomes": [
+      {
+        "description": "You find a shoelace on the ground, you put it in your pocket, because it may come in handy later.",
+        "stateChanges": [
+          {
+            "type": "addItem",
+            "key": "shoelace"
           }
         ]
       }

@@ -12,6 +12,12 @@ const ITEM_ICONS: Record<string, string> = {
   helped_hedgehog: '🦔',
   helped_bird: '🐦',
   friend_beaver: '🦫',
+  shoelace: '👟',
+  acorn: '🌰',
+  fish: '🐟',
+  flower: '🌸',
+  pebble: '🪨',
+  backpack: '🎒',
   // Add more mappings as needed
 };
 
