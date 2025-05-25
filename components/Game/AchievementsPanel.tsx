@@ -4,6 +4,7 @@ import { ItemsPanel } from './ItemsPanel';
 const ACHIEVEMENT_ICONS: Record<string, string> = {
   helped_bird: '🐦',
   helped_hedgehog: '🦔',
+  helped_beaver: '🦫',
   friend_beaver: '🦫',
   gratitude_token: '🎟️',
   shiny_pebble: '💎',
@@ -18,6 +19,7 @@ const ACHIEVEMENT_ICONS: Record<string, string> = {
   sunrise_seen: '🌅',
   hidden_path: '🗺️',
   robin_asked: '🪶',
+  found_flower: '🌸',
   // Add more as needed
 };
 
