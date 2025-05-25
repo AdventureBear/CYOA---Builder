@@ -1,7 +1,7 @@
 import { createGameStore } from '../store/gameStore'
 import { initialGameState } from '../lib/gameState'
 import { applyChanges } from '@/engine/applyChanges'
-import { allActions as actions } from '../data/actions'
+import { allActions as actions } from '../public/games/viking-adventure/actions/actions'
 
 export function setupTestStore(overrides = {}) {
   const store = createGameStore(false)

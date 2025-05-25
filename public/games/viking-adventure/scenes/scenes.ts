@@ -9,7 +9,7 @@ export const allScenes: Record<string, Scene> = {
         id: "village_gathering",
         imageUrl: '/scene-images/village_gathering-1747029157872.png',
         name: "The Village Gathering",
-        text: "As the sun sets over your coastal Viking village, the community gathers for an important meeting. The air is thick with anticipation as your jarl announces plans for the coming season. You stand among your fellow villagers, knowing that your voice could shape the future of your people.",
+        description: "As the sun sets over your coastal Viking village, the community gathers for an important meeting. The air is thick with anticipation as your jarl announces plans for the coming season. You stand among your fellow villagers, knowing that your voice could shape the future of your people.",
         location: "Coastal Viking Village",
         season: "Late Spring, 793 AD",
         storyPhase: StoryPhase.PEACEFUL_BEGINNINGS,
@@ -42,7 +42,7 @@ export const allScenes: Record<string, Scene> = {
         id: "prepare_trade_voyage",
         imageUrl: '/scene-images/prepare_trade_voyage-1747029481412.png',
         name: "Preparing the Trade Voyage",
-        text: "With the decision made to embark on a trading expedition, the village buzzes with activity. You find yourself at the docks, overseeing the preparation of a sturdy longship. Goods are being loaded, and the crew is assembling. As a respected voice in the community, you're asked to make some key decisions.",
+        description: "With the decision made to embark on a trading expedition, the village buzzes with activity. You find yourself at the docks, overseeing the preparation of a sturdy longship. Goods are being loaded, and the crew is assembling. As a respected voice in the community, you're asked to make some key decisions.",
         location: "Village Docks",
         season: "Early Summer, 793 AD",
         storyPhase: StoryPhase.PEACEFUL_BEGINNINGS,
@@ -71,7 +71,7 @@ export const allScenes: Record<string, Scene> = {
         imageUrl: '/scene-images/diverse_cargo-1747112104889.png',
     
         name: "A Diverse Cargo",
-        text: "Your decision to focus on a wide range of trade goods pays off. The hold of your ship is filled with furs, amber, honey, and crafted items. As you set sail, the village elder praises your wisdom, noting that this variety will surely open doors in foreign lands. The crew's morale is high as you embark on this peaceful venture.",
+        description: "Your decision to focus on a wide range of trade goods pays off. The hold of your ship is filled with furs, amber, honey, and crafted items. As you set sail, the village elder praises your wisdom, noting that this variety will surely open doors in foreign lands. The crew's morale is high as you embark on this peaceful venture.",
         location: "Aboard the Longship",
         season: "Early Summer, 793 AD",
         storyPhase: StoryPhase.PEACEFUL_BEGINNINGS,
@@ -93,8 +93,8 @@ export const allScenes: Record<string, Scene> = {
         id: "seer_prophecy",
         imageUrl: '/scene-images/seer_prophecy-1747029157872.png',
         name: "The Seer's Tent",
-        text: "In a dimly lit tent at the edge of the village, the air smells of herbs and smoke. The ancient völva, eyes clouded with age and wisdom, beckons you forward. She reaches for your hand and begins to speak in a low voice filled with portent.",
-        location: "The Seer’s Tent, Coastal Village",
+        description: "In a dimly lit tent at the edge of the village, the air smells of herbs and smoke. The ancient völva, eyes clouded with age and wisdom, beckons you forward. She reaches for your hand and begins to speak in a low voice filled with portent.",
+        location: "The Seer's Tent, Coastal Village",
         season: "Late Spring, 793 AD",
         storyPhase: StoryPhase.PEACEFUL_BEGINNINGS,
         isRequired: true,
@@ -127,7 +127,7 @@ export const allScenes: Record<string, Scene> = {
         imageUrl: '/scene-images/viking_outpost-1747112846105.png',
     
         name: "The Viking Outpost",
-        text: "You arrive at a small Viking trading post. The settlers here have established good relations with the locals and share valuable information about the surrounding lands. They offer to join your expedition, bringing their knowledge and connections.",
+        description: "You arrive at a small Viking trading post. The settlers here have established good relations with the locals and share valuable information about the surrounding lands. They offer to join your expedition, bringing their knowledge and connections.",
         location: "Viking Trading Post",
         season: "Early Summer, 793 AD",
         storyPhase: StoryPhase.PEACEFUL_BEGINNINGS,
@@ -149,7 +149,7 @@ export const allScenes: Record<string, Scene> = {
         id: "armed_traders",
         imageUrl: '/scene-images/armed_traders-1747029704682.png',
         name: "Armed Traders",
-        text: "Your ship is well-prepared for any eventuality. The crew is trained in both trade and combat, and the ship's defenses are formidable. As you set sail, you feel confident in your ability to handle any situation that arises.",
+        description: "Your ship is well-prepared for any eventuality. The crew is trained in both trade and combat, and the ship's defenses are formidable. As you set sail, you feel confident in your ability to handle any situation that arises.",
         location: "Aboard the Longship",
         season: "Early Summer, 793 AD",
         storyPhase: StoryPhase.PEACEFUL_BEGINNINGS,
@@ -180,7 +180,7 @@ export const allScenes: Record<string, Scene> = {
     plan_first_raid: {
         id: "plan_first_raid",
         name: "Planning the First Raid",
-        text: "The village has chosen the path of the raider. As you gather with the warriors, the air is charged with anticipation. The target has been chosen, and now you must decide how to approach this first raid.",
+        description: "The village has chosen the path of the raider. As you gather with the warriors, the air is charged with anticipation. The target has been chosen, and now you must decide how to approach this first raid.",
         location: "Warrior's Hall",
         season: "Early Summer, 793 AD",
         storyPhase: StoryPhase.PEACEFUL_BEGINNINGS,
@@ -206,7 +206,7 @@ export const allScenes: Record<string, Scene> = {
     scouting_mission: {
         id: "scouting_mission",
         name: "The Scouting Mission",
-        text: "Under cover of darkness, your scouts return with detailed information about the target settlement. They've mapped the defenses, identified valuable resources, and learned about the local customs. This knowledge could be used for either peaceful trade or strategic advantage.",
+        description: "Under cover of darkness, your scouts return with detailed information about the target settlement. They've mapped the defenses, identified valuable resources, and learned about the local customs. This knowledge could be used for either peaceful trade or strategic advantage.",
         location: "Enemy Territory",
         season: "Early Summer, 793 AD",
         storyPhase: StoryPhase.PEACEFUL_BEGINNINGS,
@@ -234,7 +234,7 @@ export const allScenes: Record<string, Scene> = {
         imageUrl: '/scene-images/first_foreign_shore-1747030172104.png',
     
         name: "First Foreign Shore",
-        text: "After days at sea, your ship approaches an unfamiliar coastline. The beach is lined with dense forests, and smoke rises from what appears to be a thriving settlement inland. As you drop anchor in a hidden cove, the crew looks to you for guidance on how to proceed in this new land.",
+        description: "After days at sea, your ship approaches an unfamiliar coastline. The beach is lined with dense forests, and smoke rises from what appears to be a thriving settlement inland. As you drop anchor in a hidden cove, the crew looks to you for guidance on how to proceed in this new land.",
         location: "Unknown Foreign Coast",
         season: "Mid-Summer, 793 AD",
         storyPhase: StoryPhase.FIRST_VENTURES,
@@ -267,7 +267,7 @@ export const allScenes: Record<string, Scene> = {
         imageUrl: '/scene-images/peaceful_contact-1747111651483.png',
     
         name: "Peaceful First Contact",
-        text: "Your open approach is met with cautious curiosity. The local leaders agree to meet with you, presenting an opportunity for negotiation and alliance-building. The initial meeting goes well, and they seem interested in establishing trade relations.",
+        description: "Your open approach is met with cautious curiosity. The local leaders agree to meet with you, presenting an opportunity for negotiation and alliance-building. The initial meeting goes well, and they seem interested in establishing trade relations.",
         location: "Foreign Settlement",
         season: "Mid-Summer, 793 AD",
         storyPhase: StoryPhase.FIRST_VENTURES,
@@ -295,7 +295,7 @@ export const allScenes: Record<string, Scene> = {
         imageUrl: '/scene-images/covert_scouting-1747030512816.png',
     
         name: "Covert Scouting",
-        text: "Your scouts return with valuable information about the settlement's defenses, resources, and social structure. They've identified potential allies and enemies within the community, giving you multiple options for how to proceed.",
+        description: "Your scouts return with valuable information about the settlement's defenses, resources, and social structure. They've identified potential allies and enemies within the community, giving you multiple options for how to proceed.",
         location: "Foreign Settlement",
         season: "Mid-Summer, 793 AD",
         storyPhase: StoryPhase.FIRST_VENTURES,
@@ -323,7 +323,7 @@ export const allScenes: Record<string, Scene> = {
         imageUrl: '/scene-images/establish_colony-1747112298049.png',
     
         name: "Establishing the Colony",
-        text: "With a foothold in this new land, you begin the process of establishing a permanent Viking settlement. However, tensions rise as different factions within your group have conflicting visions for the colony's future.",
+        description: "With a foothold in this new land, you begin the process of establishing a permanent Viking settlement. However, tensions rise as different factions within your group have conflicting visions for the colony's future.",
         location: "New Viking Settlement",
         season: "Spring, 794 AD",
         storyPhase: StoryPhase.EXPANSION,
@@ -354,7 +354,7 @@ export const allScenes: Record<string, Scene> = {
     colony_flourishes: {
         id: "colony_flourishes",
         name: "A Flourishing Legacy",
-        text: "Years have passed, and your decisions have shaped the colony's growth and reputation. As you reflect on your journey from a small village to this thriving settlement, you must make one final choice that will define your legacy.",
+        description: "Years have passed, and your decisions have shaped the colony's growth and reputation. As you reflect on your journey from a small village to this thriving settlement, you must make one final choice that will define your legacy.",
         location: "Thriving Viking Colony",
         season: "Autumn, 800 AD",
         storyPhase: StoryPhase.LEGACY,
@@ -385,7 +385,7 @@ export const allScenes: Record<string, Scene> = {
     game_end: {
         id: "game_end",
         name: "The Saga Concludes",
-        text: "Your choices have written a unique saga of Viking adventure and ambition. The impact of your decisions will echo through the ages, shaping the future of your people and the lands you've touched.",
+        description: "Your choices have written a unique saga of Viking adventure and ambition. The impact of your decisions will echo through the ages, shaping the future of your people and the lands you've touched.",
         location: "The Annals of History",
         season: "The Passage of Time",
         storyPhase: StoryPhase.LEGACY,
@@ -395,7 +395,7 @@ export const allScenes: Record<string, Scene> = {
     fortify_village: {
         id: "fortify_village",
         name: "Fortifying the Village",
-        text: "The village has chosen to strengthen its defenses. As you oversee the construction of new palisades and watchtowers, you must decide how to balance security with the needs of daily life. The work is demanding, but the community is united in this effort.",
+        description: "The village has chosen to strengthen its defenses. As you oversee the construction of new palisades and watchtowers, you must decide how to balance security with the needs of daily life. The work is demanding, but the community is united in this effort.",
         location: "Village Perimeter",
         season: "Early Summer, 793 AD",
         storyPhase: StoryPhase.PEACEFUL_BEGINNINGS,
@@ -421,7 +421,7 @@ export const allScenes: Record<string, Scene> = {
     defense_training: {
         id: "defense_training",
         name: "Defense Training",
-        text: "The new defensive structures are taking shape, and now it's time to train the villagers in their use. You organize drills and practice sessions, teaching everyone how to respond to potential threats.",
+        description: "The new defensive structures are taking shape, and now it's time to train the villagers in their use. You organize drills and practice sessions, teaching everyone how to respond to potential threats.",
         location: "Village Training Grounds",
         season: "Mid-Summer, 793 AD",
         storyPhase: StoryPhase.PEACEFUL_BEGINNINGS,
@@ -442,7 +442,7 @@ export const allScenes: Record<string, Scene> = {
     secret_defenses: {
         id: "secret_defenses",
         name: "Secret Defenses",
-        text: "Your network of hidden passages and escape routes is nearly complete. These secret paths could save lives in an emergency, but they could also be used for more... strategic purposes.",
+        description: "Your network of hidden passages and escape routes is nearly complete. These secret paths could save lives in an emergency, but they could also be used for more... strategic purposes.",
         location: "Village Underground",
         season: "Mid-Summer, 793 AD",
         storyPhase: StoryPhase.PEACEFUL_BEGINNINGS,
@@ -463,7 +463,7 @@ export const allScenes: Record<string, Scene> = {
     warning_system: {
         id: "warning_system",
         name: "Warning System",
-        text: "The beacon system is ready, with signal fires prepared at key points around the village. This early warning system will help protect not just your village, but also nearby settlements.",
+        description: "The beacon system is ready, with signal fires prepared at key points around the village. This early warning system will help protect not just your village, but also nearby settlements.",
         location: "Village Watchtowers",
         season: "Mid-Summer, 793 AD",
         storyPhase: StoryPhase.PEACEFUL_BEGINNINGS,

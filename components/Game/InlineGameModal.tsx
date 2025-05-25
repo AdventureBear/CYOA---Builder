@@ -10,8 +10,8 @@ import { useGameStore } from "@/store/gameStore";
 function InlineGameModal() {
     const currentModal = useModalStore((state) => state.current());
     const pop = useModalStore((state) => state.pop);
-    const lastChoice = useGameStore((state) => state.lastChoice);
-    const choiceStack = useGameStore((state) => state.choiceStack);
+    // const lastChoice = useGameStore((state) => state.lastChoice);
+    // const choiceStack = useGameStore((state) => state.choiceStack);
     const pushChoice = useGameStore((state) => state.pushChoice);
     const popChoice = useGameStore((state) => state.popChoice);
   

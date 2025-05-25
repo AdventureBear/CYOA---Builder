@@ -4,6 +4,7 @@ export interface Choice {
     nextAction?: string;
     resultMessage?: string;
     resultButtonText?: string;
+    alignment?: Alignment;
 }
 
 export interface Scene {
@@ -19,6 +20,7 @@ export interface Scene {
     actions?: string[];
     parentSceneId?: string;
     locationImage?: string;
+    storyPhase?: StoryPhase;
 }
 
 export interface NPC {
@@ -137,3 +139,20 @@ export interface Outcome {
     key: string;
     amount?: number | undefined;
   }
+
+export enum Alignment {
+  Ljosbearer = "Ljosbearer",
+  Myrkrider = "Myrkrider",
+  Solheart = "Solheart",
+  Skuggasmith = "Skuggasmith",
+
+}
+
+export enum StoryPhase {
+  PEACEFUL_BEGINNINGS = 'PEACEFUL_BEGINNINGS',
+  FIRST_VENTURES = 'FIRST_VENTURES',
+  EXPANSION = 'EXPANSION',
+  SETTLEMENT = 'SETTLEMENT',
+  CONFLICT = 'CONFLICT',
+  LEGACY = 'LEGACY',
+}

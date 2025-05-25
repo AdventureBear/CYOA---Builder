@@ -37,7 +37,7 @@ useEffect(() => {
   };
   if (!scenes && game) fetchScenes();
  
-}, [game, setScenes, setActions]);
+}, [game, setScenes, setActions, scenes]);
 
   const loading = !scenes;
   
