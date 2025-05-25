@@ -1,8 +1,7 @@
 import React from 'react'
 import { Handle, NodeProps, Position } from 'reactflow'
-import { StoryPhase } from '@/app/types'
 
-const phaseColors: Record<StoryPhase, string> = {
+const phaseColors: Record<string, string> = {
   PEACEFUL_BEGINNINGS: '#fef3c7',
   FIRST_VENTURES: '#dbeafe',
   EXPANSION: '#d1fae5',
@@ -11,8 +10,8 @@ const phaseColors: Record<StoryPhase, string> = {
   LEGACY: '#e0e7ff'
 }
 
-export default function SceneCardNode({ id, data, selected }: NodeProps) {
-  const bgColor = phaseColors[data.storyPhase as StoryPhase] || '#f3f4f6'
+export default function SceneCardNode({ data, selected }: NodeProps) {
+  const bgColor = phaseColors[data.storyPhase as string] || '#f3f4f6'
 
 
   return (

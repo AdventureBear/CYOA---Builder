@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ReactFlow, {
   Background,
   Controls,
@@ -14,41 +14,28 @@ import 'reactflow/dist/style.css'
 import { allScenes as scenes } from '@/data/scenes'
 
 // import SceneCardNode from './sceneCardNode'
-import { Scene, StoryPhase } from '@/app/types'
-import { layoutByPhase } from '@/lib/layoutByPhase'
+import { Scene } from '@/app/types'
 import { sceneLayout } from '@/lib/layoutPhasesWithVerticalFlow'
 
 import { sceneNodeTypes } from '@/lib/sceneNodeTypes'
 
+const handleSaveToFile = async (scene: Scene) => {
+  const res = await fetch('/api/save-scene', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(scene)
+  })
 
-
-const phaseOrder: StoryPhase[] = [
-    StoryPhase.PEACEFUL_BEGINNINGS,
-    StoryPhase.FIRST_VENTURES,
-    StoryPhase.EXPANSION,
-    StoryPhase.CONFLICT,
-    StoryPhase.SETTLEMENT,
-    StoryPhase.LEGACY
-  ]
-  
-  const handleSaveToFile = async (scene: Scene) => {
-    const res = await fetch('/api/save-scene', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(scene)
-    })
-  
-    if (res.ok) {
-      alert('Scene saved to file!')
-    } else {
-      alert('Error saving scene.')
-    }
+  if (res.ok) {
+    alert('Scene saved to file!')
+  } else {
+    alert('Error saving scene.')
   }
-  
+}
+
 const SceneFlow = () => {
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedScene, setSelectedScene] = useState<Node | null>(null)
 
   console.log('sceneNodeTypes', sceneNodeTypes)
@@ -71,7 +58,6 @@ const SceneFlow = () => {
       data: {
         label: scene.name || scene.id,
         description: scene.text.slice(0, 100) + '...',
-        storyPhase: scene.storyPhase
       }
     }))
 
@@ -101,16 +87,10 @@ const SceneFlow = () => {
   const onNodesChange = (changes: NodeChange[]) => {
     setNodes(nds => applyNodeChanges(changes, nds))
   }
-  const onNodeClick = (_event: any, node: Node) => {
+  const onNodeClick = (_event: unknown, node: Node) => {
     console.log('node', node)
     setSelectedScene(node)
   }
-  const filteredEdges = edges.map(edge => ({
-    ...edge,
-    label: selectedNodeId === edge.source ? edge.label : undefined
-  }))
-
-
 
   return (
     <div style={{ width: '100%', height: '95vh' }}>
@@ -119,10 +99,9 @@ const SceneFlow = () => {
 
       <ReactFlow
         nodes={nodes}
-        edges={filteredEdges}
+        edges={edges}
         nodeTypes={sceneNodeTypes}
         onNodeClick={onNodeClick}
-        // onNodeClick={(_, node) => setSelectedNodeId(node.id)}
         onNodesChange={onNodesChange}
         fitView
         panOnScroll

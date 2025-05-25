@@ -1,13 +1,12 @@
 import { Node, Edge, Position } from 'reactflow'
-import { StoryPhase } from '@/app/types'
 
-const phaseOrder: StoryPhase[] = [
-  StoryPhase.PEACEFUL_BEGINNINGS,
-  StoryPhase.FIRST_VENTURES,
-  StoryPhase.EXPANSION,
-  StoryPhase.CONFLICT,
-  StoryPhase.SETTLEMENT,
-  StoryPhase.LEGACY
+const phaseOrder: string[] = [
+  'PEACEFUL_BEGINNINGS',
+  'FIRST_VENTURES',
+  'EXPANSION',
+  'CONFLICT',
+  'SETTLEMENT',
+  'LEGACY'
 ]
 
 export function sceneLayout(
@@ -19,18 +18,18 @@ export function sceneLayout(
   const columnHeight = 3       // number of cards in each vertical column
   const paddingBelowPhase = 100
 
-  const phaseToNodes: Record<StoryPhase, Node[]> = {
-    [StoryPhase.PEACEFUL_BEGINNINGS]: [],
-    [StoryPhase.FIRST_VENTURES]: [],
-    [StoryPhase.EXPANSION]: [],
-    [StoryPhase.CONFLICT]: [],
-    [StoryPhase.SETTLEMENT]: [],
-    [StoryPhase.LEGACY]: []
+  const phaseToNodes: Record<string, Node[]> = {
+    'PEACEFUL_BEGINNINGS': [],
+    'FIRST_VENTURES': [],
+    'EXPANSION': [],
+    'CONFLICT': [],
+    'SETTLEMENT': [],
+    'LEGACY': []
   }
 
   // Group nodes by phase
   nodes.forEach(node => {
-    const phase = node.data.storyPhase as StoryPhase
+    const phase = node.data.storyPhase as string
     if (phaseToNodes[phase]) {
       phaseToNodes[phase].push(node)
     }
@@ -42,7 +41,6 @@ export function sceneLayout(
   for (const phase of phaseOrder) {
     const phaseNodes = phaseToNodes[phase]
     const totalNodes = phaseNodes.length
-    const columnsNeeded = Math.ceil(totalNodes / columnHeight)
 
     // Layout nodes in vertical columns for this phase
     phaseNodes.forEach((node, index) => {

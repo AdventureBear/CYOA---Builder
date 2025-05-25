@@ -21,10 +21,6 @@ interface SceneProps {
 
 
 export default function SceneComponent({ scene, onChoice }: SceneProps) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-    
-
   const gameState = useGameStore((state) => state.gameState)
   const modal = useModalStore((state) => state.current())
 

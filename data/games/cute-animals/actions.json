@@ -447,5 +447,40 @@
         ]
       }
     ]
+  },
+  "find_mission": {
+    "id": "find_mission",
+    "trigger": "onChoice",
+    "conditions": [
+      {
+        "type": "TODO: Add condition type.",
+        "key": "TODO: Add condition key."
+      }
+    ],
+    "outcomes": [
+      {
+        "description": "TODO: Add outcome description.",
+        "stateChanges": [
+          {
+            "type": "TODO: Add state change type.",
+            "key": "TODO: Add state change key."
+          }
+        ],
+        "choices": [
+          {
+            "text": "TODO: Add choice text.",
+            "nextAction": "TODO: Add next action.",
+            "resultMessage": "TODO: Add result message.",
+            "resultButtonText": "TODO: Add result button text."
+          },
+          {
+            "text": "TODO: Add choice text.",
+            "nextScene": "TODO: Add jump to scene.",
+            "resultMessage": "TODO: Add result message.",
+            "resultButtonText": "TODO: Add result button text."
+          }
+        ]
+      }
+    ]
   }
 }

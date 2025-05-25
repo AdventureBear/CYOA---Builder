@@ -8,7 +8,7 @@ interface Action {
   name: string;
   description: string;
   type: string;
-  params: Record<string, any>;
+  params: Record<string, unknown>;
 }
 
 const defaultAction: Action = {

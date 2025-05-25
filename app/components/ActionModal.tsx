@@ -106,8 +106,8 @@ export default function ActionModal({ action, onSave, onClose, isEditing = false
     try {
       await onSave(form);
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to save action');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save action');
     } finally {
       setLoading(false);
     }

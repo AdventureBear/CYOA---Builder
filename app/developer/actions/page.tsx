@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import { Action, Trigger, Condition, Outcome, StateChange } from '@/app/types';
+import { Action, Condition, Outcome, StateChange } from '@/app/types';
 import { useSearchParams } from 'next/navigation';
 import ActionModal from '@/app/components/ActionModal';
 
@@ -83,78 +83,6 @@ export default function ActionsManager() {
     setForm(defaultAction);
     setEditIndex(null);
   }
-  function handleFormChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  }
-  function handleFailMessageChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setForm({ ...form, failMessage: e.target.value });
-  }
-  // --- Conditions ---
-  function handleConditionChange(idx: number, field: keyof Condition, value: string) {
-    const newConditions = [...(form.conditions || [])];
-    newConditions[idx] = { ...newConditions[idx], [field]: value };
-    setForm({ ...form, conditions: newConditions });
-  }
-  function addCondition() {
-    setForm({ ...form, conditions: [...(form.conditions || []), { type: 'hasItem', key: '', value: '' }] });
-  }
-  function removeCondition(idx: number) {
-    setForm({ ...form, conditions: (form.conditions || []).filter((_, i) => i !== idx) });
-  }
-  // --- Outcomes ---
-  function handleOutcomeChange(idx: number, field: keyof Outcome, value: string) {
-    const newOutcomes = [...(form.outcomes || [])];
-    newOutcomes[idx] = { ...newOutcomes[idx], [field]: value };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  function addOutcome() {
-    setForm({ ...form, outcomes: [...(form.outcomes || []), { description: '', stateChanges: [] }] });
-  }
-  function removeOutcome(idx: number) {
-    setForm({ ...form, outcomes: (form.outcomes || []).filter((_, i) => i !== idx) });
-  }
-  // --- StateChanges for Outcomes ---
-  function handleStateChangeChange(outIdx: number, scIdx: number, field: keyof StateChange, value: string | number) {
-    const newOutcomes = [...(form.outcomes || [])];
-    const newStateChanges = [...(newOutcomes[outIdx].stateChanges || [])];
-    if (field === 'type' && typeof value === 'string' && !['addItem', 'removeItem', 'setFlag'].includes(value)) return;
-    newStateChanges[scIdx] = { ...newStateChanges[scIdx], [field]: value };
-    newOutcomes[outIdx] = { ...newOutcomes[outIdx], stateChanges: newStateChanges as StateChange[] };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  function addStateChange(outIdx: number) {
-    const newOutcomes = [...(form.outcomes || [])];
-    const newStateChanges = [...(newOutcomes[outIdx].stateChanges || []), { type: 'addItem' as const, key: '', amount: 1 }];
-    newOutcomes[outIdx] = { ...newOutcomes[outIdx], stateChanges: newStateChanges as StateChange[] };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  function removeStateChange(outIdx: number, scIdx: number) {
-    const newOutcomes = [...(form.outcomes || [])];
-    const newStateChanges = newOutcomes[outIdx].stateChanges.filter((_, i) => i !== scIdx);
-    newOutcomes[outIdx] = { ...newOutcomes[outIdx], stateChanges: newStateChanges };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  // --- Choices for Outcomes ---
-  function handleChoiceChange(outIdx: number, choiceIdx: number, field: string, value: string) {
-    const newOutcomes = [...(form.outcomes || [])];
-    const newChoices = [...(newOutcomes[outIdx].choices || [])];
-    newChoices[choiceIdx] = { ...newChoices[choiceIdx], [field]: value };
-    newOutcomes[outIdx] = { ...newOutcomes[outIdx], choices: newChoices };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  function addChoice(outIdx: number) {
-    const newOutcomes = [...(form.outcomes || [])];
-    const newChoices = [...(newOutcomes[outIdx].choices || []), { text: '', nextAction: '', nextScene: '', resultMessage: '', resultButtonText: '' }];
-    newOutcomes[outIdx] = { ...newOutcomes[outIdx], choices: newChoices };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  function removeChoice(outIdx: number, choiceIdx: number) {
-    const newOutcomes = [...(form.outcomes || [])];
-    const newChoices = newOutcomes[outIdx].choices?.filter((_, i) => i !== choiceIdx) || [];
-    newOutcomes[outIdx] = { ...newOutcomes[outIdx], choices: newChoices };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     let updatedActions: Record<string, Action> = actionsObj ? { ...actionsObj } : {};
@@ -171,8 +99,8 @@ export default function ActionsManager() {
       if (!actionToSave) throw new Error('No action to save');
       await saveActionToDisk(actionToSave, game);
       closeModal();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert((err as Error)?.message || 'An error occurred');
     }
   }
   function confirmDelete(idx: number) {

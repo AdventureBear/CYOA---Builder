@@ -1,8 +1,4 @@
 'use client'
-import { useRouter } from 'next/navigation'
-import { useGameStore } from '@/store/gameStore'
-import { useEffect, useState } from 'react'
-import { initialGameState } from '@/lib/gameState'
 import Link from 'next/link'
 
 export default function SplashScreen() {

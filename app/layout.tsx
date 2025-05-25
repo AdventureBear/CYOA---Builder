@@ -3,7 +3,6 @@ import './globals.css'
 import { useState } from 'react'
 import { NewGameModal } from '@/components/Game/NewGameModal'
 // import { MenuPopover } from '@/components/Game/MenuPopover'
-import Breadcrumbs from '@/components/Game/Breadcrumbs'
 // import { GameModal } from '@/components/ModalComponent'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
