@@ -3,7 +3,9 @@
     "id": "forest_clearing",
     "location": "Forest Clearing",
     "description": "Hazel the squirrel wakes up to a bright morning in the forest. What will she do today?",
-    "actions": [],
+    "actions": [
+      "find_mission"
+    ],
     "choices": [
       {
         "text": "Go to the oak tree",
@@ -141,7 +143,9 @@
     "id": "rummage_leaves",
     "location": "Leaf Pile",
     "description": "You rummage through the leaves, and find many acorns!  Too many to carry.  You need to find a way to carry them all.",
-    "actions": ["stash_acorns"],
+    "actions": [
+      "stash_acorns"
+    ],
     "parentSceneId": "oak_tree",
     "choices": [
       {
