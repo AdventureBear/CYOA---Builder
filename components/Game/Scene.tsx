@@ -103,7 +103,7 @@ export default function SceneComponent({ scene, onChoice }: SceneProps) {
       <div className=" text-[#5a4632] bg-[#ece5db]/90">
           {/* Scene location, name and description below image */}
           <div className="w-full flex flex-col items-center px-4 py-3">
-            {/* Breadcrumbs above location, fixed height, small text */}
+            {/* Breadcrumbs (always visible, top of main area) */}
             <div className="w-full flex items-center justify-center min-h-[24px] max-h-[32px] text-xs text-[#a89b8c] mb-1 overflow-hidden">
               <Breadcrumbs />
             </div>
@@ -115,8 +115,8 @@ export default function SceneComponent({ scene, onChoice }: SceneProps) {
             {/* Scene description with fixed height for 5 lines, and Read more/Show less */}
             <div
               ref={descTextRef}
-              className={`text-[#3d2c1a] text-base leading-snug mb-4 w-full ${!descExpanded ? 'line-clamp-5 min-h-[6.5em] max-h-[6.5em] overflow-hidden' : 'min-h-[6.5em] max-h-[20em] overflow-y-auto'}`}
-              style={descExpanded ? {} : { maxHeight: '6.5em', minHeight: '6.5em', overflow: 'hidden' }}
+              className={`text-[#3d2c1a] text-base leading-snug mb-4 w-full ${!descExpanded ? (window.innerWidth >= 1024 ? 'line-clamp-3 min-h-[4em] max-h-[4em] overflow-hidden' : 'line-clamp-5 min-h-[6.5em] max-h-[6.5em] overflow-hidden') : 'min-h-[6.5em] max-h-[20em] overflow-y-auto'}`}
+              style={descExpanded ? {} : (typeof window !== 'undefined' && window.innerWidth >= 1024 ? { maxHeight: '4em', minHeight: '4em', overflow: 'hidden' } : { maxHeight: '6.5em', minHeight: '6.5em', overflow: 'hidden' })}
             >
               {scene.description}
             </div>
@@ -154,17 +154,23 @@ export default function SceneComponent({ scene, onChoice }: SceneProps) {
           {/* Inline Game Modal */}
           <InlineGameModal />
 
-          {/* Only show choices if there is no modal active (from the global modal store) */}
+          {/* Choices Panel: mobile and desktop */}
           {(!modal) && (
             <div className="flex flex-col gap-2 px-2 py-0 flex-1 overflow-y-auto">
-              {/* Choices Panel for mobile */}
+              {/* Mobile: choices panel */}
               <div className="bg-[#f5eee5] rounded-xl shadow-sm p-3 flex flex-col gap-2 lg:hidden">
                 <div className="text-xs text-[#bfae99] font-semibold mb-1">What do you do?</div>
                 {choices.map((choice, idx) => (
                   <ChoiceComponent key={idx} choice={choice} onChoice={onChoice} />
                 ))}
               </div>
-              {/* Desktop choices (if needed) could go here */}
+              {/* Desktop: choices panel */}
+              <div className="hidden lg:flex flex-col gap-2 bg-[#f5eee5] rounded-xl shadow-sm p-4 mt-2">
+                <div className="text-xs text-[#bfae99] font-semibold mb-1">What do you do?</div>
+                {choices.map((choice, idx) => (
+                  <ChoiceComponent key={idx} choice={choice} onChoice={onChoice} />
+                ))}
+              </div>
             </div>
           )}
 

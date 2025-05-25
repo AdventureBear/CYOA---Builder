@@ -7,6 +7,17 @@ const ACHIEVEMENT_ICONS: Record<string, string> = {
   friend_beaver: '🦫',
   gratitude_token: '🎟️',
   shiny_pebble: '💎',
+  bravery_badge: '🦁',
+  mystery_found: '🕵️‍♂️',
+  forest_explorer: '🌲',
+  puzzle_master: '🧩',
+  friendship: '🤝',
+  storyteller: '📖',
+  lucky_day: '🍀',
+  moonlit_walk: '🌙',
+  sunrise_seen: '🌅',
+  hidden_path: '🗺️',
+  robin_asked: '🪶',
   // Add more as needed
 };
 
