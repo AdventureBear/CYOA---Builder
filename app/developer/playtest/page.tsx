@@ -5,12 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useGameStore } from '@/store/gameStore';
 
 
-interface Scene {
-  id: string;
-  location: string;
-}
-
-
 export default function PlaytestAdventure() {
   const searchParams = useSearchParams();
   const game = searchParams?.get('game') || 'cute-animals';
@@ -42,7 +36,7 @@ export default function PlaytestAdventure() {
         setSelected(scenesArray[0].id);
         setBreadcrumbs(scenesArray[0].id);
       }
-    }, [scenesArray, selected]);
+    }, [scenesArray, selected, setBreadcrumbs]);
 
   function handleStart(selected: string) {
     console.log('handleStart', selected);

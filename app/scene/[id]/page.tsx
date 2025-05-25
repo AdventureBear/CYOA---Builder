@@ -9,8 +9,6 @@ import DeadEndScene from '@/components/Game/DeadEndScene'
 import { initialGameState } from '@/lib/gameState'
 import AddScene from '@/components/Dev/AddScene'
 import { Scene, Choice } from '@/app/types'
-import Breadcrumbs from '@/components/Game/Breadcrumbs'
-// import scenesData from '@/data/games/cute-animals/scenes.json'
 
 
 
@@ -21,7 +19,6 @@ export default function Page() {
   const { gameState, resetGame, actions, setActions, setLastChoice, pushChoice, resetChoiceStack } = useGameStore()
   const [showAddScene, setShowAddScene] = useState(false);
   const searchParams = useSearchParams();
-  const isPlaytest = searchParams?.get('playtest') === '1';
   const game = searchParams?.get('game') || 'cute-animals';
   console.log('breadcrumbs', gameState.breadcrumbs);
 
@@ -40,7 +37,7 @@ useEffect(() => {
   };
   if (!scenes && game) fetchScenes();
  
-}, [game]);
+}, [game, setScenes, setActions]);
 
   const loading = !scenes;
   

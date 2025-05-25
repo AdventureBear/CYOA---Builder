@@ -3,22 +3,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useGameStore } from '@/store/gameStore';
-import type { Scene, Action, Trigger } from '@/app/types';
-import ActionModal from '@/app/components/ActionModal';
-
-function getSceneFilenames(game: string) {
-  // For now, hardcode for cute-animals; in a real app, fetch from API
-  if (game === 'cute-animals') {
-    return [
-      'scene-intro.json',
-      'scene-oak_tree.json',
-      'scene-nut_grove.json',
-      'scene-riverbank.json',
-    ];
-  }
-  // For new games, return empty or fetch dynamically
-  return [];
-}
+import type { Scene, Action } from '@/app/types';
+import ActionModal from '@/components/Dev/ActionModal';
 
 const defaultScene = {
   id: '',
@@ -42,54 +28,6 @@ async function saveSceneToDisk(scene: Scene, game: string) {
     const data = await res.json();
     throw new Error(data.error || 'Failed to save scene');
   }
-}
-
-// SceneActionsEditor component for actions array UI
-interface SceneActionsEditorProps {
-  form: Scene;
-  setForm: (scene: Scene) => void;
-}
-function SceneActionsEditor({ form, setForm }: SceneActionsEditorProps) {
-  const actionsObj = useGameStore((state) => state.actions);
-  const actions = actionsObj ? Object.values(actionsObj) : [];
-  const [selectedAction, setSelectedAction] = useState<string>('');
-  const [customAction, setCustomAction] = useState<string>('');
-
-  function addAction(actionId: string) {
-    if (!actionId) return;
-    if ((form.actions || []).includes(actionId)) return;
-    setForm({ ...form, actions: [...(form.actions || []), actionId] });
-    setSelectedAction('');
-    setCustomAction('');
-  }
-  function removeAction(idx: number) {
-    setForm({ ...form, actions: (form.actions || []).filter((_: string, i: number) => i !== idx) });
-  }
-
-  return (
-    <div style={{ marginBottom: 0 }}>
-      <label style={{ fontWeight: 600, fontSize: 15 }}>Actions</label>
-      <div style={{ display: 'flex', gap: 8, marginTop: 2, alignItems: 'center' }}>
-        <select value={selectedAction} onChange={e => setSelectedAction(e.target.value)} style={{ flex: 2, padding: 6, borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15 }}>
-          <option value="">Select existing action...</option>
-          {actions.length === 0 && <option value="" disabled>No actions available</option>}
-          {actions.map((a: { id: string }) => (
-            <option key={a.id} value={a.id}>{a.id}</option>
-          ))}
-        </select>
-        <input placeholder="Or type new action ID" value={customAction} onChange={e => setCustomAction(e.target.value)} style={{ flex: 2, padding: 6, borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15 }} />
-        <button type="button" onClick={() => addAction(selectedAction || customAction)} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>Add</button>
-      </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-        {(form.actions || []).map((a: string, idx: number) => (
-          <span key={a} style={{ display: 'flex', alignItems: 'center', background: '#e0e7ef', color: '#334155', borderRadius: 12, padding: '4px 12px', fontSize: 14, fontWeight: 500, marginRight: 4, marginBottom: 4 }}>
-            {a}
-            <button type="button" onClick={() => removeAction(idx)} style={{ marginLeft: 6, background: 'none', border: 'none', color: '#ef4444', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>×</button>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 // More colorful pastel backgrounds
@@ -124,8 +62,8 @@ function SceneActionsBox({ form, setForm, actionsObj, onEditAction, onUpdateActi
     const found = actionsObj && actionsObj[id];
     return {
       id,
-      trigger: found && (found as any).trigger ? (found as any).trigger : 'onEnter',
-      outcome: found && (found as any).outcome ? (found as any).outcome : '',
+      trigger: found && (found as Action).trigger ? (found as Action).trigger : 'onEnter',
+      outcome: found && Array.isArray((found as Action).outcomes) && (found as Action).outcomes.length > 0 ? (found as Action).outcomes[0].description || '' : '',
     };
   });
 
@@ -231,7 +169,6 @@ export default function SceneManager() {
   const game = searchParams?.get('game') || 'cute-animals';
 
   const scenes: Scene[] = scenesObj ? Object.values(scenesObj) : [];
-  const actions: Action[] = actionsObj ? Object.values(actionsObj) : [];
 
   // State for modal-on-modal action editing
   const [showActionModal, setShowActionModal] = useState(false);
@@ -280,9 +217,6 @@ export default function SceneManager() {
       setForm({ ...form, [name]: value });
     }
   }
-  function handleActionsChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm({ ...form, actions: e.target.value.split(',').map(a => a.trim()).filter(Boolean) });
-  }
   function handleChoiceChange(idx: number, field: keyof Scene['choices'][0], value: string) {
     const newChoices = [...form.choices];
     newChoices[idx] = { ...newChoices[idx], [field]: value };
@@ -296,7 +230,7 @@ export default function SceneManager() {
   }
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    let updatedScenes: Record<string, Scene> = scenesObj ? { ...scenesObj } : {};
+    const updatedScenes: Record<string, Scene> = scenesObj ? { ...scenesObj } : {};
     let sceneToSave: Scene | undefined = undefined;
     if (editIndex === null) {
       updatedScenes[form.id] = form;
@@ -310,8 +244,8 @@ export default function SceneManager() {
       if (!sceneToSave) throw new Error('No scene to save');
       await saveSceneToDisk(sceneToSave, game);
       closeModal();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Failed to save scene');
     }
   }
   function confirmDelete(idx: number) {

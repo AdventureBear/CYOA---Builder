@@ -2,9 +2,9 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import { Action, Trigger, Condition, Outcome, StateChange } from '@/app/types';
+import { Action } from '@/app/types';
 import { useSearchParams } from 'next/navigation';
-import ActionModal from '@/app/components/ActionModal';
+import ActionModal from '@/components/Dev/ActionModal';
 
 const defaultAction: Action = {
   id: '',
@@ -32,7 +32,6 @@ export default function ActionsManager() {
   const actions: Action[] = actionsObj ? Object.values(actionsObj) : [];
   const [showModal, setShowModal] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [form, setForm] = useState<Action>(defaultAction);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const searchParams = useSearchParams();
   const game = searchParams?.get('game') || 'cute-animals';
@@ -68,112 +67,17 @@ export default function ActionsManager() {
   }, [game, actionsObj, setActions]);
 
   function openAddModal() {
-    setForm(defaultAction);
     setEditIndex(null);
     setShowModal(true);
   }
   function openEditModal(idx: number) {
     if (!actions) return;
-    setForm(actions[idx]);
     setEditIndex(idx);
     setShowModal(true);
   }
   function closeModal() {
     setShowModal(false);
-    setForm(defaultAction);
     setEditIndex(null);
-  }
-  function handleFormChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  }
-  function handleFailMessageChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setForm({ ...form, failMessage: e.target.value });
-  }
-  // --- Conditions ---
-  function handleConditionChange(idx: number, field: keyof Condition, value: string) {
-    const newConditions = [...(form.conditions || [])];
-    newConditions[idx] = { ...newConditions[idx], [field]: value };
-    setForm({ ...form, conditions: newConditions });
-  }
-  function addCondition() {
-    setForm({ ...form, conditions: [...(form.conditions || []), { type: 'hasItem', key: '', value: '' }] });
-  }
-  function removeCondition(idx: number) {
-    setForm({ ...form, conditions: (form.conditions || []).filter((_, i) => i !== idx) });
-  }
-  // --- Outcomes ---
-  function handleOutcomeChange(idx: number, field: keyof Outcome, value: string) {
-    const newOutcomes = [...(form.outcomes || [])];
-    newOutcomes[idx] = { ...newOutcomes[idx], [field]: value };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  function addOutcome() {
-    setForm({ ...form, outcomes: [...(form.outcomes || []), { description: '', stateChanges: [] }] });
-  }
-  function removeOutcome(idx: number) {
-    setForm({ ...form, outcomes: (form.outcomes || []).filter((_, i) => i !== idx) });
-  }
-  // --- StateChanges for Outcomes ---
-  function handleStateChangeChange(outIdx: number, scIdx: number, field: keyof StateChange, value: string | number) {
-    const newOutcomes = [...(form.outcomes || [])];
-    const newStateChanges = [...(newOutcomes[outIdx].stateChanges || [])];
-    if (field === 'type' && typeof value === 'string' && !['addItem', 'removeItem', 'setFlag'].includes(value)) return;
-    newStateChanges[scIdx] = { ...newStateChanges[scIdx], [field]: value };
-    newOutcomes[outIdx] = { ...newOutcomes[outIdx], stateChanges: newStateChanges as StateChange[] };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  function addStateChange(outIdx: number) {
-    const newOutcomes = [...(form.outcomes || [])];
-    const newStateChanges = [...(newOutcomes[outIdx].stateChanges || []), { type: 'addItem' as const, key: '', amount: 1 }];
-    newOutcomes[outIdx] = { ...newOutcomes[outIdx], stateChanges: newStateChanges as StateChange[] };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  function removeStateChange(outIdx: number, scIdx: number) {
-    const newOutcomes = [...(form.outcomes || [])];
-    const newStateChanges = newOutcomes[outIdx].stateChanges.filter((_, i) => i !== scIdx);
-    newOutcomes[outIdx] = { ...newOutcomes[outIdx], stateChanges: newStateChanges };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  // --- Choices for Outcomes ---
-  function handleChoiceChange(outIdx: number, choiceIdx: number, field: string, value: string) {
-    const newOutcomes = [...(form.outcomes || [])];
-    const newChoices = [...(newOutcomes[outIdx].choices || [])];
-    newChoices[choiceIdx] = { ...newChoices[choiceIdx], [field]: value };
-    newOutcomes[outIdx] = { ...newOutcomes[outIdx], choices: newChoices };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  function addChoice(outIdx: number) {
-    const newOutcomes = [...(form.outcomes || [])];
-    const newChoices = [...(newOutcomes[outIdx].choices || []), { text: '', nextAction: '', nextScene: '', resultMessage: '', resultButtonText: '' }];
-    newOutcomes[outIdx] = { ...newOutcomes[outIdx], choices: newChoices };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  function removeChoice(outIdx: number, choiceIdx: number) {
-    const newOutcomes = [...(form.outcomes || [])];
-    const newChoices = newOutcomes[outIdx].choices?.filter((_, i) => i !== choiceIdx) || [];
-    newOutcomes[outIdx] = { ...newOutcomes[outIdx], choices: newChoices };
-    setForm({ ...form, outcomes: newOutcomes });
-  }
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    let updatedActions: Record<string, Action> = actionsObj ? { ...actionsObj } : {};
-    let actionToSave: Action | undefined = undefined;
-    if (editIndex === null) {
-      updatedActions[form.id] = form;
-      actionToSave = form;
-    } else if (actions[editIndex]) {
-      updatedActions[actions[editIndex].id] = form;
-      actionToSave = form;
-    }
-    setActions(updatedActions);
-    try {
-      if (!actionToSave) throw new Error('No action to save');
-      await saveActionToDisk(actionToSave, game);
-      closeModal();
-    } catch (err: any) {
-      alert(err.message);
-    }
   }
   function confirmDelete(idx: number) {
     setDeleteIndex(idx);
@@ -191,8 +95,7 @@ export default function ActionsManager() {
   }
 
   // Handler to add a missing action
-  function handleAddMissingAction(id: string) {
-    setForm({ ...defaultAction, id });
+  function handleAddMissingAction() {
     setEditIndex(null);
     setShowModal(true);
   }
@@ -228,7 +131,7 @@ export default function ActionsManager() {
               {missingActionIds.map(id => (
                 <li key={id} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
                   <span style={{ fontWeight: 600, color: '#d97706', fontSize: 16 }}>{id}</span>
-                  <button type="button" onClick={() => handleAddMissingAction(id)} style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 16px', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>Add Action</button>
+                  <button type="button" onClick={handleAddMissingAction} style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 16px', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>Add Action</button>
                 </li>
               ))}
             </ul>

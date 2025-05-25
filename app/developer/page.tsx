@@ -1,6 +1,5 @@
 'use client'
 import Link from 'next/link';
-import { useState } from 'react';
 
 const games = [
   { id: 'cute-animals', name: 'Cute Animals (Sample)' },
