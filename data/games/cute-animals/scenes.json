@@ -3,9 +3,7 @@
     "id": "forest_clearing",
     "location": "Forest Clearing",
     "description": "Hazel the squirrel wakes up to a bright morning in the forest. What will she do today?",
-    "actions": [
-  
-    ],
+    "actions": [],
     "choices": [
       {
         "text": "Go to the oak tree",
@@ -58,7 +56,8 @@
     "location": "Birds' Nest",
     "description": "You climb up to the birds' nest. The mother bird chirps anxiously as you see a baby bird that has fallen out of the nest.",
     "actions": [
-      "help_bird",   "find_message"
+      "help_bird",
+      "find_message"
     ],
     "choices": [
       {
@@ -109,7 +108,8 @@
     "location": "Sunny Meadow",
     "description": "The meadow is full of wildflowers and butterflies. It feels peaceful here.",
     "actions": [
-      "find_flower", "meet_robin_in_meadow"
+      "find_flower",
+      "meet_robin_in_meadow"
     ],
     "choices": [
       {
@@ -146,7 +146,6 @@
     "actions": [
       "stash_acorns"
     ],
-   
     "choices": [
       {
         "text": "Go back to the Oak Tree.",
@@ -164,7 +163,29 @@
       {
         "text": "Climb back down the tree.",
         "nextNodeId": "oak_tree"
+      },
+      {
+        "text": "Jump off because you are a flying squirell ",
+        "nextNodeId": "flying_in_air"
       }
     ]
+  },
+  "flying_in_air": {
+    "id": "flying_in_air",
+    "name": "",
+    "description": "asdfa",
+    "location": "asdfa",
+    "season": "",
+    "isRequired": false,
+    "choices": [
+      {
+        "text": "asdf",
+        "nextNodeId": "asdf"
+      }
+    ],
+    "actions": [
+      "run_faster"
+    ],
+    "locationImage": ""
   }
 }

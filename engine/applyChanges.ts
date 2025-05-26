@@ -18,7 +18,6 @@ export function applyChanges(
       case "addItem": {
         const qty = change.amount ?? 1;
         next.inventory[change.key] = (next.inventory[change.key] ?? 0) + qty;
-        console.log('Added item:', change.key, 'qty:', qty, 'next:', next.inventory[change.key]);
         break;
       }
       case "removeItem": {
@@ -30,7 +29,6 @@ export function applyChanges(
       }
       case "setFlag": {
         next.flags[change.key] = true;
-        console.log('Set flag:', change.key, 'next:', next.flags[change.key]);
         break;
       }
     }
