@@ -442,6 +442,8 @@ export default function SceneManagerClient() {
             // Optionally, persist to disk here
           }}
           onClose={handleCloseActionModal}
+          actions={Object.values(actionsObj)}
+          scenes={Object.values(scenesObj)}
         />
       )}
     </div>

@@ -150,6 +150,8 @@ export default function ActionsManagerClient() {
             await saveActionToDisk(updatedAction, game);
           }}
           onClose={closeModal}
+          actions={actions}
+          scenes={scenes}
         />
       )}
       {/* Delete Confirmation */}
