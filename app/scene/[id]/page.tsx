@@ -4,11 +4,12 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useRef, useEffect, useState, useMemo } from 'react'
 import SceneComponent from '@/components/Game/Scene'
 import { useGameStore } from '@/store/gameStore'
-import { logEntry, runActions } from '@/engine/actionRunner'
+import { runActions } from '@/engine/actionRunner'
 import DeadEndScene from '@/components/Game/DeadEndScene'
 import { initialGameState } from '@/lib/gameState'
 import AddScene from '@/components/Dev/AddScene'
 import { Scene, Choice } from '@/app/types'
+import { logEvent } from '@/lib/logger'
 
 
 
@@ -90,7 +91,7 @@ useEffect(() => {
     resetChoiceStack();
     pushChoice(choice.text);
     if (!currentScene) return;
-    logEntry("choice", {
+    logEvent("choice", {
       id: currentScene.location,    
       description: choice.text
     });
