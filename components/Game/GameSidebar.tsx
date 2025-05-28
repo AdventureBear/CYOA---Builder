@@ -20,6 +20,7 @@ const GameSidebar: React.FC<GameSidebarProps> = ({ inventory, achievements }) =>
     </div>
     <div>
       <h2 className="text-lg font-bold mb-2">Journal</h2>
+      
             <DiaryPanel />    
     </div>
   </aside>

@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState , useMemo} from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useGameStore } from '@/store/gameStore';
 import type { Scene, Action } from '@/app/types';
@@ -99,59 +99,60 @@ function SceneActionsBox({ form, setForm, actionsObj, onEditAction, onUpdateActi
   }
 
   return (
-    <div style={{ background: pastelActions, border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, marginBottom: 16, width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-        <label style={{ fontWeight: 600, fontSize: 16 }}>Actions</label>
-        <button type="button" onClick={handleAddAction} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginLeft: 2 }}>+</button>
-      </div>
-      {/* Header row */}
-      {actionRows.length > 0 && (
-        <div style={{ display: 'flex', gap: 8, fontWeight: 600, fontSize: 14, marginBottom: 2 }}>
-          <div style={{ flex: 2 }}>Action</div>
-          <div style={{ flex: 1 }}>Trigger</div>
-          <div style={{ flex: 3 }}>Outcome</div>
-          <div style={{ width: 80 }}></div>
-        </div>
-      )}
-      {/* Action rows */}
-      {actionRows.map((a, idx) => (
-        <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <input value={a.id} readOnly style={{ flex: 2, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14, background: '#f9fafb' }} />
-          <select value={a.trigger} onChange={e => handleTriggerChange(idx, e.target.value)} style={{ flex: 1, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }}>
-            {triggers.map((t: string) => <option key={t} value={t}>{t}</option>)}
-          </select>
-          <input value={a.outcome || ''} onChange={e => handleOutcomeChange(idx, e.target.value)} placeholder="Outcome note" style={{ flex: 3, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }} />
-          <button type="button" onClick={() => onEditAction(a.id)} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, fontSize: 13, cursor: 'pointer', marginRight: 2 }}>Edit</button>
-          <button type="button" onClick={() => handleDelete(idx)} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Delete</button>
-        </div>
-      ))}
-      {/* If no actions, show only Add button */}
-      {actionRows.length === 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
-          <button type="button" onClick={handleAddAction} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginLeft: 2 }}>+</button>
-        </div>
-      )}
-      {/* Add Action Modal */}
-      {showAddModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
-          <div style={{ background: '#fff', borderRadius: 10, padding: 24, minWidth: 320, boxShadow: '0 4px 24px #0002', textAlign: 'center' }}>
-            <h4 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Add Action</h4>
-            <div style={{ marginBottom: 12 }}>
-              <select value={selectedExisting} onChange={e => setSelectedExisting(e.target.value)} style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15, marginBottom: 8 }}>
-                <option value="">Select existing action...</option>
-                {actions.map((a: Action) => <option key={a.id} value={a.id}>{a.id}</option>)}
-              </select>
-              <div style={{ fontSize: 13, color: '#64748b', margin: '6px 0' }}>or add a new action ID</div>
-              <input value={newActionId} onChange={e => setNewActionId(e.target.value)} placeholder="New action ID" style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15 }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
-              <button type="button" onClick={() => setShowAddModal(false)} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-              <button type="button" onClick={handleSaveNewAction} style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Save</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    // <div style={{ background: pastelActions, border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, marginBottom: 16, width: '100%' }}>
+    //   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+    //     <label style={{ fontWeight: 600, fontSize: 16 }}>Actions</label>
+    //     <button type="button" onClick={handleAddAction} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginLeft: 2 }}>+</button>
+    //   </div>
+    //   {/* Header row */}
+    //   {actionRows.length > 0 && (
+    //     <div style={{ display: 'flex', gap: 8, fontWeight: 600, fontSize: 14, marginBottom: 2 }}>
+    //       <div style={{ flex: 2 }}>Action</div>
+    //       <div style={{ flex: 1 }}>Trigger</div>
+    //       <div style={{ flex: 3 }}>Outcome</div>
+    //       <div style={{ width: 80 }}></div>
+    //     </div>
+    //   )}
+    //   {/* Action rows */}
+    //   {actionRows.map((a, idx) => (
+    //     <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+    //       <input value={a.id} readOnly style={{ flex: 2, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14, background: '#f9fafb' }} />
+    //       <select value={a.trigger} onChange={e => handleTriggerChange(idx, e.target.value)} style={{ flex: 1, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }}>
+    //         {triggers.map((t: string) => <option key={t} value={t}>{t}</option>)}
+    //       </select>
+    //       <input value={a.outcome || ''} onChange={e => handleOutcomeChange(idx, e.target.value)} placeholder="Outcome note" style={{ flex: 3, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }} />
+    //       <button type="button" onClick={() => onEditAction(a.id)} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, fontSize: 13, cursor: 'pointer', marginRight: 2 }}>Edit</button>
+    //       <button type="button" onClick={() => handleDelete(idx)} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Delete</button>
+    //     </div>
+    //   ))}
+    //   {/* If no actions, show only Add button */}
+    //   {actionRows.length === 0 && (
+    //     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+    //       <button type="button" onClick={handleAddAction} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginLeft: 2 }}>+</button>
+    //     </div>
+    //   )}
+    //   {/* Add Action Modal */}
+    //   {showAddModal && (
+    //     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+    //       <div style={{ background: '#fff', borderRadius: 10, padding: 24, minWidth: 320, boxShadow: '0 4px 24px #0002', textAlign: 'center' }}>
+    //         <h4 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Add Action</h4>
+    //         <div style={{ marginBottom: 12 }}>
+    //           <select value={selectedExisting} onChange={e => setSelectedExisting(e.target.value)} style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15, marginBottom: 8 }}>
+    //             <option value="">Select existing action...</option>
+    //             {actions.map((a: Action) => <option key={a.id} value={a.id}>{a.id}</option>)}
+    //           </select>
+    //           <div style={{ fontSize: 13, color: '#64748b', margin: '6px 0' }}>or add a new action ID</div>
+    //           <input value={newActionId} onChange={e => setNewActionId(e.target.value)} placeholder="New action ID" style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15 }} />
+    //         </div>
+    //         <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+    //           <button type="button" onClick={() => setShowAddModal(false)} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+    //           <button type="button" onClick={handleSaveNewAction} style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Save</button>
+    //         </div>
+    //       </div>
+    //     </div>
+    //   )}
+    // </div>
+    <h1>Scene Actions</h1>
   );
 }
 
@@ -174,17 +175,22 @@ export default function SceneManagerClient() {
   const [showActionModal, setShowActionModal] = useState(false);
   const [editingActionId, setEditingActionId] = useState<string | null>(null);
 
-  // Find missing scenes referenced by choices[].nextNodeId
-  const existingSceneIds = new Set(scenes.map(s => s.id));
-  const referencedSceneIds = new Set<string>();
-  scenes.forEach(scene => {
-    scene.choices.forEach(choice => {
-      if (choice.nextNodeId && !existingSceneIds.has(choice.nextNodeId)) {
-        referencedSceneIds.add(choice.nextNodeId);
+  const missingSceneIds = useMemo(() => {
+    if (!scenes || !Array.isArray(scenes) || scenes.length === 0) return []
+    const existingSceneIds = new Set(scenes.map((s) => s.id))
+    const referencedSceneIds = new Set<string>()
+    scenes.forEach((scene) => {
+      if (scene.choices && Array.isArray(scene.choices)) {
+        scene.choices.forEach((choice) => {
+          if (choice.nextNodeId && !existingSceneIds.has(choice.nextNodeId)) {
+            referencedSceneIds.add(choice.nextNodeId)
+          }
+        })
       }
-    });
-  });
-  const missingSceneIds = Array.from(referencedSceneIds).filter(id => !existingSceneIds.has(id));
+    })
+    return Array.from(referencedSceneIds).filter((id) => !existingSceneIds.has(id))
+  }, [scenes])
+
 
   // Handler to add a missing scene
   function handleAddMissingScene(id: string) {
@@ -289,6 +295,7 @@ export default function SceneManagerClient() {
   }
 
   return (
+    // <h1>Scene Manager</h1>
     <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#1a202c', padding: 32 }}>
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
         <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Scene Manager</h2>

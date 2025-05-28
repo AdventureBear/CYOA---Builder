@@ -1,0 +1,1225 @@
+diff --git a/app/developer/[game]/page.tsx b/app/developer/[game]/page.tsx
+index 48e2e18..5896b82 100644
+--- a/app/developer/[game]/page.tsx
++++ b/app/developer/[game]/page.tsx
+@@ -19,6 +19,7 @@ export default function GameLandingPage({ params }: { params: { game: string } }
+           <Link href={`/developer/scenes?game=${game.id}`} style={{ padding: '18px 0', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 20, textDecoration: 'none', boxShadow: '0 2px 8px #0001', letterSpacing: 1 }}>Scene Manager</Link>
+           <Link href={`/developer/actions?game=${game.id}`} style={{ padding: '18px 0', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 20, textDecoration: 'none', boxShadow: '0 2px 8px #0001', letterSpacing: 1 }}>Action Manager</Link>
+           <Link href={`/developer/playtest?game=${game.id}`} style={{ padding: '18px 0', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 20, textDecoration: 'none', boxShadow: '0 2px 8px #0001', letterSpacing: 1 }}>Playtest</Link>
++          <Link href={`/developer/${game.id}/story-threader`} style={{ padding: '18px 0', background: '#22c55e', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 20, textDecoration: 'none', boxShadow: '0 2px 8px #0001', letterSpacing: 1 }}>Story Threader</Link>
+         </div>
+       </div>
+     </div>
+diff --git a/app/developer/[game]/story-threader/page.tsx b/app/developer/[game]/story-threader/page.tsx
+new file mode 100644
+index 0000000..bacc068
+--- /dev/null
++++ b/app/developer/[game]/story-threader/page.tsx
+@@ -0,0 +1,11 @@
++import StoryThreader from '@/components/Dev/StoryThreader';
++import Link from 'next/link';
++
++export default function StoryThreaderPage({ params }: { params: { game: string } }) {
++  return (
++    <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#1a202c', padding: 32 }}>
++      <Link href={`/developer/${params.game}`} style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500, fontSize: 18, marginBottom: 24, display: 'inline-block' }}>&larr; Back to Game Dashboard</Link>
++      <StoryThreader />
++    </div>
++  );
++} 
+\ No newline at end of file
+diff --git a/app/developer/scenes/SceneManagerClient.tsx b/app/developer/scenes/SceneManagerClient.tsx
+index 45ffe1d..80e6359 100644
+--- a/app/developer/scenes/SceneManagerClient.tsx
++++ b/app/developer/scenes/SceneManagerClient.tsx
+@@ -168,6 +168,7 @@ export default function SceneManagerClient() {
+   const game = searchParams?.get('game') || 'cute-animals';
+ 
+   const scenes: Scene[] = scenesObj ? Object.values(scenesObj) : [];
++  console.log('scenes', scenes);
+ 
+   // State for modal-on-modal action editing
+   const [showActionModal, setShowActionModal] = useState(false);
+diff --git a/app/scene/[id]/page.tsx b/app/scene/[id]/page.tsx
+index 481cb0d..c65c960 100644
+--- a/app/scene/[id]/page.tsx
++++ b/app/scene/[id]/page.tsx
+@@ -9,6 +9,7 @@ import DeadEndScene from '@/components/Game/DeadEndScene'
+ import { initialGameState } from '@/lib/gameState'
+ import AddScene from '@/components/Dev/AddScene'
+ import { Scene, Choice } from '@/app/types'
++import { logEvent } from '@/lib/logger'
+ 
+ 
+ 
+@@ -63,15 +64,37 @@ useEffect(() => {
+       Object.keys(actions).length > 0
+     ) {
+       hasRunActions.current = true;
+-      runActions(currentScene.actions, "onEnter", gameState, actions);
++      // runActions(currentScene.actions, "onEnter", gameState, actions);
++
++      // --- call runner and catch an override -----------------
++      const override = runActions(
++        currentScene.actions,
++        "onEnter",
++        gameState,
++        actions
++      );
++      console.log('override', override);
++
++      // --- if a router action asked for a detour, go there ----
++      if (override && override !== id) {
++        useGameStore.getState().updateBreadcrumbs(override); // optional
++        router.replace(`/scene/${override}`);                // swap URL
++        return;                                              // stop: new scene will mount
++      }
++
++
+     }
+-  }, [currentScene, gameState, actions])
++  }, [currentScene, gameState, actions,id,router])
+ 
+   const handleChoice = (choice: Choice) => {
+     setLastChoice(choice.text);
+     resetChoiceStack();
+     pushChoice(choice.text);
+     if (!currentScene) return;
++    logEvent("choice", {
++      id: currentScene.location,    
++      description: choice.text
++    });
+     if (choice.nextAction && actions && Object.keys(actions).length > 0) {
+       runActions([choice.nextAction], "onChoice", gameState, actions);
+     }
+diff --git a/app/types.ts b/app/types.ts
+index 67bb9e1..76da45c 100644
+--- a/app/types.ts
++++ b/app/types.ts
+@@ -36,7 +36,8 @@ export interface GameState {
+     reputation: Record<string, number>;
+     health: number;
+     npcs: Record<string, NPC>;
+-    timeOfDay: 'morning' | 'afternoon' | 'dusk' | 'night';
++    timeOfDay: 'dawn' | 'sunrise'| 'morning' | 'noon'  |'afternoon' |  'evening' |  'sunset' | 'dusk' | 'night' |  'midnight'  ;
++    season: 'spring' | 'summer' | 'autumn' | 'winter';
+     breadcrumbs: string[];
+ }
+ 
+@@ -112,6 +113,7 @@ export interface Outcome {
+     stateChanges: StateChange[];
+     nextSceneOverride?: string;   // optional detour
+     choices?: Choice[];
++    conditions?: Condition[]; // for random encoutners, escalating encounters, etc.
+   }
+   
+   export interface Action {
+@@ -126,7 +128,7 @@ export interface Outcome {
+ 
+ 
+   export interface Condition {
+-    type: "hasItem" | "flagSet" | "flagNotSet" | "random" | "reputation" | "doesNotHaveItem";
++    type: "hasItem" | "flagSet" | "flagNotSet" | "random" | "reputation" | "doesNotHaveItem" | "seasonIs" | "timeOfDayIs";
+     key?:   string;        // item name, flag id, etc.
+     value?: ConditionValue;           // expected value (true, 3+, etc.)
+     chance?: number;       // 0–1 for random rolls
+diff --git a/components/Dev/StoryThreader.tsx b/components/Dev/StoryThreader.tsx
+new file mode 100644
+index 0000000..ab967b6
+--- /dev/null
++++ b/components/Dev/StoryThreader.tsx
+@@ -0,0 +1,727 @@
++'use client';
++import React, { useMemo, useState, useEffect } from 'react';
++import { useGameStore } from '@/store/gameStore';
++import type { Action, Scene, Condition, StateChange } from '@/app/types';
++import { useSearchParams } from 'next/navigation';
++import ReactFlow, { Background, Controls, MiniMap, Node, Edge, NodeProps } from 'reactflow';
++import 'reactflow/dist/style.css';
++
++// Extend Choice type locally to include stateChanges for dependency search
++interface ChoiceWithStateChanges {
++  stateChanges?: StateChange[];
++  text?: string;
++}
++
++interface OutcomeWithChoices {
++  description?: string;
++  choices?: ChoiceWithStateChanges[];
++}
++
++// Helper: find all actions that can set a flag or add an item
++function findActionsForDependency(actions: Record<string, Action>, type: 'flag' | 'item', key: string): string[] {
++  const result: string[] = [];
++  for (const actionId in actions) {
++    const action = actions[actionId];
++    for (const outcome of action.outcomes || []) {
++      // Check outcome-level stateChanges
++      for (const sc of outcome.stateChanges || []) {
++        if (type === 'flag' && sc.type === 'setFlag' && sc.key === key) {
++          result.push(actionId);
++        }
++        if (type === 'item' && sc.type === 'addItem' && sc.key === key) {
++          result.push(actionId);
++        }
++      }
++      // Check choices[].stateChanges
++      for (const choice of outcome.choices || []) {
++        const stateChanges = (choice as ChoiceWithStateChanges).stateChanges || [];
++        for (const sc of stateChanges) {
++          if (type === 'flag' && sc.type === 'setFlag' && sc.key === key) {
++            result.push(actionId);
++          }
++          if (type === 'item' && sc.type === 'addItem' && sc.key === key) {
++            result.push(actionId);
++          }
++        }
++      }
++    }
++  }
++  return Array.from(new Set(result)); // dedupe
++}
++
++// Helper: get unmet dependencies for an action
++function getDependencies(action: Action): { type: 'flag' | 'item', key: string, cond: Condition }[] {
++  const deps: { type: 'flag' | 'item', key: string, cond: Condition }[] = [];
++  for (const cond of action.conditions || []) {
++    if (cond.type === 'flagSet') {
++      deps.push({ type: 'flag', key: cond.key!, cond });
++    }
++    if (cond.type === 'hasItem' || cond.type === 'doesNotHaveItem') {
++      deps.push({ type: 'item', key: cond.key!, cond });
++    }
++  }
++  return deps;
++}
++
++// Helper: find all scenes that reference an action
++function findScenesForAction(scenes: Record<string, Scene>, actionId: string): string[] {
++  const result: string[] = [];
++  for (const sceneId in scenes) {
++    const scene = scenes[sceneId];
++    if (scene.actions && scene.actions.includes(actionId)) {
++      result.push(sceneId);
++    }
++  }
++  return result;
++}
++
++// Tree node type
++interface TreeNode {
++  id: string;
++  type: 'action' | 'scene' | 'dependency' | 'choice';
++  label: string;
++  sceneName?: string;
++  actionDesc?: string;
++  choiceText?: string;
++  children: TreeNode[];
++  dependencyFor?: string; // which flag/item this is a dependency for
++}
++
++// Helper: get the first outcome description for an action
++function getActionDescription(action: Action): string {
++  if (!action) return '';
++  if (action.outcomes && action.outcomes.length > 0) {
++    return action.outcomes[0].description || '';
++  }
++  return '';
++}
++
++// Helper: get scene/location name
++function getSceneName(scene: Scene): string {
++  return scene.location || scene.name || scene.id;
++}
++
++// Helper: find all choices that set a flag/item in an action
++function findChoicesForDependency(action: Action, type: 'flag' | 'item', key: string): { choice: ChoiceWithStateChanges, outcome: OutcomeWithChoices }[] {
++  const result: { choice: ChoiceWithStateChanges, outcome: OutcomeWithChoices }[] = [];
++  for (const outcome of action.outcomes as OutcomeWithChoices[] || []) {
++    for (const choice of outcome.choices || []) {
++      const c = choice as ChoiceWithStateChanges;
++      const stateChanges = c.stateChanges || [];
++      for (const sc of stateChanges) {
++        if (type === 'flag' && sc.type === 'setFlag' && sc.key === key) {
++          result.push({ choice: c, outcome });
++        }
++        if (type === 'item' && sc.type === 'addItem' && sc.key === key) {
++          result.push({ choice: c, outcome });
++        }
++      }
++    }
++  }
++  return result;
++}
++
++// Helper: find all paths from a start scene to a target scene
++function findScenePaths(
++  scenes: Record<string, Scene>,
++  startSceneId: string,
++  targetSceneId: string,
++  path: { sceneId: string; choiceText?: string }[] = [],
++  visited: Set<string> = new Set()
++): { sceneId: string; choiceText?: string }[][] {
++  if (startSceneId === targetSceneId) {
++    return [[...path, { sceneId: startSceneId }]];
++  }
++  if (visited.has(startSceneId)) return [];
++  visited.add(startSceneId);
++  const scene = scenes[startSceneId];
++  if (!scene) return [];
++  let paths: { sceneId: string; choiceText?: string }[][] = [];
++  for (const choice of scene.choices || []) {
++    if (choice.nextNodeId) {
++      const subPaths = findScenePaths(
++        scenes,
++        choice.nextNodeId,
++        targetSceneId,
++        [...path, { sceneId: startSceneId, choiceText: choice.text }],
++        new Set(Array.from(visited))
++      );
++      paths = paths.concat(subPaths);
++    }
++  }
++  return paths;
++}
++
++// Recursively build the dependency tree for an action (narrative version)
++function buildDependencyTree(
++  actions: Record<string, Action>,
++  scenes: Record<string, Scene>,
++  actionId: string,
++  visited: Set<string> = new Set(),
++  dependencyFor?: string
++): TreeNode {
++  if (visited.has(actionId)) {
++    return { id: actionId, type: 'action', label: `${actionId} (cycle)`, children: [] };
++  }
++  visited.add(actionId);
++  const action = actions[actionId];
++  if (!action) {
++    return { id: actionId, type: 'action', label: `${actionId} (not found)`, children: [] };
++  }
++  const deps = getDependencies(action);
++  const children: TreeNode[] = [];
++  for (const dep of deps) {
++    const depActions = findActionsForDependency(actions, dep.type, dep.key);
++    if (depActions.length === 0) {
++      children.push({
++        id: `${dep.type}:${dep.key}`,
++        type: 'dependency',
++        label: `No action found to set ${dep.type}:${dep.key}`,
++        children: [],
++        dependencyFor: dep.key,
++      });
++    } else {
++      for (const depActionId of depActions) {
++        // For each action that can satisfy the dependency, find all scenes that reference it
++        const depScenes = findScenesForAction(scenes, depActionId);
++        const depAction = actions[depActionId];
++        const depActionDesc = getActionDescription(depAction);
++        const depSceneNodes: TreeNode[] = [];
++        for (const sceneId of depScenes) {
++          const scene = scenes[sceneId];
++          // Find all choices in this action that set the flag/item
++          const choices = findChoicesForDependency(depAction, dep.type, dep.key);
++          // Find all paths from forest_clearing to this scene
++          const scenePaths = findScenePaths(scenes, 'forest_clearing', sceneId);
++          if (choices.length > 0) {
++            for (const { choice, outcome } of choices) {
++              for (const scenePath of scenePaths) {
++                // Build a narrative path node for each scene path
++                const pathNodes: TreeNode[] = [];
++                for (let i = 0; i < scenePath.length; i++) {
++                  const step = scenePath[i];
++                  const sceneObj = scenes[step.sceneId];
++                  pathNodes.push({
++                    id: `scene:${step.sceneId}:${i}`,
++                    type: 'scene',
++                    label: `Scene: ${getSceneName(sceneObj)}`,
++                    children: step.choiceText
++                      ? [{
++                          id: `choice:${step.sceneId}:${step.choiceText}`,
++                          type: 'choice',
++                          label: `Choice: "${step.choiceText}"`,
++                          children: [],
++                        }]
++                      : [],
++                  });
++                }
++                // Add the dependency action/choice at the end
++                pathNodes.push({
++                  id: `${sceneId}:${depActionId}:${choice.text}`,
++                  type: 'choice',
++                  label: `Choice: "${choice.text}" (sets ${dep.key})`,
++                  sceneName: getSceneName(scene),
++                  actionDesc: outcome.description || depActionDesc,
++                  choiceText: choice.text,
++                  children: [
++                    {
++                      id: sceneId,
++                      type: 'scene',
++                      label: `Scene: ${getSceneName(scene)}`,
++                      children: [
++                        {
++                          id: depActionId,
++                          type: 'action',
++                          label: `Action: ${depActionId}${depActionDesc ? ` — ${depActionDesc}` : ''}`,
++                          children: [buildDependencyTree(actions, scenes, depActionId, new Set(Array.from(visited)), dep.key)],
++                          dependencyFor: dep.key,
++                        },
++                      ],
++                    },
++                  ],
++                  dependencyFor: dep.key,
++                });
++                depSceneNodes.push({
++                  id: `narrativePath:${sceneId}:${depActionId}:${choice.text}`,
++                  type: 'dependency',
++                  label: `Narrative path to satisfy ${dep.key}`,
++                  children: pathNodes,
++                  dependencyFor: dep.key,
++                });
++              }
++            }
++          } else {
++            for (const scenePath of scenePaths) {
++              const pathNodes: TreeNode[] = [];
++              for (let i = 0; i < scenePath.length; i++) {
++                const step = scenePath[i];
++                const sceneObj = scenes[step.sceneId];
++                pathNodes.push({
++                  id: `scene:${step.sceneId}:${i}`,
++                  type: 'scene',
++                  label: `Scene: ${getSceneName(sceneObj)}`,
++                  children: step.choiceText
++                    ? [{
++                        id: `choice:${step.sceneId}:${step.choiceText}`,
++                        type: 'choice',
++                        label: `Choice: "${step.choiceText}"`,
++                        children: [],
++                      }]
++                    : [],
++                });
++              }
++              pathNodes.push({
++                id: depActionId,
++                type: 'action',
++                label: `Action: ${depActionId}${depActionDesc ? ` — ${depActionDesc}` : ''}`,
++                children: [buildDependencyTree(actions, scenes, depActionId, new Set(Array.from(visited)), dep.key)],
++                dependencyFor: dep.key,
++              });
++              depSceneNodes.push({
++                id: `narrativePath:${sceneId}:${depActionId}`,
++                type: 'dependency',
++                label: `Narrative path to satisfy ${dep.key}`,
++                children: pathNodes,
++                dependencyFor: dep.key,
++              });
++            }
++          }
++        }
++        // If no scene, just add the action
++        if (depSceneNodes.length === 0) {
++          depSceneNodes.push({
++            id: depActionId,
++            type: 'action',
++            label: `Action: ${depActionId}${depActionDesc ? ` — ${depActionDesc}` : ''}`,
++            children: [buildDependencyTree(actions, scenes, depActionId, new Set(Array.from(visited)), dep.key)],
++            dependencyFor: dep.key,
++          });
++        }
++        children.push({
++          id: `${dep.type}:${dep.key}:${depActionId}`,
++          type: 'dependency',
++          label: `Dependency for ${dep.type}:${dep.key}`,
++          children: depSceneNodes,
++          dependencyFor: dep.key,
++        });
++      }
++    }
++  }
++  // Find all scenes for this action (for endpoint display)
++  const endpointScenes = findScenesForAction(scenes, actionId);
++  let sceneLabel = '';
++  if (endpointScenes.length > 0) {
++    sceneLabel = ` (at ${getSceneName(scenes[endpointScenes[0]])})`;
++  }
++  return {
++    id: actionId,
++    type: dependencyFor ? 'dependency' : 'action',
++    label: `Action: ${actionId}${sceneLabel}${getActionDescription(action) ? ` — ${getActionDescription(action)}` : ''}${dependencyFor ? ` (for ${dependencyFor})` : ''}`,
++    children,
++    dependencyFor,
++  };
++}
++
++// Find all dead-end actions (actions with no outgoing nextAction/nextScene/nextNodeId)
++function findDeadEndActions(actions: Record<string, Action>, graph: Record<string, string[]>) {
++  return Object.keys(actions).filter(
++    (actionId) => !graph[actionId] || graph[actionId].length === 0
++  );
++}
++
++// Build the story graph (same as before)
++function buildStoryGraph(actions: Record<string, Action>, scenes: Record<string, Scene>) {
++  const graph: Record<string, string[]> = {};
++  for (const sceneId in scenes) {
++    const scene = scenes[sceneId];
++    graph[sceneId] = [];
++    if (scene.actions) {
++      for (const actionId of scene.actions) {
++        graph[sceneId].push(actionId);
++      }
++    }
++    for (const choice of scene.choices || []) {
++      if (choice.nextNodeId) graph[sceneId].push(choice.nextNodeId);
++      if (choice.nextScene) graph[sceneId].push(choice.nextScene);
++      if (choice.nextAction) graph[sceneId].push(choice.nextAction);
++    }
++  }
++  for (const actionId in actions) {
++    const action = actions[actionId];
++    graph[actionId] = [];
++    for (const outcome of action.outcomes || []) {
++      for (const choice of outcome.choices || []) {
++        if (choice.nextAction) graph[actionId].push(choice.nextAction);
++        if (choice.nextScene) graph[actionId].push(choice.nextScene);
++        if (choice.nextNodeId) graph[actionId].push(choice.nextNodeId);
++      }
++    }
++  }
++  return graph;
++}
++
++// Render the tree recursively (narrative version)
++function renderTree(node: TreeNode, depth = 0) {
++  const isDep = node.type === 'dependency';
++  const isScene = node.type === 'scene';
++  const isChoice = node.type === 'choice';
++  return (
++    <div key={node.id + depth} style={{ marginLeft: depth * 24, marginBottom: 4 }}>
++      <span
++        style={{
++          color: isDep ? '#d97706' : isScene ? '#2563eb' : isChoice ? '#0ea5e9' : '#b35c1e',
++          fontWeight: isDep ? 700 : isScene ? 600 : isChoice ? 600 : 700,
++          background: isDep ? '#fef3c7' : isScene ? '#e6f7fa' : isChoice ? '#bae6fd' : 'none',
++          borderRadius: isDep ? 4 : isScene ? 4 : isChoice ? 4 : 0,
++          padding: isDep ? '2px 6px' : isScene ? '2px 6px' : isChoice ? '2px 6px' : 0,
++          border: isDep ? '1px solid #fbbf24' : isScene ? '1px solid #a5f3fc' : isChoice ? '1px solid #38bdf8' : 'none',
++        }}
++        title={isDep ? 'Dependency step (required to satisfy a condition)' : isScene ? 'Scene/location' : isChoice ? 'Choice that sets flag/item' : ''}
++      >
++        {node.label}
++      </span>
++      {node.children.length > 0 && (
++        <div style={{ marginTop: 2 }}>
++          {node.children.map(child => renderTree(child, depth + 1))}
++        </div>
++      )}
++    </div>
++  );
++}
++
++// Helper: find all linear scene/choice/action paths from start to endpoint action
++function findAllActionPaths(
++  scenes: Record<string, Scene>,
++  actions: Record<string, Action>,
++  startSceneId: string,
++  targetActionId: string,
++  path: { sceneId: string; choiceText?: string; actionId?: string }[] = [],
++  visitedScenes: Set<string> = new Set(),
++  visitedActions: Set<string> = new Set()
++): { sceneId: string; choiceText?: string; actionId?: string }[][] {
++  // If the current scene contains the target action, add it as a path
++  const scene = scenes[startSceneId];
++  if (!scene) return [];
++  let paths: { sceneId: string; choiceText?: string; actionId?: string }[][] = [];
++  if (scene.actions && scene.actions.includes(targetActionId)) {
++    paths.push([...path, { sceneId: startSceneId, actionId: targetActionId }]);
++  }
++  if (visitedScenes.has(startSceneId)) return paths;
++  visitedScenes.add(startSceneId);
++  for (const choice of scene.choices || []) {
++    if (choice.nextNodeId && scenes[choice.nextNodeId]) {
++      const subPaths = findAllActionPaths(
++        scenes,
++        actions,
++        choice.nextNodeId,
++        targetActionId,
++        [...path, { sceneId: startSceneId, choiceText: choice.text }],
++        new Set(Array.from(visitedScenes)),
++        visitedActions
++      );
++      paths = paths.concat(subPaths);
++    }
++  }
++  return paths;
++}
++
++// Helper: format a path as a one-liner string
++function formatPathOneLiner(
++  path: { sceneId: string; choiceText?: string; actionId?: string }[],
++  scenes: Record<string, Scene>,
++  actions: Record<string, Action>
++) {
++  const steps: string[] = [];
++  for (const step of path) {
++    if (step.sceneId && scenes[step.sceneId]) {
++      steps.push(scenes[step.sceneId].location || scenes[step.sceneId].name || step.sceneId);
++    }
++    if (step.choiceText) {
++      steps.push(`[${step.choiceText}]`);
++    }
++    if (step.actionId && actions[step.actionId]) {
++      const desc = actions[step.actionId].outcomes?.[0]?.description;
++      steps.push(`{${actions[step.actionId].id}${desc ? ': ' + desc : ''}}`);
++    }
++  }
++  return steps.join(' → ');
++}
++
++// Custom node style for dependency-satisfying actions
++const dependencyNodeStyle = {
++  border: '2px solid #dc2626',
++  background: '#fee2e2',
++  color: '#991b1b',
++  fontWeight: 700,
++};
++
++function CustomNode({ data }: NodeProps) {
++  return (
++    <div style={data.isDependency ? dependencyNodeStyle : {}} title={data.tooltip}>
++      {data.label}
++    </div>
++  );
++}
++
++// Helper: Build a minimal dependency DAG for an endpoint action, merging branches at shared nodes
++function buildDependencyGraph(
++  actions: Record<string, Action>,
++  scenes: Record<string, Scene>,
++  endpointActionId: string
++): { nodes: Node[]; edges: Edge[] } {
++  let nodeId = 0;
++  const nodes: Node[] = [];
++  const edges: Edge[] = [];
++  const nodeMap = new Map<string, string>(); // key -> node.id
++  // For simple grid layout
++  let gridX = 0;
++  const GRID_STEP_X = 220;
++  const GRID_STEP_Y = 100;
++
++  // Track which actions are dependency-satisfying for the endpoint
++  const endpointDeps = new Set<string>();
++  const endpointAction = actions[endpointActionId];
++  if (endpointAction) {
++    for (const dep of getDependencies(endpointAction)) {
++      if (dep.cond.type === 'flagSet' || dep.cond.type === 'hasItem') {
++        const depActions = findActionsForDependency(actions, dep.type, dep.key);
++        for (const depActionId of depActions) {
++          endpointDeps.add(depActionId);
++        }
++      }
++    }
++  }
++
++  // Helper to add a node if not already present, with branchIndex for y staggering
++  function addNode(key: string, label: string, type: string, data: Record<string, unknown> = {}, branchIndex = 0) {
++    if (nodeMap.has(key)) return nodeMap.get(key)!;
++    // Stagger y by branchIndex
++    const id = `${type}-${nodeId++}`;
++    const position = { x: gridX * GRID_STEP_X, y: branchIndex * GRID_STEP_Y };
++    nodes.push({ id, data: { label, ...data }, position, type: data.isDependency ? 'dependency-action' : 'default' });
++    nodeMap.set(key, id);
++    gridX++;
++    if (gridX >= 6) { gridX = 0; }
++    return id;
++  }
++
++  // Add a full playable path (scenes/choices) to a target scene, return the last node id
++  function addPlayablePath(path: { sceneId: string; choiceText?: string }[], branchIndex = 0): string | undefined {
++    let prevNodeId: string | undefined;
++    for (const step of path) {
++      const sceneObj = scenes[step.sceneId];
++      const sceneKey = `scene:${step.sceneId}`;
++      const sceneNodeId = addNode(sceneKey, getSceneName(sceneObj), 'scene', { tooltip: sceneObj.description }, branchIndex);
++      if (prevNodeId && !edges.find(e => e.source === prevNodeId && e.target === sceneNodeId)) {
++        edges.push({ id: `${prevNodeId}->${sceneNodeId}`, source: prevNodeId, target: sceneNodeId });
++      }
++      prevNodeId = sceneNodeId;
++      if (step.choiceText) {
++        const choiceKey = `choice:${step.sceneId}:${step.choiceText}`;
++        const choiceNodeId = addNode(choiceKey, `[${step.choiceText}]`, 'choice', { tooltip: step.choiceText }, branchIndex);
++        if (!edges.find(e => e.source === prevNodeId && e.target === choiceNodeId)) {
++          edges.push({ id: `${prevNodeId}->${choiceNodeId}`, source: prevNodeId, target: choiceNodeId });
++        }
++        prevNodeId = choiceNodeId;
++      }
++    }
++    return prevNodeId;
++  }
++
++  // Recursively add dependencies and playable path, merging at shared nodes
++  function addActionWithDeps(actionId: string, parentId?: string, visited: Set<string> = new Set(), branchIndex = 0) {
++    if (visited.has(actionId)) {
++      if (parentId) edges.push({ id: `${parentId}->${actionId}`, source: parentId, target: nodeMap.get(`action:${actionId}`)! });
++      return;
++    }
++    visited.add(actionId);
++    const action = actions[actionId];
++    if (!action) return;
++    const desc = getActionDescription(action);
++    const isDep = endpointDeps.has(actionId);
++    // If this is a dependency-satisfying action, add all playable paths to it
++    if (isDep) {
++      const depScenes = findScenesForAction(scenes, actionId);
++      depScenes.forEach((sceneId, depIdx) => {
++        const scenePaths = findScenePaths(scenes, 'forest_clearing', sceneId);
++        scenePaths.forEach((path) => {
++          const lastNodeId = addPlayablePath(path, branchIndex + depIdx);
++          const actionNodeId = addNode(`action:${actionId}`, `{${actionId}${desc ? ': ' + desc : ''}}`, 'action', { tooltip: desc, isDependency: isDep }, branchIndex + depIdx);
++          if (lastNodeId && !edges.find(e => e.source === lastNodeId && e.target === actionNodeId)) {
++            edges.push({ id: `${lastNodeId}->${actionNodeId}`, source: lastNodeId, target: actionNodeId });
++          }
++          // Recursively add dependencies for this action
++          let depBranch = 1;
++          for (const dep of getDependencies(action)) {
++            if (dep.cond.type === 'flagSet' || dep.cond.type === 'hasItem') {
++              const depActions = findActionsForDependency(actions, dep.type, dep.key);
++              if (depActions.length > 0) {
++                for (const depActionId of depActions) {
++                  addActionWithDeps(depActionId, actionNodeId, new Set(visited), branchIndex + depBranch);
++                  depBranch++;
++                }
++              } else {
++                const depNodeId = addNode(`dep:${dep.type}:${dep.key}`, `[Needs ${dep.type}: ${dep.key}]`, 'dependency', { tooltip: `Dependency: ${dep.type}:${dep.key}` }, branchIndex + depBranch);
++                edges.push({ id: `${depNodeId}->${actionNodeId}-dep`, source: depNodeId, target: actionNodeId });
++                depBranch++;
++              }
++            }
++          }
++        });
++      });
++      return;
++    }
++    // Otherwise, just add the action node
++    const actionNodeId = addNode(`action:${actionId}`, `{${actionId}${desc ? ': ' + desc : ''}}`, 'action', { tooltip: desc, isDependency: isDep }, branchIndex);
++    if (parentId) edges.push({ id: `${parentId}->${actionNodeId}`, source: parentId, target: actionNodeId });
++    // Add dependencies
++    let depBranch = 1;
++    for (const dep of getDependencies(action)) {
++      if (dep.cond.type === 'flagSet' || dep.cond.type === 'hasItem') {
++        const depActions = findActionsForDependency(actions, dep.type, dep.key);
++        if (depActions.length > 0) {
++          for (const depActionId of depActions) {
++            addActionWithDeps(depActionId, actionNodeId, new Set(visited), branchIndex + depBranch);
++            depBranch++;
++          }
++        } else {
++          const depNodeId = addNode(`dep:${dep.type}:${dep.key}`, `[Needs ${dep.type}: ${dep.key}]`, 'dependency', { tooltip: `Dependency: ${dep.type}:${dep.key}` }, branchIndex + depBranch);
++          edges.push({ id: `${depNodeId}->${actionNodeId}-dep`, source: depNodeId, target: actionNodeId });
++          depBranch++;
++        }
++      }
++    }
++  }
++
++  // Find all scenes that reference the endpoint action
++  const endpointScenes = findScenesForAction(scenes, endpointActionId);
++  for (const sceneId of endpointScenes) {
++    const scenePaths = findScenePaths(scenes, 'forest_clearing', sceneId);
++    scenePaths.forEach((path) => {
++      const lastNodeId = addPlayablePath(path, 0);
++      const actionNodeId = addNode(`action:${endpointActionId}`, `{${endpointActionId}${getActionDescription(actions[endpointActionId]) ? ': ' + getActionDescription(actions[endpointActionId]) : ''}}`, 'action', { tooltip: getActionDescription(actions[endpointActionId]), isDependency: false }, 0);
++      if (lastNodeId && !edges.find(e => e.source === lastNodeId && e.target === actionNodeId)) {
++        edges.push({ id: `${lastNodeId}->${actionNodeId}`, source: lastNodeId, target: actionNodeId });
++      }
++      // Recursively add dependencies for the endpoint action
++      let depBranch = 1;
++      for (const dep of getDependencies(actions[endpointActionId])) {
++        if (dep.cond.type === 'flagSet' || dep.cond.type === 'hasItem') {
++          const depActions = findActionsForDependency(actions, dep.type, dep.key);
++          if (depActions.length > 0) {
++            for (const depActionId of depActions) {
++              addActionWithDeps(depActionId, actionNodeId, new Set(), depBranch);
++              depBranch++;
++            }
++          } else {
++            const depNodeId = addNode(`dep:${dep.type}:${dep.key}`, `[Needs ${dep.type}: ${dep.key}]`, 'dependency', { tooltip: `Dependency: ${dep.type}:${dep.key}` }, depBranch);
++            edges.push({ id: `${depNodeId}->${actionNodeId}-dep`, source: depNodeId, target: actionNodeId });
++            depBranch++;
++          }
++        }
++      }
++    });
++  }
++  if (endpointScenes.length === 0) {
++    addActionWithDeps(endpointActionId);
++  }
++  return { nodes, edges };
++}
++
++export default function StoryThreader() {
++  const actionsObj = useGameStore((state) => state.actions);
++  const scenesObj = useGameStore((state) => state.scenes);
++  const setActions = useGameStore((state) => state.setActions);
++  const setScenes = useGameStore((state) => state.setScenes);
++  const [selectedEndpoint, setSelectedEndpoint] = useState<string | null>(null);
++  const searchParams = useSearchParams();
++  const game = searchParams?.get('game') || 'cute-animals';
++
++  useEffect(() => {
++    async function fetchData() {
++      const res = await fetch(`/api/games/${game}/`);
++      const { actions, scenes } = await res.json();
++      setActions(actions);
++      setScenes(scenes);
++    }
++    if (!actionsObj || !scenesObj) fetchData();
++  }, [game, actionsObj, scenesObj, setActions, setScenes]);
++
++  const graph = useMemo(() => buildStoryGraph(actionsObj || {}, scenesObj || {}), [actionsObj, scenesObj]);
++  const deadEnds = useMemo(() => findDeadEndActions(actionsObj || {}, graph), [actionsObj, graph]);
++  const endpoints = selectedEndpoint ? [selectedEndpoint] : deadEnds;
++
++  // Build the tree for each endpoint
++  const treesByEndpoint = useMemo(() => {
++    const result: Record<string, TreeNode> = {};
++    for (const endpoint of endpoints) {
++      result[endpoint] = buildDependencyTree(actionsObj || {}, scenesObj || {}, endpoint);
++    }
++    return result;
++  }, [actionsObj, scenesObj, endpoints]);
++
++  // Build linear paths for each endpoint
++  const linearPathsByEndpoint = useMemo(() => {
++    const result: Record<string, string[]> = {};
++    for (const endpoint of endpoints) {
++      const paths = findAllActionPaths(scenesObj || {}, actionsObj || {}, 'forest_clearing', endpoint);
++      result[endpoint] = paths.map(p => formatPathOneLiner(p, scenesObj || {}, actionsObj || {}));
++    }
++    return result;
++  }, [actionsObj, scenesObj, endpoints]);
++
++  // Build dependency graph for each endpoint
++  const depGraphsByEndpoint = useMemo(() => {
++    const result: Record<string, { nodes: Node[]; edges: Edge[] }> = {};
++    for (const endpoint of endpoints) {
++      result[endpoint] = buildDependencyGraph(actionsObj || {}, scenesObj || {}, endpoint);
++    }
++    return result;
++  }, [actionsObj, scenesObj, endpoints]);
++
++  return (
++    <div style={{ padding: 32, background: '#f8fafc', minHeight: '100vh' }}>
++      <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16 }}>Story Threader (Tree View)</h2>
++      <div style={{ marginBottom: 24 }}>
++        <label style={{ fontWeight: 600, fontSize: 16, marginRight: 8 }}>Endpoint Action:</label>
++        <select
++          value={selectedEndpoint || ''}
++          onChange={e => setSelectedEndpoint(e.target.value || null)}
++          style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 16 }}
++        >
++          <option value="">(All Dead-End Actions)</option>
++          {deadEnds.map(id => (
++            <option key={id} value={id}>{id}</option>
++          ))}
++        </select>
++      </div>
++      {endpoints.map(endpoint => (
++        <div key={endpoint} style={{ marginBottom: 32 }}>
++          <h3 style={{ fontSize: 20, fontWeight: 700, color: '#2563eb', marginBottom: 8 }}>Dependency Tree for <span style={{ color: '#b35c1e' }}>{endpoint}</span></h3>
++          {renderTree(treesByEndpoint[endpoint])}
++          <h4 style={{ fontSize: 18, fontWeight: 700, color: '#0ea5e9', margin: '18px 0 6px 0' }}>Linear Path(s):</h4>
++          <ul style={{ fontFamily: 'monospace', fontSize: 15, background: '#fff', borderRadius: 6, padding: 16, margin: 0, boxShadow: '0 1px 4px #0001' }}>
++            {linearPathsByEndpoint[endpoint]?.length ? linearPathsByEndpoint[endpoint].map((line, i) => (
++              <li key={i} style={{ marginBottom: 2 }}>{line}</li>
++            )) : <li style={{ color: '#888' }}>(No path found from Forest Clearing)</li>}
++          </ul>
++          <h4 style={{ fontSize: 18, fontWeight: 700, color: '#a21caf', margin: '18px 0 6px 0' }}>Dependency Graph:</h4>
++          <div style={{ height: 400, background: '#fff', borderRadius: 8, border: '1px solid #e5e7eb', marginBottom: 8 }}>
++            <ReactFlow
++              nodes={depGraphsByEndpoint[endpoint].nodes}
++              edges={depGraphsByEndpoint[endpoint].edges}
++              fitView
++              minZoom={0.2}
++              maxZoom={1.5}
++              nodeTypes={{ 'dependency-action': CustomNode }}
++            >
++              <Background />
++              <MiniMap />
++              <Controls />
++            </ReactFlow>
++          </div>
++        </div>
++      ))}
++    </div>
++  );
++} 
+\ No newline at end of file
+diff --git a/components/Game/DiaryPanel.tsx b/components/Game/DiaryPanel.tsx
+new file mode 100644
+index 0000000..4a166db
+--- /dev/null
++++ b/components/Game/DiaryPanel.tsx
+@@ -0,0 +1,20 @@
++
++import { useLogStore } from '@/store/logStore';
++
++export function DiaryPanel() {
++  const entries = useLogStore((s) => s.entries);
++
++  return (
++    <aside className="w-72 bg-black/70 text-amber-100 p-2 text-xs overflow-y-auto">
++      {entries.map((e, i) => (
++        <div key={i} className="mb-1">
++          <span className="opacity-60 mr-1">
++            {new Date(e.t).toLocaleTimeString()}
++          </span>
++          {e.kind === "action"   && <>Action <b>{e.id}</b></>}
++          {e.kind === "outcome" && <>→ {e.description}</>}
++        </div>
++      ))}
++    </aside>
++  );
++}
+\ No newline at end of file
+diff --git a/components/Game/GameSidebar.tsx b/components/Game/GameSidebar.tsx
+index e5895b1..a9f22a0 100644
+--- a/components/Game/GameSidebar.tsx
++++ b/components/Game/GameSidebar.tsx
+@@ -1,6 +1,7 @@
+ import React from 'react';
+ import { InventoryPanel } from './InventoryPanel';
+ import { AchievementsPanel } from './AchievementsPanel';
++import { DiaryPanel } from './DiaryPanel';
+ 
+ interface GameSidebarProps {
+   inventory: Record<string, number>;
+@@ -19,7 +20,7 @@ const GameSidebar: React.FC<GameSidebarProps> = ({ inventory, achievements }) =>
+     </div>
+     <div>
+       <h2 className="text-lg font-bold mb-2">Journal</h2>
+-      <div className="text-sm text-[#5a4632]">Story progress and notes...</div>
++            <DiaryPanel />    
+     </div>
+   </aside>
+ );
+diff --git a/components/Game/JournalOverlay.tsx b/components/Game/JournalOverlay.tsx
+index a82632c..fddbfd0 100644
+--- a/components/Game/JournalOverlay.tsx
++++ b/components/Game/JournalOverlay.tsx
+@@ -1,4 +1,5 @@
+ import React from 'react';
++import { DiaryPanel } from './DiaryPanel';
+ 
+ interface JournalOverlayProps {
+   open: boolean;
+@@ -12,6 +13,7 @@ const JournalOverlay: React.FC<JournalOverlayProps> = ({ open, onClose }) => {
+       <div className="w-full max-w-xs sm:max-w-sm bg-[#ece5db] text-[#3d2c1a] rounded-2xl shadow-2xl p-5 sm:p-6 relative border-2 border-[#bfae99] mx-2" style={{ boxShadow: '0 8px 32px 0 rgba(60,40,20,0.25), 0 1.5px 8px 0 rgba(60,40,20,0.10)' }} onClick={e => e.stopPropagation()}>
+         <button className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-[#bfae99]/20 text-[#5a4632] hover:bg-[#bfae99]/30 transition" onClick={onClose}>✕</button>
+         <h2 className="text-lg font-bold mb-2 font-runic text-[#5a4632]">Journal</h2>
++        <DiaryPanel />
+         <div className="text-sm text-[#5a4632]">Story progress and notes...</div>
+       </div>
+     </div>
+diff --git a/components/Game/Scene.tsx b/components/Game/Scene.tsx
+index 817f291..1899ce6 100644
+--- a/components/Game/Scene.tsx
++++ b/components/Game/Scene.tsx
+@@ -178,9 +178,9 @@ export default function SceneComponent({ scene, onChoice }: SceneProps) {
+ 
+             {/* Breadcrumbs */}
+             
+-    <div className="absolute left-0 right-0 bottom-20 z-30 bg-[#ece5db] border-t-2 border-[#bfae99] px-4 py-2 flex lg:hidden  w-full">
++    {/* <div className="absolute left-0 right-0 bottom-20 z-30 bg-[#ece5db] border-t-2 border-[#bfae99] px-4 py-2 flex lg:hidden  w-full">
+       <Breadcrumbs />
+-    </div>
++    </div> */}
+ 
+ 
+           {/* Footer toggles (mobile only) */}
+diff --git a/data/games/cute-animals/actions.json b/data/games/cute-animals/actions.json
+index 59a1155..e5284cd 100644
+--- a/data/games/cute-animals/actions.json
++++ b/data/games/cute-animals/actions.json
+@@ -450,5 +450,20 @@
+         ]
+       }
+     ]
+-  }
++  },
++  "route_meadow": {
++  "id": "route_meadow",
++  "trigger": "onEnter",
++  "outcomes": [
++    { "conditions":[
++      {
++        "type": "timeOfDayIs",
++        "value": "morning"
++      }
++    
++    ],
++      "nextSceneOverride":"meadow_morning" },
++    { "nextSceneOverride":"meadow_dusk" }
++  ]
++}
+ }
+\ No newline at end of file
+diff --git a/data/games/cute-animals/scenes.json b/data/games/cute-animals/scenes.json
+index 79aa1c8..c86e8e8 100644
+--- a/data/games/cute-animals/scenes.json
++++ b/data/games/cute-animals/scenes.json
+@@ -105,10 +105,33 @@
+   "meadow": {
+     "id": "meadow",
+     "parentSceneId": "forest_clearing",
++    "location": "Meadow",
++    "description":   "(router only)",
++    "actions": [
++      "route_meadow"
++    ]
++  },
++  "meadow_morning": {
++    "id": "meadow_morning",
++    "parentSceneId": "forest_clearing",
+     "location": "Sunny Meadow",
+-    "description": "The meadow is full of wildflowers and butterflies. It feels peaceful here.",
++    "description": "In the morning, the meadow is full of wildflowers and butterflies. It feels peaceful here.",
++    "actions": [
++      "find_flower"
++    ],
++    "choices": [
++      {
++        "text": "Return to the clearing",
++        "nextNodeId": "forest_clearing"
++      }
++    ]
++  },
++  "meadow_dusk": {
++    "id": "meadow_dusk",
++    "parentSceneId": "forest_clearing",
++    "location": "Dusk Meadow",
++    "description": "As the sun sets, the meadow is full of fireflies and the sounds of crickets. The air is cool and the sky is a beautiful shade of pink and orange.",
+     "actions": [
+-      "find_flower",
+       "meet_robin_in_meadow"
+     ],
+     "choices": [
+diff --git a/engine/actionRunner.ts b/engine/actionRunner.ts
+index 2998413..895ba43 100644
+--- a/engine/actionRunner.ts
++++ b/engine/actionRunner.ts
+@@ -5,18 +5,32 @@ import { useGameStore } from "@/store/gameStore";
+ import { applyChanges } from "./applyChanges";
+ import { ModalChoice, useModalStore } from "@/store/modalStore";
+ 
++
++// import { LogEntry, useLogStore } from '@/store/logStore';
++import { logEvent } from "@/lib/logger";
++
++// export function logEntry(kind: LogEntry["kind"], data: Partial<LogEntry>) {
++//   console.log("logging", kind, data);
++//   useLogStore.getState().push({
++//     t: Date.now(),
++//     kind,
++//     ...data,
++//   });
++// }
++
++
+ export function runActions(
+   ids: string[],
+   trigger: Trigger,
+   stateSnapshot: GameState,
+   actions: Record<string, Action>
+-) {
++):string | undefined {
+   // console.log("runActions ids:", ids, "actions keys:", actions && Object.keys(actions));
+- 
+ 
++  let override: string | undefined 
+   ids.forEach((id) => {
+     // console.log("Trying to access actions[id]:", id, actions && actions[id]);
+-
++  
+     const action: Action | undefined = actions[id];
+     /* ---------- missing id ---------- */
+     if (!action) {
+@@ -46,6 +60,8 @@ export function runActions(
+     if (!passed) {
+       console.log(`✖ RESULT: conditions failed – ${action.id} NOT run\n`);
+       if (action.failMessage) {
++        logEvent("fail", { id, trigger, description: action.failMessage });
++
+         setTimeout(() => {
+           useModalStore.getState().push({
+             id: `${id}/fail` + Math.random(),
+@@ -57,12 +73,37 @@ export function runActions(
+     }
+ 
+     console.log(`✔ RESULT: conditions passed – ${action.id} WILL run\n`);
++    logEvent("action", { id, trigger });
++
+ 
+ 
+ 
+     /* ---- Step 4 logic (stateChanges) will go here ---- */
+-    const outcome = action.outcomes[0];     // step‑4: use first outcome only
++    //const outcome = action.outcomes[0];     // step‑4: use first outcome only
+     
++  /* ---------- find first matching outcome ---------- */
++  const outcome = action.outcomes.find(o =>
++    passesConditions(o.conditions, stateSnapshot).passed
++  );
++
++  if (!outcome) {
++    console.log("No outcome passed - action aborts");
++    return;
++  }
++  if (outcome.nextSceneOverride) {
++    override = outcome.nextSceneOverride;
++  }
++
++  if (outcome) {
++
++    /* after choosing an outcome */
++    logEvent("outcome", {
++      id: `${action.id}`,
++      description: outcome.description,
++      details: { stateChanges: outcome.stateChanges }
++    });
++  }
++
+     if (outcome) {
+       // Queue the modal update for the next tick
+       setTimeout(() => {
+@@ -85,6 +126,7 @@ if (outcome.stateChanges?.length) {
+       }, 0);
+     } 
+   });
++  return override;
+ }
+ 
+ // New function to handle choice selection
+diff --git a/engine/passesConditions.ts b/engine/passesConditions.ts
+index 4387283..d13b568 100644
+--- a/engine/passesConditions.ts
++++ b/engine/passesConditions.ts
+@@ -17,6 +17,14 @@ export interface ConditionReport {
+     const cmp  = cond.comparator ?? "gte";
+     return cmp === "eq" ? have === need : have >= need;
+   }
++
++  function checkSeason(cond: Condition, state: GameState): boolean {
++    return state.season === cond.value;
++  }
++
++  function checkTimeOfDay(cond: Condition, state: GameState): boolean {
++    return state.timeOfDay === cond.value;
++  }
+   
+   export function passesConditions(
+     conds: Condition[] | undefined,
+@@ -66,6 +74,20 @@ export interface ConditionReport {
+             }`,
+           };
+         }
++        case "seasonIs": {
++          const pass = checkSeason(choice, state);
++          return {
++            pass,
++            msg: `🌳 seasonIs • ${state.season} = ${choice.value} → ${pass ? "PASS" : "FAIL"}`,
++          };
++        }
++        case "timeOfDayIs": {
++          const pass = checkTimeOfDay(choice, state);
++          return {
++            pass,
++            msg: `🌳 timeOfDayIs • ${state.timeOfDay} = ${choice.value} → ${pass ? "PASS" : "FAIL"}`,
++          };
++        }
+   
+         default:
+           return {
+diff --git a/lib/gameState.ts b/lib/gameState.ts
+index 2d74360..872ee7d 100644
+--- a/lib/gameState.ts
++++ b/lib/gameState.ts
+@@ -10,7 +10,8 @@ export function createInitialGameState(options: GameState): GameState {
+     flags: {},
+     reputation: {},
+     health: options.health ?? 10,
+-    timeOfDay: 'morning',
++    timeOfDay: 'dusk',
++    season: 'spring',
+     breadcrumbs: [],
+   };
+ }
+@@ -23,6 +24,7 @@ export const initialGameState: GameState = createInitialGameState({
+   reputation: {},
+   health: 10,
+   npcs: {},
+-  timeOfDay: 'morning',
++  timeOfDay: 'dusk',
++  season: 'spring',
+   breadcrumbs: [],
+ })
+\ No newline at end of file
+diff --git a/lib/logger.ts b/lib/logger.ts
+new file mode 100644
+index 0000000..d8f8158
+--- /dev/null
++++ b/lib/logger.ts
+@@ -0,0 +1,14 @@
++import { Action, Outcome } from "@/app/types";
++import { LogEntry, useLogStore } from '@/store/logStore';
++
++export function logEvent(kind: LogEntry["kind"], data: Partial<LogEntry>) {
++  useLogStore.getState().push({ t: Date.now(), kind, ...data });
++}
++
++export function logAction(action: Action) {
++  logEvent("action", action);
++}
++
++export function logOutcome(outcome: Outcome) {
++  logEvent("outcome", outcome);
++}
+\ No newline at end of file
+diff --git a/store/logStore.ts b/store/logStore.ts
+new file mode 100644
+index 0000000..82d59a8
+--- /dev/null
++++ b/store/logStore.ts
+@@ -0,0 +1,30 @@
++// store/logStore.ts
++'use client';
++
++import { Trigger } from '@/app/types';
++import { create } from 'zustand';
++
++/* 1 ─ log row type */
++export interface LogEntry {
++  t: number;
++  kind: "action" | "outcome" | "info" | "fail" | "choice";
++  id?: string;
++  description?: string;
++  details?: Record<string, unknown>;
++  trigger?: Trigger;      // ← added
++}
++
++/* 2 ─ zustand slice (no persist) */
++interface LogStore {
++  entries: LogEntry[];
++  push:  (e: LogEntry) => void;
++  clear: () => void;
++}
++
++export const useLogStore = create<LogStore>((set) => ({
++  entries: [],
++
++  push: (entry) => set((state) => ({ entries: [...state.entries, entry] })),
++
++  clear: () => set({ entries: [] }),
++}));

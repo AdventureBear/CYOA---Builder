@@ -106,7 +106,7 @@
     "id": "meadow",
     "parentSceneId": "forest_clearing",
     "location": "Meadow",
-    "description":   "(router only)",
+    "description": "(router only)",
     "actions": [
       "route_meadow"
     ]
@@ -189,7 +189,7 @@
       },
       {
         "text": "Jump off because you are a flying squirell ",
-        "nextNodeId": "flying_in_air"
+        "nextNodeId": "free_fall"
       }
     ]
   },
@@ -210,5 +210,26 @@
       "run_faster"
     ],
     "locationImage": ""
+  },
+  "free_fall": {
+    "id": "free_fall",
+    "name": "",
+    "description": "Sailing through the air with your limbs outstretched, you feel the air supporting you as you gently glide towards the ground.   The sun shines on your face and you close your eyes.  \n\nDrifting quietly you open your eyes and see the river down below...",
+    "location": "Free Falling through the Forest",
+    "season": "",
+    "isRequired": false,
+    "choices": [
+      {
+        "text": "You steer towards the little wooden footbridge to visit the Robin",
+        "nextNodeId": "bridge"
+      },
+      {
+        "text": "You steer back around towards the Oak Tree hoping to find acorns to take home. ",
+        "nextNodeId": "oak_tree"
+      }
+    ],
+    "actions": [],
+    "locationImage": "",
+    "parentSceneId": "top_of_tree"
   }
 }
