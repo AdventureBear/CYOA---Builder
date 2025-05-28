@@ -178,9 +178,9 @@ export default function SceneComponent({ scene, onChoice }: SceneProps) {
 
             {/* Breadcrumbs */}
             
-    <div className="absolute left-0 right-0 bottom-20 z-30 bg-[#ece5db] border-t-2 border-[#bfae99] px-4 py-2 flex lg:hidden  w-full">
+    {/* <div className="absolute left-0 right-0 bottom-20 z-30 bg-[#ece5db] border-t-2 border-[#bfae99] px-4 py-2 flex lg:hidden  w-full">
       <Breadcrumbs />
-    </div>
+    </div> */}
 
 
           {/* Footer toggles (mobile only) */}

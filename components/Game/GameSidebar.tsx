@@ -1,6 +1,7 @@
 import React from 'react';
 import { InventoryPanel } from './InventoryPanel';
 import { AchievementsPanel } from './AchievementsPanel';
+import { DiaryPanel } from './DiaryPanel';
 
 interface GameSidebarProps {
   inventory: Record<string, number>;
@@ -19,7 +20,7 @@ const GameSidebar: React.FC<GameSidebarProps> = ({ inventory, achievements }) =>
     </div>
     <div>
       <h2 className="text-lg font-bold mb-2">Journal</h2>
-      <div className="text-sm text-[#5a4632]">Story progress and notes...</div>
+            <DiaryPanel />    
     </div>
   </aside>
 );

@@ -168,6 +168,7 @@ export default function SceneManagerClient() {
   const game = searchParams?.get('game') || 'cute-animals';
 
   const scenes: Scene[] = scenesObj ? Object.values(scenesObj) : [];
+  console.log('scenes', scenes);
 
   // State for modal-on-modal action editing
   const [showActionModal, setShowActionModal] = useState(false);

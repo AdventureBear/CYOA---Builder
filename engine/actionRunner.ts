@@ -4,7 +4,20 @@ import { passesConditions } from "./passesConditions";
 import { useGameStore } from "@/store/gameStore";
 import { applyChanges } from "./applyChanges";
 import { ModalChoice, useModalStore } from "@/store/modalStore";
+
+
+// import { LogEntry, useLogStore } from '@/store/logStore';
 import { logEvent } from "@/lib/logger";
+
+// export function logEntry(kind: LogEntry["kind"], data: Partial<LogEntry>) {
+//   console.log("logging", kind, data);
+//   useLogStore.getState().push({
+//     t: Date.now(),
+//     kind,
+//     ...data,
+//   });
+// }
+
 
 export function runActions(
   ids: string[],
@@ -13,11 +26,11 @@ export function runActions(
   actions: Record<string, Action>
 ):string | undefined {
   // console.log("runActions ids:", ids, "actions keys:", actions && Object.keys(actions));
- 
+
   let override: string | undefined 
   ids.forEach((id) => {
     // console.log("Trying to access actions[id]:", id, actions && actions[id]);
-
+  
     const action: Action | undefined = actions[id];
     /* ---------- missing id ---------- */
     if (!action) {
@@ -47,6 +60,8 @@ export function runActions(
     if (!passed) {
       console.log(`✖ RESULT: conditions failed – ${action.id} NOT run\n`);
       if (action.failMessage) {
+        logEvent("fail", { id, trigger, description: action.failMessage });
+
         setTimeout(() => {
           useModalStore.getState().push({
             id: `${id}/fail` + Math.random(),
@@ -58,6 +73,8 @@ export function runActions(
     }
 
     console.log(`✔ RESULT: conditions passed – ${action.id} WILL run\n`);
+    logEvent("action", { id, trigger });
+
 
 
 
@@ -78,9 +95,12 @@ export function runActions(
   }
 
   if (outcome) {
+
+    /* after choosing an outcome */
     logEvent("outcome", {
+      id: `${action.id}`,
       description: outcome.description,
-      stateChanges: outcome.stateChanges
+      details: { stateChanges: outcome.stateChanges }
     });
   }
 

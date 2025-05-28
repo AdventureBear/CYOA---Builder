@@ -1,15 +1,17 @@
 // store/logStore.ts
 'use client';
 
+import { Trigger } from '@/app/types';
 import { create } from 'zustand';
 
 /* 1 ─ log row type */
 export interface LogEntry {
   t: number;
-  kind: "action" | "outcome" | "info";
+  kind: "action" | "outcome" | "info" | "fail" | "choice";
   id?: string;
   description?: string;
-  details?: any;
+  details?: Record<string, unknown>;
+  trigger?: Trigger;      // ← added
 }
 
 /* 2 ─ zustand slice (no persist) */

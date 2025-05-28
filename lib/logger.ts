@@ -1,7 +1,7 @@
 import { Action, Outcome } from "@/app/types";
-import { useLogStore } from "@/store/logStore"; // new zustand slice
+import { LogEntry, useLogStore } from '@/store/logStore';
 
-export function logEvent(kind: "action" | "outcome", data: any) {
+export function logEvent(kind: LogEntry["kind"], data: Partial<LogEntry>) {
   useLogStore.getState().push({ t: Date.now(), kind, ...data });
 }
 

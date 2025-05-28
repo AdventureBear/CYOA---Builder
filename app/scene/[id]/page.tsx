@@ -4,7 +4,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useRef, useEffect, useState, useMemo } from 'react'
 import SceneComponent from '@/components/Game/Scene'
 import { useGameStore } from '@/store/gameStore'
-import { runActions } from '@/engine/actionRunner'
+import { logEntry, runActions } from '@/engine/actionRunner'
 import DeadEndScene from '@/components/Game/DeadEndScene'
 import { initialGameState } from '@/lib/gameState'
 import AddScene from '@/components/Dev/AddScene'
@@ -90,6 +90,10 @@ useEffect(() => {
     resetChoiceStack();
     pushChoice(choice.text);
     if (!currentScene) return;
+    logEntry("choice", {
+      id: currentScene.location,    
+      description: choice.text
+    });
     if (choice.nextAction && actions && Object.keys(actions).length > 0) {
       runActions([choice.nextAction], "onChoice", gameState, actions);
     }
