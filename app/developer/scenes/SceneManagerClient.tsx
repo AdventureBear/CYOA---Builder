@@ -18,6 +18,8 @@ const defaultScene = {
   locationImage: '',
 };
 
+
+
 async function saveSceneToDisk(scene: Scene, game: string) {
   const res = await fetch('/api/saveScene', {
     method: 'POST',
@@ -99,60 +101,60 @@ function SceneActionsBox({ form, setForm, actionsObj, onEditAction, onUpdateActi
   }
 
   return (
-    // <div style={{ background: pastelActions, border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, marginBottom: 16, width: '100%' }}>
-    //   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-    //     <label style={{ fontWeight: 600, fontSize: 16 }}>Actions</label>
-    //     <button type="button" onClick={handleAddAction} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginLeft: 2 }}>+</button>
-    //   </div>
-    //   {/* Header row */}
-    //   {actionRows.length > 0 && (
-    //     <div style={{ display: 'flex', gap: 8, fontWeight: 600, fontSize: 14, marginBottom: 2 }}>
-    //       <div style={{ flex: 2 }}>Action</div>
-    //       <div style={{ flex: 1 }}>Trigger</div>
-    //       <div style={{ flex: 3 }}>Outcome</div>
-    //       <div style={{ width: 80 }}></div>
-    //     </div>
-    //   )}
-    //   {/* Action rows */}
-    //   {actionRows.map((a, idx) => (
-    //     <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-    //       <input value={a.id} readOnly style={{ flex: 2, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14, background: '#f9fafb' }} />
-    //       <select value={a.trigger} onChange={e => handleTriggerChange(idx, e.target.value)} style={{ flex: 1, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }}>
-    //         {triggers.map((t: string) => <option key={t} value={t}>{t}</option>)}
-    //       </select>
-    //       <input value={a.outcome || ''} onChange={e => handleOutcomeChange(idx, e.target.value)} placeholder="Outcome note" style={{ flex: 3, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }} />
-    //       <button type="button" onClick={() => onEditAction(a.id)} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, fontSize: 13, cursor: 'pointer', marginRight: 2 }}>Edit</button>
-    //       <button type="button" onClick={() => handleDelete(idx)} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Delete</button>
-    //     </div>
-    //   ))}
-    //   {/* If no actions, show only Add button */}
-    //   {actionRows.length === 0 && (
-    //     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
-    //       <button type="button" onClick={handleAddAction} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginLeft: 2 }}>+</button>
-    //     </div>
-    //   )}
-    //   {/* Add Action Modal */}
-    //   {showAddModal && (
-    //     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
-    //       <div style={{ background: '#fff', borderRadius: 10, padding: 24, minWidth: 320, boxShadow: '0 4px 24px #0002', textAlign: 'center' }}>
-    //         <h4 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Add Action</h4>
-    //         <div style={{ marginBottom: 12 }}>
-    //           <select value={selectedExisting} onChange={e => setSelectedExisting(e.target.value)} style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15, marginBottom: 8 }}>
-    //             <option value="">Select existing action...</option>
-    //             {actions.map((a: Action) => <option key={a.id} value={a.id}>{a.id}</option>)}
-    //           </select>
-    //           <div style={{ fontSize: 13, color: '#64748b', margin: '6px 0' }}>or add a new action ID</div>
-    //           <input value={newActionId} onChange={e => setNewActionId(e.target.value)} placeholder="New action ID" style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15 }} />
-    //         </div>
-    //         <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
-    //           <button type="button" onClick={() => setShowAddModal(false)} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-    //           <button type="button" onClick={handleSaveNewAction} style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Save</button>
-    //         </div>
-    //       </div>
-    //     </div>
-    //   )}
-    // </div>
-    <h1>Scene Actions</h1>
+    <div style={{ background: pastelActions, border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, marginBottom: 16, width: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+        <label style={{ fontWeight: 600, fontSize: 16 }}>Actions</label>
+        <button type="button" onClick={handleAddAction} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginLeft: 2 }}>+</button>
+      </div>
+      {/* Header row */}
+      {actionRows.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, fontWeight: 600, fontSize: 14, marginBottom: 2 }}>
+          <div style={{ flex: 2 }}>Action</div>
+          <div style={{ flex: 1 }}>Trigger</div>
+          <div style={{ flex: 3 }}>Outcome</div>
+          <div style={{ width: 80 }}></div>
+        </div>
+      )}
+      {/* Action rows */}
+      {actionRows.map((a, idx) => (
+        <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <input value={a.id} readOnly style={{ flex: 2, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14, background: '#f9fafb' }} />
+          <select value={a.trigger} onChange={e => handleTriggerChange(idx, e.target.value)} style={{ flex: 1, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }}>
+            {triggers.map((t: string) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <input value={a.outcome || ''} onChange={e => handleOutcomeChange(idx, e.target.value)} placeholder="Outcome note" style={{ flex: 3, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }} />
+          <button type="button" onClick={() => onEditAction(a.id)} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, fontSize: 13, cursor: 'pointer', marginRight: 2 }}>Edit</button>
+          <button type="button" onClick={() => handleDelete(idx)} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Delete</button>
+        </div>
+      ))}
+      {/* If no actions, show only Add button */}
+      {actionRows.length === 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+          <button type="button" onClick={handleAddAction} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginLeft: 2 }}>+</button>
+        </div>
+      )}
+      {/* Add Action Modal */}
+      {showAddModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 24, minWidth: 320, boxShadow: '0 4px 24px #0002', textAlign: 'center' }}>
+            <h4 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Add Action</h4>
+            <div style={{ marginBottom: 12 }}>
+              <select value={selectedExisting} onChange={e => setSelectedExisting(e.target.value)} style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15, marginBottom: 8 }}>
+                <option value="">Select existing action...</option>
+                {actions.map((a: Action) => <option key={a.id} value={a.id}>{a.id}</option>)}
+              </select>
+              <div style={{ fontSize: 13, color: '#64748b', margin: '6px 0' }}>or add a new action ID</div>
+              <input value={newActionId} onChange={e => setNewActionId(e.target.value)} placeholder="New action ID" style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15 }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+              <button type="button" onClick={() => setShowAddModal(false)} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              <button type="button" onClick={handleSaveNewAction} style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+    // <h1>Scene Actions</h1>
   );
 }
 
@@ -167,14 +169,49 @@ export default function SceneManagerClient() {
   const [form, setForm] = useState<Scene>(defaultScene);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const game = searchParams?.get('game') || 'cute-animals';
+// State for modal-on-modal action editing
+const [showActionModal, setShowActionModal] = useState(false);
+const [editingActionId, setEditingActionId] = useState<string | null>(null);
 
-  const scenes: Scene[] = scenesObj ? Object.values(scenesObj) : [];
-  console.log('scenes', scenes);
+  
+  // All scene IDs in teh store, memoized to avoid re-rendering when scenesObj changes
+  const scenes: Scene[] = useMemo(() => scenesObj ? Object.values(scenesObj) : [], [scenesObj]);
 
-  // State for modal-on-modal action editing
-  const [showActionModal, setShowActionModal] = useState(false);
-  const [editingActionId, setEditingActionId] = useState<string | null>(null);
 
+  const orphanedSceneIds = useMemo(() => {
+    if (!scenes || !Array.isArray(scenes) || scenes.length === 0) return []
+    const existingSceneIds = new Set(scenes.map((s) => s.id))
+    
+    // All referenced scene IDs from scene choices
+  const referencedSceneIds = new Set();
+  scenes.forEach(scene => {
+    (scene.choices || []).forEach(choice => {
+      if (choice.nextNodeId) referencedSceneIds.add(choice.nextNodeId);
+    });
+  });
+
+  // 3. All referenced scene IDs from action outcomes (nextSceneOverride)
+  actionsObj && Object.values(actionsObj).forEach((action: Action) => {
+    (action.outcomes || []).forEach(outcome => {
+      if (outcome.nextSceneOverride) referencedSceneIds.add(outcome.nextSceneOverride);
+      // (Optional: outcome.choices[].nextNodeId)
+      (outcome.choices || []).forEach(choice => {
+        if (choice.nextNodeId) referencedSceneIds.add(choice.nextNodeId);
+      });
+    });
+  });
+
+
+  //Todo: Add referenced scene IDs from next node no choices?
+
+  // 4. Orphaned = in allSceneIds but not in referencedSceneIds
+  // (Optionally, exclude the initial scene, e.g., 'forest_clearing')
+  return Array.from(existingSceneIds).filter(
+    id => !referencedSceneIds.has(id) && id !== 'forest_clearing'
+  );
+}, [scenes, actionsObj]);
+
+  
   const missingSceneIds = useMemo(() => {
     if (!scenes || !Array.isArray(scenes) || scenes.length === 0) return []
     const existingSceneIds = new Set(scenes.map((s) => s.id))
@@ -257,13 +294,29 @@ export default function SceneManagerClient() {
   function confirmDelete(idx: number) {
     setDeleteIndex(idx);
   }
-  function handleDelete() {
+  async function handleDelete() {
     if (deleteIndex !== null && scenesObj && scenes[deleteIndex]) {
       const updatedScenes = { ...scenesObj };
       delete updatedScenes[scenes[deleteIndex].id];
-      setScenes(updatedScenes);
-      setDeleteIndex(null);
+      setScenes(updatedScenes); setDeleteIndex(null);
+       // Call backend to delete scene
+    try {
+      const res = await fetch('/api/deleteScene', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: scenes[deleteIndex].id, game }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to delete scene');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete scene');
     }
+    setDeleteIndex(null);
+    }
+
+     
   }
   function cancelDelete() {
     setDeleteIndex(null);
@@ -293,41 +346,69 @@ export default function SceneManagerClient() {
   if (!scenesObj) {
     return <div style={{ marginTop: 48, textAlign: 'center', color: '#64748b', fontSize: 20 }}>Loading scenes...</div>;
   }
+  const nonOrphanedScenes = scenes.filter(scene => !orphanedSceneIds.includes(scene.id));
 
   return (
     // <h1>Scene Manager</h1>
-    <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#1a202c', padding: 32 }}>
+    <div style={{ minHeight: '100vh', background: '#f2f5fe', color: '#1a202c', padding: 32 }}>
       <div style={{ maxWidth: 700, margin: '0 auto' }}>
         <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Scene Manager</h2>
         <Link href="/developer" style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500 }}>&larr; Back to Dashboard</Link>
         <Link href="/developer/actions" style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500, marginLeft: 16 }}>Go to Actions Manager</Link>
-        <ul style={{ marginTop: 16, padding: 0, listStyle: 'none', width: '100%' }}>
-          {scenes.map((scene, idx) => (
-            <li key={scene.id} style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#fff', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px #0001', padding: '6px 12px', borderRadius: 8, marginBottom: 6, fontSize: 15, width: '100%', minWidth: 0 }}>
-              <div style={{ flex: 2, fontWeight: 700, color: '#b35c1e', fontSize: 16, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{scene.location}</div>
-              <div style={{ flex: 1, color: '#64748b', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>({scene.id})</div>
-              <div style={{ flex: 4, color: '#334155', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{scene.description.slice(0, 60) || '...'}</div>
-              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                <button style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={() => openEditModal(idx)}>Edit</button>
-                <button style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={() => confirmDelete(idx)}>Delete</button>
-              </div>
-            </li>
-          ))}
-        </ul>
+       
+      
+        <div style={{ marginTop: 32 }}>
+          <div style={{ background: '#e6fbe6', border: '1px solid #22c55e', borderTopLeftRadius: 8, borderTopRightRadius: 8, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, padding: '8px 20px', marginBottom: 0, borderBottom: '1px solid #e2e8f0' }}>
+            <h4 style={{ fontSize: 18, fontWeight: 700, color: '#15803d', margin: 0 }}>All Scenes</h4>
+          </div>
+          <ul style={{ marginTop: 0, width: '100%', listStyle: 'none', padding: 0, background: '#fff', borderRadius: '0 0 8px 8px', border: '1px solid #e2e8f0', borderTop: 'none' }}>
+            {nonOrphanedScenes.map((scene, idx) => (
+              <li key={scene.id} style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#fff', borderBottom: '1px solid #e2e8f0', boxShadow: '0 1px 3px #0001', padding: '6px 12px', fontSize: 15, width: '100%', minWidth: 0 }}>
+                <div style={{ flex: 2, fontWeight: 700, color: '#b35c1e', fontSize: 16, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{scene.location}</div>
+                <div style={{ flex: 1, color: '#64748b', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>({scene.id})</div>
+                <div style={{ flex: 4, color: '#334155', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{scene.description.slice(0, 60) || '...'}</div>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  <button style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={() => openEditModal(idx)}>Edit</button>
+                  <button style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={() => confirmDelete(idx)}>Delete</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+        
+
         {/* Missing Scenes Section */}
         {missingSceneIds.length > 0 && (
-          <div style={{ marginTop: 32, background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 8, padding: 20 }}>
-            <h4 style={{ fontSize: 18, fontWeight: 700, color: '#b35c1e', marginBottom: 8 }}>Missing Scenes</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {missingSceneIds.map(id => (
-                <li key={id} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-                  <span style={{ fontWeight: 600, color: '#d97706', fontSize: 16 }}>{id}</span>
-                  <button type="button" onClick={() => handleAddMissingScene(id)} style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 16px', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>Add Scene</button>
+          <div style={{ marginTop: 32 }}>
+            <div style={{ background: '#fffbe6', border: '1px solid #ffe58f', borderTopLeftRadius: 8, borderTopRightRadius: 8, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, padding: '8px 20px', marginBottom: 0, borderBottom: '1px solid #e2e8f0' }}>
+              <h4 style={{ fontSize: 18, fontWeight: 700, color: '#b35c1e', margin: 0 }}>Missing Scenes</h4>
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, background: '#fff', borderRadius: '0 0 8px 8px', border: '1px solid #e2e8f0', borderTop: 'none' }}>
+              {missingSceneIds.map((id) => (
+                <li key={id} style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#fff', borderBottom: '1px solid #e2e8f0', boxShadow: '0 1px 3px #0001', padding: '6px 12px', fontSize: 15, width: '100%', minWidth: 0 }}>
+                  <div style={{ flex: 1, color: '#64748b', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{id}</div>
+                  <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                    <button style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={() => handleAddMissingScene(id)}>Add</button>
+                  </div>
                 </li>
               ))}
             </ul>
           </div>
         )}
+          {/* Orphaned Scenes Section */}
+          {orphanedSceneIds.length > 0 && (
+                  <div style={{ marginTop: 32 }}>
+                    <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', borderTopLeftRadius: 8, borderTopRightRadius: 8, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, padding: '8px 20px', marginBottom: 0, borderBottom: '1px solid #e2e8f0' }}>
+                      <h4 style={{ fontSize: 18, fontWeight: 700, color: '#dc2626', margin: 0 }}>Orphaned Scenes</h4>
+                    </div>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, background: '#fff', borderRadius: '0 0 8px 8px', border: '1px solid #e2e8f0', borderTop: 'none' }}>
+                      {orphanedSceneIds.map(id => (
+                        <li key={id} style={{ color: '#991b1b', fontWeight: 600, fontSize: 16, background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '6px 12px' }}>{id}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
         <button style={{ marginTop: 32, background: '#22c55e', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 2px 8px #0001' }} onClick={openAddModal}>+ Add Scene</button>
       </div>
       {/* Modal for Add/Edit */}
@@ -439,6 +520,7 @@ export default function SceneManagerClient() {
           </div>
         </div>
       )}
+
       {/* Render the Actions modal as a modal-on-modal if showActionModal is true */}
       {showActionModal && editingActionId && actionsObj && actionsObj[editingActionId] && (
         <ActionModal
@@ -454,6 +536,8 @@ export default function SceneManagerClient() {
           scenes={Object.values(scenesObj)}
         />
       )}
+
+     
     </div>
   );
 } 

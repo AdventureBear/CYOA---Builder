@@ -193,24 +193,6 @@
       }
     ]
   },
-  "flying_in_air": {
-    "id": "flying_in_air",
-    "name": "",
-    "description": "asdfa",
-    "location": "asdfa",
-    "season": "",
-    "isRequired": false,
-    "choices": [
-      {
-        "text": "asdf",
-        "nextNodeId": "asdf"
-      }
-    ],
-    "actions": [
-      "run_faster"
-    ],
-    "locationImage": ""
-  },
   "free_fall": {
     "id": "free_fall",
     "name": "",
@@ -231,5 +213,21 @@
     "actions": [],
     "locationImage": "",
     "parentSceneId": "top_of_tree"
+  },
+  "test": {
+    "id": "test",
+    "name": "",
+    "description": "MIssing AND orphaned",
+    "location": "\"Test",
+    "season": "",
+    "isRequired": false,
+    "choices": [
+      {
+        "text": "There is one choice",
+        "nextNodeId": "test_missing"
+      }
+    ],
+    "actions": [],
+    "locationImage": ""
   }
 }
