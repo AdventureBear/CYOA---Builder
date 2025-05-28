@@ -63,9 +63,27 @@ useEffect(() => {
       Object.keys(actions).length > 0
     ) {
       hasRunActions.current = true;
-      runActions(currentScene.actions, "onEnter", gameState, actions);
+      // runActions(currentScene.actions, "onEnter", gameState, actions);
+
+      // --- call runner and catch an override -----------------
+      const override = runActions(
+        currentScene.actions,
+        "onEnter",
+        gameState,
+        actions
+      );
+      console.log('override', override);
+
+      // --- if a router action asked for a detour, go there ----
+      if (override && override !== id) {
+        useGameStore.getState().updateBreadcrumbs(override); // optional
+        router.replace(`/scene/${override}`);                // swap URL
+        return;                                              // stop: new scene will mount
+      }
+
+
     }
-  }, [currentScene, gameState, actions])
+  }, [currentScene, gameState, actions,id,router])
 
   const handleChoice = (choice: Choice) => {
     setLastChoice(choice.text);

@@ -105,10 +105,33 @@
   "meadow": {
     "id": "meadow",
     "parentSceneId": "forest_clearing",
-    "location": "Sunny Meadow",
-    "description": "The meadow is full of wildflowers and butterflies. It feels peaceful here.",
+    "location": "Meadow",
+    "description":   "(router only)",
     "actions": [
-      "find_flower",
+      "route_meadow"
+    ]
+  },
+  "meadow_morning": {
+    "id": "meadow_morning",
+    "parentSceneId": "forest_clearing",
+    "location": "Sunny Meadow",
+    "description": "In the morning, the meadow is full of wildflowers and butterflies. It feels peaceful here.",
+    "actions": [
+      "find_flower"
+    ],
+    "choices": [
+      {
+        "text": "Return to the clearing",
+        "nextNodeId": "forest_clearing"
+      }
+    ]
+  },
+  "meadow_dusk": {
+    "id": "meadow_dusk",
+    "parentSceneId": "forest_clearing",
+    "location": "Dusk Meadow",
+    "description": "As the sun sets, the meadow is full of fireflies and the sounds of crickets. The air is cool and the sky is a beautiful shade of pink and orange.",
+    "actions": [
       "meet_robin_in_meadow"
     ],
     "choices": [

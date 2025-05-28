@@ -19,6 +19,7 @@ export default function GameLandingPage({ params }: { params: { game: string } }
           <Link href={`/developer/scenes?game=${game.id}`} style={{ padding: '18px 0', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 20, textDecoration: 'none', boxShadow: '0 2px 8px #0001', letterSpacing: 1 }}>Scene Manager</Link>
           <Link href={`/developer/actions?game=${game.id}`} style={{ padding: '18px 0', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 20, textDecoration: 'none', boxShadow: '0 2px 8px #0001', letterSpacing: 1 }}>Action Manager</Link>
           <Link href={`/developer/playtest?game=${game.id}`} style={{ padding: '18px 0', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 20, textDecoration: 'none', boxShadow: '0 2px 8px #0001', letterSpacing: 1 }}>Playtest</Link>
+          <Link href={`/developer/${game.id}/story-threader`} style={{ padding: '18px 0', background: '#22c55e', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 20, textDecoration: 'none', boxShadow: '0 2px 8px #0001', letterSpacing: 1 }}>Story Threader</Link>
         </div>
       </div>
     </div>

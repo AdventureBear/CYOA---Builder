@@ -17,6 +17,14 @@ export interface ConditionReport {
     const cmp  = cond.comparator ?? "gte";
     return cmp === "eq" ? have === need : have >= need;
   }
+
+  function checkSeason(cond: Condition, state: GameState): boolean {
+    return state.season === cond.value;
+  }
+
+  function checkTimeOfDay(cond: Condition, state: GameState): boolean {
+    return state.timeOfDay === cond.value;
+  }
   
   export function passesConditions(
     conds: Condition[] | undefined,
@@ -64,6 +72,20 @@ export interface ConditionReport {
             msg: `🎲 random • roll=${roll.toFixed(2)}  chance=${chance}  → ${
               pass ? "PASS" : "FAIL"
             }`,
+          };
+        }
+        case "seasonIs": {
+          const pass = checkSeason(choice, state);
+          return {
+            pass,
+            msg: `🌳 seasonIs • ${state.season} = ${choice.value} → ${pass ? "PASS" : "FAIL"}`,
+          };
+        }
+        case "timeOfDayIs": {
+          const pass = checkTimeOfDay(choice, state);
+          return {
+            pass,
+            msg: `🌳 timeOfDayIs • ${state.timeOfDay} = ${choice.value} → ${pass ? "PASS" : "FAIL"}`,
           };
         }
   

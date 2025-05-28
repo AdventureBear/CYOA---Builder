@@ -36,7 +36,8 @@ export interface GameState {
     reputation: Record<string, number>;
     health: number;
     npcs: Record<string, NPC>;
-    timeOfDay: 'morning' | 'afternoon' | 'dusk' | 'night';
+    timeOfDay: 'dawn' | 'sunrise'| 'morning' | 'noon'  |'afternoon' |  'evening' |  'sunset' | 'dusk' | 'night' |  'midnight'  ;
+    season: 'spring' | 'summer' | 'autumn' | 'winter';
     breadcrumbs: string[];
 }
 
@@ -112,6 +113,7 @@ export interface Outcome {
     stateChanges: StateChange[];
     nextSceneOverride?: string;   // optional detour
     choices?: Choice[];
+    conditions?: Condition[]; // for random encoutners, escalating encounters, etc.
   }
   
   export interface Action {
@@ -126,7 +128,7 @@ export interface Outcome {
 
 
   export interface Condition {
-    type: "hasItem" | "flagSet" | "flagNotSet" | "random" | "reputation" | "doesNotHaveItem";
+    type: "hasItem" | "flagSet" | "flagNotSet" | "random" | "reputation" | "doesNotHaveItem" | "seasonIs" | "timeOfDayIs";
     key?:   string;        // item name, flag id, etc.
     value?: ConditionValue;           // expected value (true, 3+, etc.)
     chance?: number;       // 0–1 for random rolls

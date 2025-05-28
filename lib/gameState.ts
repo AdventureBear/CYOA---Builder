@@ -10,7 +10,8 @@ export function createInitialGameState(options: GameState): GameState {
     flags: {},
     reputation: {},
     health: options.health ?? 10,
-    timeOfDay: 'morning',
+    timeOfDay: 'dusk',
+    season: 'spring',
     breadcrumbs: [],
   };
 }
@@ -23,6 +24,7 @@ export const initialGameState: GameState = createInitialGameState({
   reputation: {},
   health: 10,
   npcs: {},
-  timeOfDay: 'morning',
+  timeOfDay: 'dusk',
+  season: 'spring',
   breadcrumbs: [],
 })

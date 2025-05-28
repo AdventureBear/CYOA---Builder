@@ -450,5 +450,20 @@
         ]
       }
     ]
-  }
+  },
+  "route_meadow": {
+  "id": "route_meadow",
+  "trigger": "onEnter",
+  "outcomes": [
+    { "conditions":[
+      {
+        "type": "timeOfDayIs",
+        "value": "morning"
+      }
+    
+    ],
+      "nextSceneOverride":"meadow_morning" },
+    { "nextSceneOverride":"meadow_dusk" }
+  ]
+}
 }

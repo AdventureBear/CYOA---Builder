@@ -4,16 +4,17 @@ import { passesConditions } from "./passesConditions";
 import { useGameStore } from "@/store/gameStore";
 import { applyChanges } from "./applyChanges";
 import { ModalChoice, useModalStore } from "@/store/modalStore";
+import { logEvent } from "@/lib/logger";
 
 export function runActions(
   ids: string[],
   trigger: Trigger,
   stateSnapshot: GameState,
   actions: Record<string, Action>
-) {
+):string | undefined {
   // console.log("runActions ids:", ids, "actions keys:", actions && Object.keys(actions));
  
-
+  let override: string | undefined 
   ids.forEach((id) => {
     // console.log("Trying to access actions[id]:", id, actions && actions[id]);
 
@@ -61,8 +62,28 @@ export function runActions(
 
 
     /* ---- Step 4 logic (stateChanges) will go here ---- */
-    const outcome = action.outcomes[0];     // step‑4: use first outcome only
+    //const outcome = action.outcomes[0];     // step‑4: use first outcome only
     
+  /* ---------- find first matching outcome ---------- */
+  const outcome = action.outcomes.find(o =>
+    passesConditions(o.conditions, stateSnapshot).passed
+  );
+
+  if (!outcome) {
+    console.log("No outcome passed - action aborts");
+    return;
+  }
+  if (outcome.nextSceneOverride) {
+    override = outcome.nextSceneOverride;
+  }
+
+  if (outcome) {
+    logEvent("outcome", {
+      description: outcome.description,
+      stateChanges: outcome.stateChanges
+    });
+  }
+
     if (outcome) {
       // Queue the modal update for the next tick
       setTimeout(() => {
@@ -85,6 +106,7 @@ if (outcome.stateChanges?.length) {
       }, 0);
     } 
   });
+  return override;
 }
 
 // New function to handle choice selection
