@@ -32,11 +32,6 @@ async function saveSceneToDisk(scene: Scene, game: string) {
   }
 }
 
-// More colorful pastel backgrounds
-const pastelBasic = '#e6f7fa'; // blue-cyan
-const pastelActions = '#f9f6e7'; // yellow
-const pastelChoices = '#f6e7fa'; // purple
-
 interface SceneActionRow {
   id: string;
   trigger: string;
@@ -101,7 +96,7 @@ function SceneActionsBox({ form, setForm, actionsObj, onEditAction, onUpdateActi
   }
 
   return (
-    <div style={{ background: pastelActions, border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, marginBottom: 16, width: '100%' }}>
+    <div style={{ background: '#f9f6e7', border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, marginBottom: 16, width: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
         <label style={{ fontWeight: 600, fontSize: 16 }}>Actions</label>
         <button type="button" onClick={handleAddAction} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginLeft: 2 }}>+</button>
@@ -453,15 +448,15 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
 
   return (
     // <h1>Scene Manager</h1>
-    <div style={{ minHeight: '100vh', background: '#f2f5fe', color: '#1a202c', padding: 32 }}>
-      <div style={{ maxWidth: 700, margin: '0 auto' }}>
-        <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Scene Manager</h2>
-        <Link href="/developer" style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500 }}>&larr; Back to Dashboard</Link>
-        <Link href="/developer/actions" style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500, marginLeft: 16 }}>Go to Actions Manager</Link>
-       
-      
-        <div style={{ marginTop: 32 }}>
-          <h4 style={{ fontSize: 18, fontWeight: 700, color: '#15803d', margin: '0 0 4px 0', background: 'none', border: 'none' }}>All Scenes</h4>
+    <div className="min-h-screen bg-blue-50 text-slate-900 p-8">
+      <div className="max-w-[700px] mx-auto">
+        <h2 className="text-[32px] font-bold mb-2">Scene Manager</h2>
+        <div className="flex gap-4 mb-4">
+          <Link href="/developer" className="text-blue-600 underline font-medium">&larr; Back to Dashboard</Link>
+          <Link href="/developer/actions" className="text-blue-600 underline font-medium ml-4">Go to Actions Manager</Link>
+        </div>
+        <div className="mt-8">
+          <h4 className="text-[18px] font-bold text-green-700 mb-1">All Scenes</h4>
           <SceneListing
             scenes={nonOrphanedScenes}
             type="active"
@@ -469,12 +464,10 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
             onDelete={confirmDelete}
           />
         </div>
-        
-
         {/* Missing Scenes Section */}
         {missingSceneIds.length > 0 && (
-          <div style={{ marginTop: 32 }}>
-            <h4 style={{ fontSize: 18, fontWeight: 700, color: '#b35c1e', margin: '0 0 4px 0', background: 'none', border: 'none' }}>Missing Scenes</h4>
+          <div className="mt-8">
+            <h4 className="text-[18px] font-bold text-orange-700 mb-1">Missing Scenes</h4>
             <SceneListing
               scenes={missingSceneIds}
               type="missing"
@@ -482,50 +475,49 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
             />
           </div>
         )}
-          {/* Orphaned Scenes Section */}
-          {orphanedSceneIds.length > 0 && (
-                  <div style={{ marginTop: 32 }}>
-                    <h4 style={{ fontSize: 18, fontWeight: 700, color: '#dc2626', margin: '0 0 4px 0', background: 'none', border: 'none' }}>Orphaned Scenes</h4>
-                    <SceneListing
-                      scenes={orphanedSceneIds.map(id => scenes.find(s => s.id === id)).filter(Boolean) as Scene[]}
-                      type="orphaned"
-                      onEdit={openEditModal}
-                      onDelete={confirmDelete}
-                    />
-                  </div>
-                )}
-
-        <button style={{ marginTop: 32, background: '#22c55e', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 2px 8px #0001' }} onClick={openAddModal}>+ Add Scene</button>
+        {/* Orphaned Scenes Section */}
+        {orphanedSceneIds.length > 0 && (
+          <div className="mt-8">
+            <h4 className="text-[18px] font-bold text-red-600 mb-1">Orphaned Scenes</h4>
+            <SceneListing
+              scenes={orphanedSceneIds.map(id => scenes.find(s => s.id === id)).filter(Boolean) as Scene[]}
+              type="orphaned"
+              onEdit={openEditModal}
+              onDelete={confirmDelete}
+            />
+          </div>
+        )}
+        <button className="mt-8 bg-green-500 text-white rounded-lg px-7 py-3 font-bold text-[18px] cursor-pointer shadow-md hover:bg-green-600 transition" onClick={openAddModal}>+ Add Scene</button>
       </div>
       {/* Modal for Add/Edit */}
       {showModal && (!form ? null : (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <form onSubmit={handleSubmit} style={{ background: '#fff', borderRadius: 12, padding: 24, minWidth: 600, boxShadow: '0 4px 24px #0002', maxWidth: 1080, width: '90%', minHeight: '90vh', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>{editIndex === null ? 'Add Scene' : 'Edit Scene'}</h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]">
+          <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 min-w-[600px] shadow-2xl max-w-[1080px] w-[90%] min-h-[90vh] max-h-[90vh] overflow-y-auto flex flex-col">
+            <h3 className="text-[22px] font-bold mb-1.5">{editIndex === null ? 'Add Scene' : 'Edit Scene'}</h3>
             {/* Basic Description section with more colorful pastel */}
-            <div style={{ background: pastelBasic, border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, marginBottom: 16, width: '100%' }}>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, justifyContent: 'stretch' }}>
-                  <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 2 }}>Basic Information</div>
+            <div className="bg-cyan-50 border border-slate-200 rounded-lg p-3 mb-4 w-full">
+              <div className="flex gap-2.5">
+                <div className="basis-1/5 flex flex-col gap-0.5 justify-stretch">
+                  <div className="font-semibold text-[15px] mb-0.5">Basic Information</div>
                   {/* ID */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                    <label style={{ fontWeight: 600, fontSize: 13, minWidth: 70 }}>ID</label>
-                    <input name="id" value={form.id} onChange={handleFormChange} required style={{ flex: 1, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }} disabled={editIndex !== null} />
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <label className="font-semibold text-[13px] min-w-[70px]">ID</label>
+                    <input name="id" value={form.id} onChange={handleFormChange} required className="flex-1 px-1 py-0.5 rounded border border-slate-300 text-[14px]" disabled={editIndex !== null} />
                   </div>
                   {/* Location */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                    <label style={{ fontWeight: 600, fontSize: 13, minWidth: 70 }}>Location</label>
-                    <input name="location" value={form.location} onChange={handleFormChange} required style={{ flex: 1, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }} />
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <label className="font-semibold text-[13px] min-w-[70px]">Location</label>
+                    <input name="location" value={form.location} onChange={handleFormChange} required className="flex-1 px-1 py-0.5 rounded border border-slate-300 text-[14px]" />
                   </div>
                   {/* Season */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                    <label style={{ fontWeight: 600, fontSize: 13, minWidth: 70 }}>Season</label>
-                    <input name="season" value={form.season} onChange={handleFormChange} style={{ flex: 1, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }} />
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <label className="font-semibold text-[13px] min-w-[70px]">Season</label>
+                    <input name="season" value={form.season} onChange={handleFormChange} className="flex-1 px-1 py-0.5 rounded border border-slate-300 text-[14px]" />
                   </div>
                   {/* Parent Scene */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                    <label style={{ fontWeight: 600, fontSize: 13, minWidth: 70 }}>Parent</label>
-                    <select name="parentSceneId" value={form.parentSceneId || ''} onChange={handleFormChange} style={{ flex: 1, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }}>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <label className="font-semibold text-[13px] min-w-[70px]">Parent</label>
+                    <select name="parentSceneId" value={form.parentSceneId || ''} onChange={handleFormChange} className="flex-1 px-1 py-0.5 rounded border border-slate-300 text-[14px]">
                       <option value="">None</option>
                       {scenes.filter(s => s.id !== form.id).map(s => (
                         <option key={s.id} value={s.id}>{s.id}</option>
@@ -533,14 +525,14 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
                     </select>
                   </div>
                   {/* Required? */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                    <label style={{ fontWeight: 600, fontSize: 13, minWidth: 70 }}>Required?</label>
-                    <input type="checkbox" name="isRequired" checked={form.isRequired} onChange={handleFormChange} style={{ marginLeft: 0 }} />
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <label className="font-semibold text-[13px] min-w-[70px]">Required?</label>
+                    <input type="checkbox" name="isRequired" checked={form.isRequired} onChange={handleFormChange} className="ml-0" />
                   </div>
                 </div>
-                <div style={{ flex: 2, display: 'flex', flexDirection: 'column', justifyContent: 'stretch' }}>
-                  <label style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>Description</label>
-                  <textarea name="description" value={form.description} onChange={handleFormChange} required style={{ width: '100%', padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14, minHeight: 112, height: '112px', marginTop: 0, resize: 'vertical' }} />
+                <div className="basis-4/5 flex flex-col justify-stretch">
+                  <label className="font-semibold text-[14px] mb-0.5">Description</label>
+                  <textarea name="description" value={form.description} onChange={handleFormChange} required className="w-full px-1 py-0.5 rounded border border-slate-300 text-[14px] min-h-[112px] h-[112px] mt-0 resize-vertical" />
                 </div>
               </div>
             </div>
@@ -565,34 +557,36 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
               }}
             />
             {/* Choices section with more colorful pastel */}
-            <div style={{ background: pastelChoices, border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, marginBottom: 0, width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <label style={{ fontWeight: 600, fontSize: 16 }}>Choices</label>
-                <button type="button" onClick={addChoice} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginLeft: 2 }}>+</button>
+            <div className="bg-purple-50 border border-slate-200 rounded-lg p-3 w-full">
+              <div className="flex items-center gap-1.5 mb-2">
+                <label className="font-semibold text-[16px]">Choices</label>
+                <button type="button" onClick={addChoice} className="bg-blue-600 text-white border-none rounded-full w-7 h-7 flex items-center justify-center font-bold text-[18px] cursor-pointer ml-0.5">+</button>
               </div>
               {/* Headers for choices */}
-              <div style={{ display: 'flex', gap: 8, fontWeight: 600, fontSize: 14, marginBottom: 2 }}>
-                <div style={{ flex: 2 }}>Text</div>
-                <div style={{ flex: 1 }}>Next Node ID</div>
+              <div className="flex gap-2 font-semibold text-[14px] mb-0.5">
+                <div className="basis-4/5">Text</div>
+                <div className="basis-1/5">Next Node ID</div>
               </div>
               {form.choices.map((choice, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <input placeholder="Text" value={choice.text} onChange={e => handleChoiceChange(idx, 'text', e.target.value)} required style={{ flex: 2, minWidth: 80, padding: '2px 4px', borderRadius: 2, border: '1px solid #cbd5e1', fontSize: 14, background: '#fff' }} />
-                  <input placeholder="Next Node ID" value={choice.nextNodeId} onChange={e => handleChoiceChange(idx, 'nextNodeId', e.target.value)} required style={{ flex: 1, minWidth: 60, padding: '2px 4px', borderRadius: 2, border: '1px solid #cbd5e1', fontSize: 14, background: '#fff' }} />
+                <div key={idx} className="flex items-center gap-2 mb-1">
+                  <input placeholder="Text" value={choice.text} onChange={e => handleChoiceChange(idx, 'text', e.target.value)} required className="basis-4/5 min-w-[80px] px-1 py-0.5 rounded border border-slate-300 text-[14px] bg-white" />
+                  <input placeholder="Next Node ID" value={choice.nextNodeId} onChange={e => handleChoiceChange(idx, 'nextNodeId', e.target.value)} required className="basis-1/5 min-w-[60px] px-1 py-0.5 rounded border border-slate-300 text-[14px] bg-white" />
                   {form.choices.length > 1 && (
-                    <button type="button" onClick={() => removeChoice(idx)} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 2, padding: '2px 8px', fontWeight: 600, cursor: 'pointer', fontSize: 13, marginLeft: 2 }}>Remove</button>
+                    <button type="button" onClick={() => removeChoice(idx)} className="bg-red-500 text-white border-none rounded px-2 font-semibold cursor-pointer text-[13px] ml-0.5">Remove</button>
                   )}
                 </div>
               ))}
             </div>
-            <div style={{ flex: 1 }} /> {/* Spacer to push buttons to bottom */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, position: 'sticky', bottom: 0, background: '#fff', paddingTop: 12, paddingBottom: 8, zIndex: 2 }}>
-              <button type="button" onClick={closeModal} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-              <button type="submit" style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>{editIndex === null ? 'Add' : 'Save'}</button>
+            <div className="flex-1" /> {/* Spacer to push buttons to bottom */}
+            <div className="flex justify-end gap-3 sticky bottom-0 bg-white pt-3 pb-2 z-2">
+              <button type="button" onClick={closeModal} className="bg-slate-500 text-white border-none rounded-lg px-5 py-2 font-semibold cursor-pointer">Cancel</button>
+              <button type="submit" className="bg-green-500 text-white border-none rounded-lg px-5 py-2 font-semibold cursor-pointer">{editIndex === null ? 'Add' : 'Save'}</button>
             </div>
           </form>
         </div>
       ))}
+
+
       {/* Delete Confirmation */}
       {deleteIndex !== null && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
