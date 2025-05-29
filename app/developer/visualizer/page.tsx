@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import ReactFlow, {
   useNodesState,
   Background,
@@ -18,18 +18,18 @@ import { Scene } from '@/app/types';
 
 
 /* 0. Helper to map variant id -> hub id */
-function hubId(id: string) {
-    return id.replace(/_(spring|summer|fall|winter|morning|afternoon|evening)$/, '');
-  }
+// function hubId(id: string) {
+//     return id.replace(/_(spring|summer|fall|winter|morning|afternoon|evening)$/, '');
+//   }
 
 /* ------------------------------------------------------------------
    buildGraph — ONE arrow per real navigation direction
    • dashed parent → child, solid normal choices
-   • “Return to …” links get no label
+   • "Return to …" links get no label
    -----------------------------------------------------------------*/
 
    
-   export function buildGraph(
+ function buildGraph(
     scenes: Record<string, Scene>
   ): { nodes: Node[]; edges: Edge[] } {
     const nodes: Node[] = [];
@@ -51,7 +51,7 @@ function hubId(id: string) {
       nodes.push({
         id: scene.id,
         data: { label: scene.id },
-        position: { x: (idx % 6) * 240, y: Math.floor(idx / 6) * 180 },
+        position: { x: (idx % 4) * 120, y: Math.floor(idx / 4) * 120 },
         style: { width: 160, padding: 8, fontSize: 12 },
         sourcePosition: Position.Right,
         targetPosition: Position.Left,
@@ -106,7 +106,7 @@ function hubId(id: string) {
     pairInfo.forEach((info, key) => {
       const [a, b] = key.split("|");
       const twoWay = info.fwd && info.rev;
-      const parentIsA = info.parentDir === "AtoB";
+      // const parentIsA = info.parentDir === "AtoB";
   
       edges.push({
         id: key,
@@ -134,17 +134,21 @@ function hubId(id: string) {
 /* ---------- component ---------------------------------------------- */
 export default function SceneFlow() {
   const scenes = useGameStore((s) => s.scenes);
+ const [nodes, setNodes, onNodesChange] = useNodesState([]);
 
-  if (!scenes) return <p>Loading graph…</p>;
+
 
   /* build graph once whenever scenes changes */
   const { nodes: initialNodes, edges } = useMemo(
-    () => buildGraph(scenes),
+    () => buildGraph(scenes || {}),
     [scenes]
   );
-
+  useEffect(() => {
+    setNodes(initialNodes)
+  }, [initialNodes, setNodes])
+  
   /* make nodes drag-able */
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  if (!scenes) return <p>Loading graph…</p>;
 
   const initialViewport = { x: 150, y: 150, zoom: 1.2 };
 
