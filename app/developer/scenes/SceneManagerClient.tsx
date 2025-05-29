@@ -170,93 +170,94 @@ function SceneListing({ scenes, type, onEdit, onDelete, onAdd }: {
   const borderColor = type === 'active' ? '#22c55e' : type === 'missing' ? '#ffe58f' : '#fca5a5';
   const headerBg = type === 'active' ? '#e6fbe6' : type === 'missing' ? '#fffbe6' : '#fee2e2';
   return (
-    <div style={{ border: `1px solid ${borderColor}`, borderTop: 'none', borderRadius: '0 0 8px 8px', marginBottom: 0, overflow: 'hidden' }}>
-      {scenes.length > 0 && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16,
-          background: headerBg,
-          borderTop: 'none',
-          borderRadius: 0,
-          fontWeight: 700,
-          fontSize: 15,
-          color: '#1a202c',
-          padding: '7px 12px 7px 12px',
-          borderBottom: '1px solid #e2e8f0',
-        }}>
-          <div style={{ flex: 1.2, fontWeight: 700 }}>Location</div>
-          <div style={{ flex: 1, fontWeight: 700 }}>ID</div>
-          <div style={{ flex: 4, fontWeight: 700 }}>Description</div>
-          <div style={{ display: 'flex', flex: 1, justifyContent: 'flex-end', gap: 6, fontWeight: 700 }}>Actions</div>
-        </div>
-      )}
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, background: '#fff', borderRadius: '0 0 8px 8px', border: 'none' }}>
-        {scenes.map((scene, idx) => {
-          const id = typeof scene === 'string' ? scene : scene.id;
-          const location = typeof scene === 'string' ? undefined : scene.location;
-          const description = typeof scene === 'string' ? undefined : scene.description;
-          // Add border radius to the last item
-          const isLast = idx === scenes.length - 1;
-          return (
-            <li
-              key={id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 16,
-                background: '#fff',
-                borderBottom: '1px solid #e2e8f0',
-                boxShadow: '0 1px 3px #0001',
-                padding: '8px 12px',
-                fontSize: 15,
-                width: '100%',
-                minWidth: 0,
-                borderBottomLeftRadius: isLast ? 8 : 0,
-                borderBottomRightRadius: isLast ? 8 : 0,
-                cursor: (type === 'active' || type === 'missing') ? 'pointer' : 'default',
-                transition: 'background 0.15s',
-              }}
-              onClick={
-                (type === 'active' && onEdit) ? () => onEdit(idx)
-                  : (type === 'missing' && onAdd) ? () => onAdd(id)
-                  : undefined
-              }
-              onKeyDown={
-                (type === 'active' && onEdit) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onEdit(idx); }
-                  : (type === 'missing' && onAdd) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onAdd(id); }
-                  : undefined
-              }
-              role={(type === 'active' || type === 'missing') ? 'button' : undefined}
-              tabIndex={(type === 'active' || type === 'missing') ? 0 : undefined}
-              onMouseEnter={e => {
-                if (type === 'active' || type === 'missing' || type === 'orphaned') {
-                  (e.currentTarget as HTMLElement).style.background = '#f3f4f6';
+    <>
+      {/* h4 title should be rendered outside this component by the parent */}
+      <div style={{ border: `1px solid ${borderColor}`, borderRadius: 8, marginBottom: 0, overflow: 'hidden', background: '#fff' }}>
+        {scenes.length > 0 && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            background: headerBg,
+            fontWeight: 700,
+            fontSize: 15,
+            color: '#1a202c',
+            padding: '7px 12px 7px 12px',
+            borderBottom: '1px solid #e2e8f0',
+          }}>
+            <div style={{ flex: 1.2, fontWeight: 700 }}>Location</div>
+            <div style={{ flex: 1, fontWeight: 700 }}>ID</div>
+            <div style={{ flex: 4, fontWeight: 700 }}>Description</div>
+            <div style={{ display: 'flex', flex: 1, justifyContent: 'flex-end', gap: 6, fontWeight: 700 }}>Actions</div>
+          </div>
+        )}
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, background: '#fff', borderRadius: 0, border: 'none' }}>
+          {scenes.map((scene, idx) => {
+            const id = typeof scene === 'string' ? scene : scene.id;
+            const location = typeof scene === 'string' ? undefined : scene.location;
+            const description = typeof scene === 'string' ? undefined : scene.description;
+            // Add border radius to the last item
+            const isLast = idx === scenes.length - 1;
+            return (
+              <li
+                key={id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  background: '#fff',
+                  borderBottom: '1px solid #e2e8f0',
+                  boxShadow: '0 1px 3px #0001',
+                  padding: '8px 12px',
+                  fontSize: 15,
+                  width: '100%',
+                  minWidth: 0,
+                  borderBottomLeftRadius: isLast ? 8 : 0,
+                  borderBottomRightRadius: isLast ? 8 : 0,
+                  cursor: (type === 'active' || type === 'missing') ? 'pointer' : 'default',
+                  transition: 'background 0.15s',
+                }}
+                onClick={
+                  (type === 'active' && onEdit) ? () => onEdit(idx)
+                    : (type === 'missing' && onAdd) ? () => onAdd(id)
+                    : undefined
                 }
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.background = '#fff';
-              }}
-            >
-              <div style={{ flex: 1.2, fontWeight: 500, color: '#111', fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{location || ''}</div>
-              <div style={{ flex: 1, color: '#64748b', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>({id})</div>
-              <div style={{ flex: 4, color: '#334155', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{description ? description.slice(0, 60) : ''}</div>
-              <div style={{ display: 'flex', gap: 6, flex: 1, justifyContent: 'flex-end' }}>
-                {(type === 'active' || type === 'orphaned') && onEdit && (
-                  <button style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={e => { e.stopPropagation(); onEdit(idx); }}>Edit</button>
-                )}
-                {(type === 'active' || type === 'orphaned') && onDelete && (
-                  <button style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={e => { e.stopPropagation(); onDelete(idx); }}>Delete</button>
-                )}
-                {type === 'missing' && onAdd && (
-                  <button style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={e => { e.stopPropagation(); onAdd(id); }}>Add</button>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+                onKeyDown={
+                  (type === 'active' && onEdit) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onEdit(idx); }
+                    : (type === 'missing' && onAdd) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onAdd(id); }
+                    : undefined
+                }
+                role={(type === 'active' || type === 'missing') ? 'button' : undefined}
+                tabIndex={(type === 'active' || type === 'missing') ? 0 : undefined}
+                onMouseEnter={e => {
+                  if (type === 'active' || type === 'missing' || type === 'orphaned') {
+                    (e.currentTarget as HTMLElement).style.background = '#f3f4f6';
+                  }
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.background = '#fff';
+                }}
+              >
+                <div style={{ flex: 1.2, fontWeight: 500, color: '#111', fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{location || ''}</div>
+                <div style={{ flex: 1, color: '#64748b', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>({id})</div>
+                <div style={{ flex: 4, color: '#334155', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{description ? description.slice(0, 60) : ''}</div>
+                <div style={{ display: 'flex', gap: 6, flex: 1, justifyContent: 'flex-end' }}>
+                  {(type === 'active' || type === 'orphaned') && onEdit && (
+                    <button style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={e => { e.stopPropagation(); onEdit(idx); }}>Edit</button>
+                  )}
+                  {(type === 'active' || type === 'orphaned') && onDelete && (
+                    <button style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={e => { e.stopPropagation(); onDelete(idx); }}>Delete</button>
+                  )}
+                  {type === 'missing' && onAdd && (
+                    <button style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={e => { e.stopPropagation(); onAdd(id); }}>Add</button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </>
   );
 }
 
@@ -460,9 +461,7 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
        
       
         <div style={{ marginTop: 32 }}>
-          <div style={{ background: '#e6fbe6', border: '1px solid #22c55e', borderTopLeftRadius: 8, borderTopRightRadius: 8, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, padding: '8px 20px', marginBottom: 0, borderBottom: '1px solid #e2e8f0' }}>
-            <h4 style={{ fontSize: 18, fontWeight: 700, color: '#15803d', margin: 0 }}>All Scenes</h4>
-          </div>
+          <h4 style={{ fontSize: 18, fontWeight: 700, color: '#15803d', margin: '0 0 4px 0', background: 'none', border: 'none' }}>All Scenes</h4>
           <SceneListing
             scenes={nonOrphanedScenes}
             type="active"
@@ -475,9 +474,7 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
         {/* Missing Scenes Section */}
         {missingSceneIds.length > 0 && (
           <div style={{ marginTop: 32 }}>
-            <div style={{ background: '#fffbe6', border: '1px solid #ffe58f', borderTopLeftRadius: 8, borderTopRightRadius: 8, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, padding: '8px 20px', marginBottom: 0, borderBottom: '1px solid #e2e8f0' }}>
-              <h4 style={{ fontSize: 18, fontWeight: 700, color: '#b35c1e', margin: 0 }}>Missing Scenes</h4>
-            </div>
+            <h4 style={{ fontSize: 18, fontWeight: 700, color: '#b35c1e', margin: '0 0 4px 0', background: 'none', border: 'none' }}>Missing Scenes</h4>
             <SceneListing
               scenes={missingSceneIds}
               type="missing"
@@ -488,9 +485,7 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
           {/* Orphaned Scenes Section */}
           {orphanedSceneIds.length > 0 && (
                   <div style={{ marginTop: 32 }}>
-                    <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', borderTopLeftRadius: 8, borderTopRightRadius: 8, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, padding: '8px 20px', marginBottom: 0, borderBottom: '1px solid #e2e8f0' }}>
-                      <h4 style={{ fontSize: 18, fontWeight: 700, color: '#dc2626', margin: 0 }}>Orphaned Scenes</h4>
-                    </div>
+                    <h4 style={{ fontSize: 18, fontWeight: 700, color: '#dc2626', margin: '0 0 4px 0', background: 'none', border: 'none' }}>Orphaned Scenes</h4>
                     <SceneListing
                       scenes={orphanedSceneIds.map(id => scenes.find(s => s.id === id)).filter(Boolean) as Scene[]}
                       type="orphaned"
