@@ -161,98 +161,73 @@ function SceneListing({ scenes, type, onEdit, onDelete, onAdd }: {
   onDelete?: (idx: number) => void;
   onAdd?: (id: string) => void;
 }) {
-  // Determine border color based on type
-  const borderColor = type === 'active' ? '#22c55e' : type === 'missing' ? '#ffe58f' : '#fca5a5';
-  const headerBg = type === 'active' ? '#e6fbe6' : type === 'missing' ? '#fffbe6' : '#fee2e2';
+  // Determine border and header color based on type
+  const borderColor = type === 'active' ? 'border-green-500' : type === 'missing' ? 'border-yellow-300' : 'border-red-300';
+  const headerBg = type === 'active' ? 'bg-green-50' : type === 'missing' ? 'bg-yellow-50' : 'bg-red-50';
+  const headerText = 'text-slate-900';
   return (
-    <>
-      {/* h4 title should be rendered outside this component by the parent */}
-      <div style={{ border: `1px solid ${borderColor}`, borderRadius: 8, marginBottom: 0, overflow: 'hidden', background: '#fff' }}>
-        {scenes.length > 0 && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
-            background: headerBg,
-            fontWeight: 700,
-            fontSize: 15,
-            color: '#1a202c',
-            padding: '7px 12px 7px 12px',
-            borderBottom: '1px solid #e2e8f0',
-          }}>
-            <div style={{ flex: 1.2, fontWeight: 700 }}>Location</div>
-            <div style={{ flex: 1, fontWeight: 700 }}>ID</div>
-            <div style={{ flex: 4, fontWeight: 700 }}>Description</div>
-            <div style={{ display: 'flex', flex: 1, justifyContent: 'flex-end', gap: 6, fontWeight: 700 }}>Actions</div>
-          </div>
-        )}
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, background: '#fff', borderRadius: 0, border: 'none' }}>
-          {scenes.map((scene, idx) => {
-            const id = typeof scene === 'string' ? scene : scene.id;
-            const location = typeof scene === 'string' ? undefined : scene.location;
-            const description = typeof scene === 'string' ? undefined : scene.description;
-            // Add border radius to the last item
-            const isLast = idx === scenes.length - 1;
-            return (
-              <li
-                key={id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 16,
-                  background: '#fff',
-                  borderBottom: '1px solid #e2e8f0',
-                  boxShadow: '0 1px 3px #0001',
-                  padding: '8px 12px',
-                  fontSize: 15,
-                  width: '100%',
-                  minWidth: 0,
-                  borderBottomLeftRadius: isLast ? 8 : 0,
-                  borderBottomRightRadius: isLast ? 8 : 0,
-                  cursor: (type === 'active' || type === 'missing') ? 'pointer' : 'default',
-                  transition: 'background 0.15s',
-                }}
-                onClick={
-                  (type === 'active' && onEdit) ? () => onEdit(idx)
-                    : (type === 'missing' && onAdd) ? () => onAdd(id)
-                    : undefined
-                }
-                onKeyDown={
-                  (type === 'active' && onEdit) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onEdit(idx); }
-                    : (type === 'missing' && onAdd) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onAdd(id); }
-                    : undefined
-                }
-                role={(type === 'active' || type === 'missing') ? 'button' : undefined}
-                tabIndex={(type === 'active' || type === 'missing') ? 0 : undefined}
-                onMouseEnter={e => {
-                  if (type === 'active' || type === 'missing' || type === 'orphaned') {
-                    (e.currentTarget as HTMLElement).style.background = '#f3f4f6';
-                  }
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.background = '#fff';
-                }}
-              >
-                <div style={{ flex: 1.2, fontWeight: 500, color: '#111', fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{location || ''}</div>
-                <div style={{ flex: 1, color: '#64748b', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>({id})</div>
-                <div style={{ flex: 4, color: '#334155', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{description ? description.slice(0, 60) : ''}</div>
-                <div style={{ display: 'flex', gap: 6, flex: 1, justifyContent: 'flex-end' }}>
-                  {(type === 'active' || type === 'orphaned') && onEdit && (
-                    <button style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={e => { e.stopPropagation(); onEdit(idx); }}>Edit</button>
-                  )}
-                  {(type === 'active' || type === 'orphaned') && onDelete && (
-                    <button style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={e => { e.stopPropagation(); onDelete(idx); }}>Delete</button>
-                  )}
-                  {type === 'missing' && onAdd && (
-                    <button style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={e => { e.stopPropagation(); onAdd(id); }}>Add</button>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </>
+    <div className={`border ${borderColor} rounded-lg mb-0 overflow-hidden bg-white`}>
+      {scenes.length > 0 && (
+        <div className={`flex items-center gap-4 ${headerBg} font-bold text-[15px] ${headerText} px-3 py-2 border-b border-slate-200`}>
+          <div className="flex-[1.2]">Location</div>
+          <div className="flex-1">ID</div>
+          <div className="flex-[4]">Description</div>
+          <div className="flex flex-1 justify-end gap-2">Actions</div>
+        </div>
+      )}
+      <ul className="list-none p-0 m-0 bg-white">
+        {scenes.map((scene, idx) => {
+          const id = typeof scene === 'string' ? scene : scene.id;
+          const location = typeof scene === 'string' ? undefined : scene.location;
+          const description = typeof scene === 'string' ? undefined : scene.description;
+          const isLast = idx === scenes.length - 1;
+          return (
+            <li
+              key={id}
+              className={`flex items-center gap-4 bg-white border-b border-slate-200 shadow-sm px-3 py-2 text-[15px] w-full min-w-0 ${isLast ? 'rounded-b-lg' : ''} ${
+                (type === 'active' || type === 'missing') ? 'cursor-pointer transition hover:bg-slate-100' : ''
+              }`}
+              onClick={
+                (type === 'active' && onEdit) ? () => onEdit(idx)
+                  : (type === 'missing' && onAdd) ? () => onAdd(id)
+                  : undefined
+              }
+              onKeyDown={
+                (type === 'active' && onEdit) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onEdit(idx); }
+                  : (type === 'missing' && onAdd) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onAdd(id); }
+                  : undefined
+              }
+              role={(type === 'active' || type === 'missing') ? 'button' : undefined}
+              tabIndex={(type === 'active' || type === 'missing') ? 0 : undefined}
+            >
+              <div className="flex-[1.2] font-medium text-slate-900 truncate">{location || ''}</div>
+              <div className="flex-1 text-slate-500 text-[14px] truncate">({id})</div>
+              <div className="flex-[4] text-slate-700 text-[14px] truncate">{description ? description.slice(0, 60) : ''}</div>
+              <div className="flex gap-2 flex-1 justify-end">
+                {(type === 'active' || type === 'orphaned') && onEdit && (
+                  <button
+                    className="bg-blue-600 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-blue-700 transition"
+                    onClick={e => { e.stopPropagation(); onEdit(idx); }}
+                  >Edit</button>
+                )}
+                {(type === 'active' || type === 'orphaned') && onDelete && (
+                  <button
+                    className="bg-red-500 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-red-600 transition"
+                    onClick={e => { e.stopPropagation(); onDelete(idx); }}
+                  >Delete</button>
+                )}
+                {type === 'missing' && onAdd && (
+                  <button
+                    className="bg-green-500 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-green-600 transition"
+                    onClick={e => { e.stopPropagation(); onAdd(id); }}
+                  >Add</button>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -589,13 +564,13 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
 
       {/* Delete Confirmation */}
       {deleteIndex !== null && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 32, minWidth: 320, boxShadow: '0 4px 24px #0002', textAlign: 'center' }}>
-            <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 16 }}>Delete Scene?</h3>
-            <p style={{ color: '#334155', marginBottom: 24 }}>Are you sure you want to delete <strong>{scenes[deleteIndex]?.id}</strong>?</p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
-              <button onClick={cancelDelete} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={handleDelete} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]">
+          <div className="bg-white rounded-xl p-8 min-w-[320px] shadow-2xl text-center">
+            <h3 className="text-[22px] font-bold mb-4">Delete Scene?</h3>
+            <p className="text-slate-700 mb-6">Are you sure you want to delete <strong>{scenes[deleteIndex]?.id}</strong>?</p>
+            <div className="flex justify-center gap-4">
+              <button onClick={cancelDelete} className="bg-slate-500 text-white rounded-lg px-5 py-2 font-semibold cursor-pointer">Cancel</button>
+              <button onClick={handleDelete} className="bg-red-500 text-white rounded-lg px-5 py-2 font-semibold cursor-pointer">Delete</button>
             </div>
           </div>
         </div>

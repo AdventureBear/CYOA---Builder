@@ -101,43 +101,45 @@ export default function ActionsManagerClient() {
   }
 
   if (!actionsObj) {
-    return <div style={{ marginTop: 48, textAlign: 'center', color: '#64748b', fontSize: 20 }}>Loading actions...</div>;
+    return <div className="mt-12 text-center text-slate-500 text-[20px]">Loading actions...</div>;
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#1a202c', padding: 32 }}>
-      <div style={{ maxWidth: 700, margin: '0 auto' }}>
-        <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Actions Manager</h2>
-        <Link href="/developer" style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500 }}>&larr; Back to Dashboard</Link>
-        <Link href="/developer/scenes" style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 500, marginLeft: 16 }}>Go to Scene Manager</Link>
-        <ul style={{ marginTop: 16, padding: 0, listStyle: 'none', width: '100%' }}>
+    <div className="min-h-screen bg-blue-50 text-slate-900 p-8">
+      <div className="max-w-[700px] mx-auto">
+        <h2 className="text-[32px] font-bold mb-2">Actions Manager</h2>
+        <div className="flex gap-4 mb-4">
+          <Link href="/developer" className="text-blue-600 underline font-medium">&larr; Back to Dashboard</Link>
+          <Link href="/developer/scenes" className="text-blue-600 underline font-medium ml-4">Go to Scene Manager</Link>
+        </div>
+        <ul className="mt-4 p-0 list-none w-full">
           {actions.map((action, idx) => (
-            <li key={action.id} style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#fff', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px #0001', padding: '6px 12px', borderRadius: 8, marginBottom: 6, fontSize: 15, width: '100%', minWidth: 0 }}>
-              <div style={{ flex: 2, fontWeight: 700, color: '#b35c1e', fontSize: 16, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{action.id}</div>
-              <div style={{ flex: 1, color: '#64748b', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>({action.trigger})</div>
-              <div style={{ flex: 4, color: '#334155', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{action.failMessage?.slice(0, 60) || '...'}</div>
-              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                <button style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={() => openEditModal(idx)}>Edit</button>
-                <button style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 12px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }} onClick={() => confirmDelete(idx)}>Delete</button>
+            <li key={action.id} className="flex items-center gap-4 bg-white border border-slate-200 shadow-sm px-3 py-2 rounded-lg mb-2 text-[15px] w-full min-w-0">
+              <div className="flex-[2] font-bold text-orange-700 text-[16px] truncate">{action.id}</div>
+              <div className="flex-1 text-slate-500 text-[14px] truncate">({action.trigger})</div>
+              <div className="flex-[4] text-slate-700 text-[14px] truncate">{action.failMessage?.slice(0, 60) || '...'}</div>
+              <div className="flex gap-2 flex-shrink-0">
+                <button className="bg-blue-600 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-blue-700 transition" onClick={() => openEditModal(idx)}>Edit</button>
+                <button className="bg-red-500 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-red-600 transition" onClick={() => confirmDelete(idx)}>Delete</button>
               </div>
             </li>
           ))}
         </ul>
         {/* Missing Actions Section */}
         {missingActionIds.length > 0 && (
-          <div style={{ marginTop: 32, background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 8, padding: 20 }}>
-            <h4 style={{ fontSize: 18, fontWeight: 700, color: '#b35c1e', marginBottom: 8 }}>Missing Actions</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          <div className="mt-8 bg-yellow-50 border border-yellow-300 rounded-lg p-5">
+            <h4 className="text-[18px] font-bold text-orange-700 mb-2">Missing Actions</h4>
+            <ul className="list-none p-0 m-0">
               {missingActionIds.map(id => (
-                <li key={id} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-                  <span style={{ fontWeight: 600, color: '#d97706', fontSize: 16 }}>{id}</span>
-                  <button type="button" onClick={handleAddMissingAction} style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 16px', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>Add Action</button>
+                <li key={id} className="flex items-center gap-3 mb-1">
+                  <span className="font-semibold text-yellow-700 text-[16px]">{id}</span>
+                  <button type="button" onClick={handleAddMissingAction} className="bg-green-500 text-white rounded-lg px-4 py-1 font-semibold text-[15px] hover:bg-green-600 transition">Add Action</button>
                 </li>
               ))}
             </ul>
           </div>
         )}
-        <button style={{ marginTop: 32, background: '#22c55e', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 2px 8px #0001' }} onClick={openAddModal}>+ Add Action</button>
+        <button className="mt-8 bg-green-500 text-white rounded-lg px-7 py-3 font-bold text-[18px] cursor-pointer shadow-md hover:bg-green-600 transition" onClick={openAddModal}>+ Add Action</button>
       </div>
       {/* Modal for Add/Edit */}
       {showModal && (
@@ -156,13 +158,13 @@ export default function ActionsManagerClient() {
       )}
       {/* Delete Confirmation */}
       {deleteIndex !== null && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 32, minWidth: 320, boxShadow: '0 4px 24px #0002', textAlign: 'center' }}>
-            <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 16 }}>Delete Action?</h3>
-            <p style={{ color: '#334155', marginBottom: 24 }}>Are you sure you want to delete <strong>{actions[deleteIndex]?.id}</strong>?</p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
-              <button onClick={cancelDelete} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={handleDelete} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]">
+          <div className="bg-white rounded-xl p-8 min-w-[320px] shadow-2xl text-center">
+            <h3 className="text-[22px] font-bold mb-4">Delete Action?</h3>
+            <p className="text-slate-700 mb-6">Are you sure you want to delete <strong>{actions[deleteIndex]?.id}</strong>?</p>
+            <div className="flex justify-center gap-4">
+              <button onClick={cancelDelete} className="bg-slate-500 text-white rounded-lg px-5 py-2 font-semibold cursor-pointer">Cancel</button>
+              <button onClick={handleDelete} className="bg-red-500 text-white rounded-lg px-5 py-2 font-semibold cursor-pointer">Delete</button>
             </div>
           </div>
         </div>
