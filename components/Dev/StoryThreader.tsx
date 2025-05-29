@@ -649,7 +649,10 @@ export default function StoryThreader() {
 
   const graph = useMemo(() => buildStoryGraph(actionsObj || {}, scenesObj || {}), [actionsObj, scenesObj]);
   const deadEnds = useMemo(() => findDeadEndActions(actionsObj || {}, graph), [actionsObj, graph]);
-  const endpoints = selectedEndpoint ? [selectedEndpoint] : deadEnds;
+  const endpoints = useMemo(
+    () => selectedEndpoint ? [selectedEndpoint] : deadEnds,
+    [selectedEndpoint, deadEnds]
+  );
 
   // Build the tree for each endpoint
   const treesByEndpoint = useMemo(() => {
