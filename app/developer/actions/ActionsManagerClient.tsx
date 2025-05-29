@@ -26,6 +26,26 @@ async function saveActionToDisk(action: Action, game: string) {
   }
 }
 
+// ActionRow component for ActionsManagerClient
+function ActionRow({ action, onEdit, onDelete, idx }: {
+  action: Action;
+  onEdit: (idx: number) => void;
+  onDelete: (idx: number) => void;
+  idx: number;
+}) {
+  return (
+    <li className="flex items-center gap-4 bg-white border-b border-slate-200 shadow-sm px-3 py-2 text-[15px] w-full min-w-0 last:rounded-b-lg">
+      <div className="flex-[2] font-bold text-black text-[16px] truncate">{action.id}</div>
+      <div className="flex-1 text-slate-500 text-[14px] truncate">({action.trigger})</div>
+      <div className="flex-[4] text-slate-700 text-[14px] truncate">{action.failMessage?.slice(0, 60) || '...'}</div>
+      <div className="flex gap-2 flex-shrink-0">
+        <button className="bg-blue-600 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-blue-700 transition" onClick={() => onEdit(idx)}>Edit</button>
+        <button className="bg-red-500 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-red-600 transition" onClick={() => onDelete(idx)}>Delete</button>
+      </div>
+    </li>
+  );
+}
+
 export default function ActionsManagerClient() {
   const actionsObj = useGameStore((state) => state.actions);
   const setActions = useGameStore((state) => state.setActions);
@@ -40,22 +60,26 @@ export default function ActionsManagerClient() {
   const scenesObj = useGameStore((state) => state.scenes);
   const scenes = scenesObj ? Object.values(scenesObj) : [];
   const existingActionIds = new Set(actions.map(a => a.id));
+  // Build referencedActionIds: all action IDs referenced in scenes (actions[] or choices[].nextAction)
   const referencedActionIds = new Set<string>();
   scenes.forEach(scene => {
-    // From scene.actions[]
     (scene.actions || []).forEach(actionId => {
-      if (actionId && !existingActionIds.has(actionId)) {
-        referencedActionIds.add(actionId);
-      }
+      if (actionId) referencedActionIds.add(actionId);
     });
-    // From choices[].nextAction
     (scene.choices || []).forEach(choice => {
-      if (choice.nextAction && !existingActionIds.has(choice.nextAction)) {
-        referencedActionIds.add(choice.nextAction);
-      }
+      if (choice.nextAction) referencedActionIds.add(choice.nextAction);
     });
   });
   const missingActionIds = Array.from(referencedActionIds).filter(id => !existingActionIds.has(id));
+  // Orphaned actions: non-router actions not referenced by any scene
+  const orphanedActions =
+    scenes.length === 0
+      ? []
+      : actions.filter(a => !referencedActionIds.has(a.id));
+
+  // Router actions: actions whose id starts with 'route_'
+  const routerActions = actions.filter(a => a.id.startsWith('route_'));
+  const nonRouterActions = actions.filter(a => !a.id.startsWith('route_'));
 
   useEffect(() => {
     async function fetchActions() {
@@ -112,23 +136,48 @@ export default function ActionsManagerClient() {
           <Link href="/developer" className="text-blue-600 underline font-medium">&larr; Back to Dashboard</Link>
           <Link href="/developer/scenes" className="text-blue-600 underline font-medium ml-4">Go to Scene Manager</Link>
         </div>
-        <ul className="mt-4 p-0 list-none w-full">
-          {actions.map((action, idx) => (
-            <li key={action.id} className="flex items-center gap-4 bg-white border border-slate-200 shadow-sm px-3 py-2 rounded-lg mb-2 text-[15px] w-full min-w-0">
-              <div className="flex-[2] font-bold text-orange-700 text-[16px] truncate">{action.id}</div>
-              <div className="flex-1 text-slate-500 text-[14px] truncate">({action.trigger})</div>
-              <div className="flex-[4] text-slate-700 text-[14px] truncate">{action.failMessage?.slice(0, 60) || '...'}</div>
-              <div className="flex gap-2 flex-shrink-0">
-                <button className="bg-blue-600 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-blue-700 transition" onClick={() => openEditModal(idx)}>Edit</button>
-                <button className="bg-red-500 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-red-600 transition" onClick={() => confirmDelete(idx)}>Delete</button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <h4 className="text-[18px] font-bold text-black mb-1 px-3 pt-3">All Actions</h4>
+        <div className="border border-green-500 rounded-lg overflow-hidden bg-white mb-8">
+          <div className="flex items-center gap-4 bg-green-50 font-bold text-[15px] text-slate-900 px-3 py-2 border-b border-slate-200">
+            <div className="flex-[2]">ID</div>
+            <div className="flex-1">Trigger</div>
+            <div className="flex-[4]">Fail Message</div>
+            <div className="flex flex-1 justify-end gap-2">Actions</div>
+          </div>
+          <ul className="list-none p-0 m-0 bg-white">
+            {nonRouterActions.map(action => (
+              <ActionRow key={action.id} action={action} onEdit={openEditModal} onDelete={confirmDelete} idx={actions.findIndex(a => a.id === action.id)} />
+            ))}
+          </ul>
+        </div>
+        {/* Router Actions Section */}
+
+        {routerActions.length > 0 && (
+          <>
+                  <h4 className="text-[18px] font-bold text-black mb-1 px-3 pt-3">Router Actions</h4>
+
+          <div className=" border border-blue-700 rounded-lg overflow-hidden bg-white">
+            <div className="flex items-center gap-4 bg-blue-50 font-bold text-[15px] text-slate-900 px-3 py-2 border-b border-slate-200">
+              <div className="flex-[2]">ID</div>
+              <div className="flex-1">Trigger</div>
+              <div className="flex-[4]">Fail Message</div>
+              <div className="flex flex-1 justify-end gap-2">Actions</div>
+            </div>
+            <ul className="list-none p-0 m-0 bg-white">
+              {routerActions.map(action => (
+                <ActionRow key={action.id} action={action} onEdit={openEditModal} onDelete={confirmDelete} idx={actions.findIndex(a => a.id === action.id)} />
+              ))}
+            </ul>
+          </div>
+          </>
+        )}
         {/* Missing Actions Section */}
+
         {missingActionIds.length > 0 && (
+          <>
+        <h4 className="text-[18px] font-bold text-black mb-1 px-3 pt-3">Missing Actions</h4>
+
           <div className="mt-8 bg-yellow-50 border border-yellow-300 rounded-lg p-5">
-            <h4 className="text-[18px] font-bold text-orange-700 mb-2">Missing Actions</h4>
             <ul className="list-none p-0 m-0">
               {missingActionIds.map(id => (
                 <li key={id} className="flex items-center gap-3 mb-1">
@@ -138,6 +187,21 @@ export default function ActionsManagerClient() {
               ))}
             </ul>
           </div>
+          </>
+        )}
+        {/* Orphaned Actions Section */}
+
+        {orphanedActions.length > 0 && (<>
+                  <h4 className="text-[18px] font-bold text-black mb-1 px-3 pt-3">Orphaned Actions</h4>
+
+          <div className=" border border-red-300 rounded-lg overflow-hidden bg-white mb-8">
+            <ul className="list-none p-0 m-0 bg-white">
+              {orphanedActions.map(action => (
+                <ActionRow key={action.id} action={action} onEdit={openEditModal} onDelete={confirmDelete} idx={actions.findIndex(a => a.id === action.id)} />
+              ))}
+            </ul>
+          </div>
+          </>
         )}
         <button className="mt-8 bg-green-500 text-white rounded-lg px-7 py-3 font-bold text-[18px] cursor-pointer shadow-md hover:bg-green-600 transition" onClick={openAddModal}>+ Add Action</button>
       </div>

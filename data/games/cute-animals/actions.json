@@ -10,7 +10,8 @@
       {
         "type": "flagNotSet",
         "key": "found_message"
-      },{
+      },
+      {
         "type": "flagSet",
         "key": "helped_bird"
       }
@@ -229,7 +230,8 @@
       {
         "type": "flagSet",
         "key": "found_message"
-      }, {
+      },
+      {
         "type": "flagSet",
         "key": "found_flower"
       }
@@ -342,10 +344,12 @@
       {
         "type": "hasItem",
         "key": "shoelace"
-      }, {
+      },
+      {
         "type": "flagNotSet",
         "key": "fish_caught"
-      },{
+      },
+      {
         "type": "hasItem",
         "key": "acorn"
       }
@@ -452,18 +456,28 @@
     ]
   },
   "route_meadow": {
-  "id": "route_meadow",
-  "trigger": "onEnter",
-  "outcomes": [
-    { "conditions":[
+    "id": "route_meadow",
+    "trigger": "onEnter",
+    "outcomes": [
       {
-        "type": "timeOfDayIs",
-        "value": "morning"
+        "conditions": [
+          {
+            "type": "timeOfDayIs",
+            "value": "morning"
+          }
+        ],
+        "nextSceneOverride": "meadow_morning"
+      },
+      {
+        "nextSceneOverride": "meadow_dusk"
       }
-    
-    ],
-      "nextSceneOverride":"meadow_morning" },
-    { "nextSceneOverride":"meadow_dusk" }
-  ]
-}
+    ]
+  },
+  "orphan": {
+    "id": "orphan",
+    "trigger": "onEnter",
+    "outcomes": [],
+    "conditions": [],
+    "failMessage": "orphaned action"
+  }
 }

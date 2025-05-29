@@ -200,7 +200,7 @@ function SceneListing({ scenes, type, onEdit, onDelete, onAdd }: {
               role={(type === 'active' || type === 'missing') ? 'button' : undefined}
               tabIndex={(type === 'active' || type === 'missing') ? 0 : undefined}
             >
-              <div className="flex-[1.2] font-medium text-slate-900 truncate">{location || ''}</div>
+              <div className="flex-[1.2] font-bold text-black truncate">{location || ''}</div>
               <div className="flex-1 text-slate-500 text-[14px] truncate">({id})</div>
               <div className="flex-[4] text-slate-700 text-[14px] truncate">{description ? description.slice(0, 60) : ''}</div>
               <div className="flex gap-2 flex-1 justify-end">
