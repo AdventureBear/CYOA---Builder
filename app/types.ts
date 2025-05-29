@@ -36,7 +36,7 @@ export interface GameState {
     reputation: Record<string, number>;
     health: number;
     npcs: Record<string, NPC>;
-    timeOfDay: 'dawn' | 'sunrise'| 'morning' | 'noon'  |'afternoon' |  'evening' |  'sunset' | 'dusk' | 'night' |  'midnight'  ;
+    timeOfDay: 'morning' | 'afternoon' | 'dusk' | 'night';
     season: 'spring' | 'summer' | 'autumn' | 'winter';
     breadcrumbs: string[];
 }
