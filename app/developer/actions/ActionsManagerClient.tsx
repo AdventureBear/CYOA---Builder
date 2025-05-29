@@ -131,11 +131,12 @@ export default function ActionsManagerClient() {
   return (
     <div className="min-h-screen bg-blue-50 text-slate-900 p-8">
       <div className="max-w-[700px] mx-auto">
-        <h2 className="text-[32px] font-bold mb-2">Actions Manager</h2>
         <div className="flex gap-4 mb-4">
           <Link href="/developer" className="text-blue-600 underline font-medium">&larr; Back to Dashboard</Link>
+          <Link href="/developer/visualizer" className="text-blue-600 underline font-medium">Storyline Visualizer</Link>
           <Link href="/developer/scenes" className="text-blue-600 underline font-medium ml-4">Go to Scene Manager</Link>
         </div>
+        <h2 className="text-[32px] font-bold mb-2">Actions Manager</h2>
         <h4 className="text-[18px] font-bold text-black mb-1 px-3 pt-3">All Actions</h4>
         <div className="border border-green-500 rounded-lg overflow-hidden bg-white mb-8">
           <div className="flex items-center gap-4 bg-green-50 font-bold text-[15px] text-slate-900 px-3 py-2 border-b border-slate-200">

@@ -422,14 +422,14 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
   const nonOrphanedScenes = scenes.filter(scene => !orphanedSceneIds.includes(scene.id));
 
   return (
-    // <h1>Scene Manager</h1>
-    <div className="min-h-screen bg-blue-50 text-slate-900 p-8">
-      <div className="max-w-[700px] mx-auto">
-        <h2 className="text-[32px] font-bold mb-2">Scene Manager</h2>
+    <div className="min-h-screen bg-slate-50 text-slate-900 p-8">
+      <div className="max-w-[900px] mx-auto">
         <div className="flex gap-4 mb-4">
           <Link href="/developer" className="text-blue-600 underline font-medium">&larr; Back to Dashboard</Link>
+          <Link href="/developer/visualizer" className="text-blue-600 underline font-medium">Storyline Visualizer</Link>
           <Link href="/developer/actions" className="text-blue-600 underline font-medium ml-4">Go to Actions Manager</Link>
         </div>
+        <h2 className="text-[32px] font-bold mb-2">Scene Manager</h2>
         <div className="mt-8">
           <h4 className="text-[18px] font-bold text-green-700 mb-1">All Scenes</h4>
           <SceneListing
