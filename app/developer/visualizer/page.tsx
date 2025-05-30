@@ -15,6 +15,7 @@ import 'reactflow/dist/style.css';
 
 import { useGameStore } from '@/store/gameStore';
 import { Scene } from '@/app/types';
+import DeveloperNav from '../../../components/Dev/DeveloperNav';
 
 
 /* 0. Helper to map variant id -> hub id */
@@ -154,6 +155,7 @@ export default function SceneFlow() {
 
   return (
     <div style={{ width: '100%', height: '100vh' }}>
+      <DeveloperNav />
       <ReactFlow
         nodes={nodes}
         edges={edges}

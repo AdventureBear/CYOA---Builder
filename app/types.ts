@@ -21,6 +21,7 @@ export interface Scene {
     parentSceneId?: string;
     locationImage?: string;
     storyPhase?: StoryPhase;
+    tags?: string[];      //for capsule encounters 
 }
 
 export interface NPC {

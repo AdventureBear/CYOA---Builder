@@ -88,6 +88,7 @@ export interface ConditionReport {
             msg: `🌳 timeOfDayIs • ${state.timeOfDay} = ${choice.value} → ${pass ? "PASS" : "FAIL"}`,
           };
         }
+        
   
         default:
           return {

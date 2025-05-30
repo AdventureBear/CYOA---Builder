@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useGameStore } from '@/store/gameStore';
 import type { Scene, Action } from '@/app/types';
 import ActionModal from '@/components/Dev/ActionModal';
+import DeveloperNav from '@/components/Dev/DeveloperNav';
 
 const defaultScene = {
   id: '',
@@ -423,6 +424,7 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 p-8">
+      <DeveloperNav />
       <div className="max-w-[900px] mx-auto">
         <div className="flex gap-4 mb-4">
           <Link href="/developer" className="text-blue-600 underline font-medium">&larr; Back to Dashboard</Link>
