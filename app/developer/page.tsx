@@ -1,30 +1,11 @@
 'use client'
-import { useEffect } from 'react';
-import { useGameStore } from '@/store/gameStore';
 import Link from 'next/link';
+import { useLoadScenesAndActions } from '@/lib/useLoadScenesAndActions';
 
 const games = [
   { id: 'cute-animals', name: 'Cute Animals (Sample)' },
   { id: 'my-new-game', name: 'My New Game' },
 ];
-
-// Custom hook to load scenes and actions if missing
-export function useLoadScenesAndActions(gameId: string = 'cute-animals') {
-  const scenes = useGameStore((s) => s.scenes);
-  const actions = useGameStore((s) => s.actions);
-  const setScenes = useGameStore((s) => s.setScenes);
-  const setActions = useGameStore((s) => s.setActions);
-
-  useEffect(() => {
-    async function fetchData() {
-      const res = await fetch(`/api/games/${gameId}/`);
-      const { scenes, actions } = await res.json();
-      setScenes(scenes);
-      setActions(actions);
-    }
-    if (!scenes || !actions) fetchData();
-  }, [gameId, scenes, actions, setScenes, setActions]);
-}
 
 export default function DeveloperDashboard() {
   useLoadScenesAndActions();

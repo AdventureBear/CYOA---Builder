@@ -6,7 +6,7 @@ import { Action } from '@/app/types';
 import { useSearchParams } from 'next/navigation';
 import ActionModal from '@/components/Dev/ActionModal';
 import DeveloperNav from '@/components/Dev/DeveloperNav';
-import { useLoadScenesAndActions } from '../page';
+import { useLoadScenesAndActions } from '@/lib/useLoadScenesAndActions';
 
 const defaultAction: Action = {
   id: '',

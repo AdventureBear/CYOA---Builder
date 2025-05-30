@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useGameStore } from '@/store/gameStore';
-import { useLoadScenesAndActions } from '../page';
+import { useLoadScenesAndActions } from '@/lib/useLoadScenesAndActions';
 
 export default function PlaytestAdventureClient() {
   useLoadScenesAndActions();

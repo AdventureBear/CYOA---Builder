@@ -4,7 +4,7 @@ import ReactFlow, { Node, Edge } from "reactflow";
 import "reactflow/dist/style.css";
 import { useGameStore } from "@/store/gameStore";
 import { Scene } from "@/app/types";
-import { useLoadScenesAndActions } from '../page';
+import { useLoadScenesAndActions } from '@/lib/useLoadScenesAndActions';
 
 function toGraph(scenes: Record<string, Scene> | null): { nodes: Node[]; edges: Edge[] } {
   if (!scenes) return { nodes: [], edges: [] };

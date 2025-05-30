@@ -6,7 +6,7 @@ import { useGameStore } from '@/store/gameStore';
 import type { Scene, Action } from '@/app/types';
 import ActionModal from '@/components/Dev/ActionModal';
 import DeveloperNav from '@/components/Dev/DeveloperNav';
-import { useLoadScenesAndActions } from '../page';
+import { useLoadScenesAndActions } from '@/lib/useLoadScenesAndActions';
 import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
 
 const defaultScene = {

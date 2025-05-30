@@ -19,7 +19,7 @@ import DeveloperNav from '../../../components/Dev/DeveloperNav';
 import SceneNode from '@/components/Dev/SceneNode';
 import Modal from '@/components/ui/Modal';
 import SceneForm from '@/components/Dev/SceneForm';
-import { useLoadScenesAndActions } from '../page';
+import { useLoadScenesAndActions } from '@/lib/useLoadScenesAndActions';
 import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
 
 
