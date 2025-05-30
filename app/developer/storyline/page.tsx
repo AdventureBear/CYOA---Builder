@@ -4,6 +4,7 @@ import ReactFlow, { Node, Edge } from "reactflow";
 import "reactflow/dist/style.css";
 import { useGameStore } from "@/store/gameStore";
 import { Scene } from "@/app/types";
+import { useLoadScenesAndActions } from '../page';
 
 function toGraph(scenes: Record<string, Scene> | null): { nodes: Node[]; edges: Edge[] } {
   if (!scenes) return { nodes: [], edges: [] };
@@ -30,6 +31,7 @@ function toGraph(scenes: Record<string, Scene> | null): { nodes: Node[]; edges: 
 }
 
 export default function StorylinePage() {
+  useLoadScenesAndActions();
   const scenes = useGameStore((state) => state.scenes);
   const { nodes, edges } = toGraph(scenes);
 

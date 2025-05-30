@@ -6,6 +6,8 @@ import { useGameStore } from '@/store/gameStore';
 import type { Scene, Action } from '@/app/types';
 import ActionModal from '@/components/Dev/ActionModal';
 import DeveloperNav from '@/components/Dev/DeveloperNav';
+import { useLoadScenesAndActions } from '../page';
+import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
 
 const defaultScene = {
   id: '',
@@ -21,17 +23,17 @@ const defaultScene = {
 
 
 
-async function saveSceneToDisk(scene: Scene, game: string) {
-  const res = await fetch('/api/saveScene', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ scene, game }),
-  });
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.error || 'Failed to save scene');
-  }
-}
+// async function saveSceneToDisk(scene: Scene, game: string) {
+//   const res = await fetch('/api/saveScene', {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify({ scene, game }),
+//   });
+//   if (!res.ok) {
+//     const data = await res.json();
+//     throw new Error(data.error || 'Failed to save scene');
+//   }
+// }
 
 interface SceneActionRow {
   id: string;
@@ -233,6 +235,7 @@ function SceneListing({ scenes, type, onEdit, onDelete, onAdd }: {
 }
 
 export default function SceneManagerClient() {
+  useLoadScenesAndActions();
   const searchParams = useSearchParams();
   const scenesObj = useGameStore((state) => state.scenes);
   const setScenes = useGameStore((state) => state.setScenes);
@@ -347,21 +350,17 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
   }
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const updatedScenes: Record<string, Scene> = scenesObj ? { ...scenesObj } : {};
-    let sceneToSave: Scene | undefined = undefined;
-    if (editIndex === null) {
-      updatedScenes[form.id] = form;
-      sceneToSave = form;
-    } else if (scenes[editIndex]) {
-      updatedScenes[scenes[editIndex].id] = form;
-      sceneToSave = form;
-    }
-    setScenes(updatedScenes);
     try {
-      if (!sceneToSave) throw new Error('No scene to save');
-      await saveSceneToDisk(sceneToSave, game);
+      await saveSceneAndUpdateStore({
+        form,
+        editIndex,
+        scenes,
+        scenesObj,
+        setScenes,
+        game,
+      });
       closeModal();
-    } catch (err: unknown) {
+    } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to save scene');
     }
   }

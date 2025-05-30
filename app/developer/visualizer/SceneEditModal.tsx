@@ -57,6 +57,7 @@ export default function SceneEditModal({ open, scene, scenes, setScenes, onSave,
     try {
       await onSave(form);
       setScenes(scenes.map(s => s.id === form.id ? form : s));
+      
       onClose();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save scene');

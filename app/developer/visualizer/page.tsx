@@ -16,6 +16,13 @@ import 'reactflow/dist/style.css';
 import { useGameStore } from '@/store/gameStore';
 import { Scene } from '@/app/types';
 import DeveloperNav from '../../../components/Dev/DeveloperNav';
+import SceneNode from '@/components/Dev/SceneNode';
+import Modal from '@/components/ui/Modal';
+import SceneForm from '@/components/Dev/SceneForm';
+import { useLoadScenesAndActions } from '../page';
+import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
+
+
 
 
 /* 0. Helper to map variant id -> hub id */
@@ -31,7 +38,8 @@ import DeveloperNav from '../../../components/Dev/DeveloperNav';
 
    
  function buildGraph(
-    scenes: Record<string, Scene>
+    scenes: Record<string, Scene>,
+    handleEdit: (sceneId: string) => void
   ): { nodes: Node[]; edges: Edge[] } {
     const nodes: Node[] = [];
     const pairInfo = new Map<
@@ -51,11 +59,16 @@ import DeveloperNav from '../../../components/Dev/DeveloperNav';
       /* node */
       nodes.push({
         id: scene.id,
-        data: { label: scene.id },
+        type: 'scene',
+        // data: { label: scene.id },
         position: { x: (idx % 4) * 120, y: Math.floor(idx / 4) * 120 },
         style: { width: 160, padding: 8, fontSize: 12 },
         sourcePosition: Position.Right,
         targetPosition: Position.Left,
+        data: {
+          label: scene.id,
+          onEdit: () => handleEdit(scene.id),
+        },
       });
   
       /* parent relationship */
@@ -134,16 +147,60 @@ import DeveloperNav from '../../../components/Dev/DeveloperNav';
 
 /* ---------- component ---------------------------------------------- */
 export default function SceneFlow() {
+  useLoadScenesAndActions();
   const scenes = useGameStore((s) => s.scenes);
  const [nodes, setNodes, onNodesChange] = useNodesState([]);
 
+ const [selectedScene, setSelectedScene] = React.useState<Scene | null>(null);
+ const [modalOpen, setModalOpen] = React.useState(false);
+ 
+ const handleEdit = React.useCallback((sceneId: string) => {
+  if (!scenes) return;
+  const scene = scenes[sceneId];
 
+  if (scene) {
+    setSelectedScene(scene);
+    setModalOpen(true);
+  }
+}, [scenes]);
+ 
+ const handleSave = async (updatedScene: Scene) => {
+   const scenesObj = useGameStore.getState().scenes;
+   const setScenes = useGameStore.getState().setScenes;
+   const scenesArr = Object.values(scenesObj || {});
+   const editIndex = scenesArr.findIndex(s => s.id === updatedScene.id);
+   const game = 'cute-animals'; // Or get from search params if available
+   try {
+     await saveSceneAndUpdateStore({
+       form: updatedScene,
+       editIndex,
+       scenes: scenesArr,
+       scenesObj,
+       setScenes,
+       game,
+     });
+     setModalOpen(false);
+   } catch (err) {
+     alert(err instanceof Error ? err.message : 'Failed to save scene');
+   }
+ };
+
+ // nodeTypes for React Flow
+const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
 
   /* build graph once whenever scenes changes */
+  // const { nodes: initialNodes, edges } = useMemo(
+  //   () => buildGraph(scenes || {}),
+  //   [scenes]
+  // );
+
   const { nodes: initialNodes, edges } = useMemo(
-    () => buildGraph(scenes || {}),
-    [scenes]
+    () => buildGraph(scenes || {}, handleEdit),
+    [scenes, handleEdit]
   );
+
+
+
   useEffect(() => {
     setNodes(initialNodes)
   }, [initialNodes, setNodes])
@@ -159,7 +216,8 @@ export default function SceneFlow() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}  
+        onNodesChange={onNodesChange}
+        nodeTypes={nodeTypes}
         defaultViewport={initialViewport}
         panOnScroll
         zoomOnScroll
@@ -171,6 +229,19 @@ export default function SceneFlow() {
         <MiniMap pannable zoomable />
         <Controls position="top-right" />
       </ReactFlow>
+  
+      <Modal open={modalOpen}>
+        {selectedScene && (
+          <SceneForm 
+            scene={selectedScene}
+            onSave={handleSave}
+            actionsObj={useGameStore.getState().actions}
+            allScenes={Object.values(useGameStore.getState().scenes || {})}
+            setActionsObj={useGameStore.getState().setActions}
+            onCancel={() => setModalOpen(false)}
+          />
+        )}
+      </Modal>
     </div>
   );
 }

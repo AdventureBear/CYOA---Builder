@@ -184,7 +184,7 @@
     "actions": [],
     "choices": [
       {
-        "text": "Climb back down the tree.",
+        "text": "Climb back down the tree but you slip and fall",
         "nextNodeId": "oak_tree"
       },
       {

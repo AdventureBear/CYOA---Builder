@@ -16,6 +16,7 @@ interface GameStore {
   scenes: Record<string, Scene> | null;
   setActions: (actions: Record<string, Action>) => void;
   setScenes: (scenes: Record<string, Scene>) => void;
+  updateScene: (scene: Scene) => void;
   setTimeOfDay: (time: 'morning' | 'afternoon' | 'dusk' | 'night') => void;
   advanceTime: () => void;
   updateBreadcrumbs: (newSceneId: string) => void;
@@ -43,6 +44,13 @@ const storeImpl: StateCreator<GameStore, [], [], GameStore> = (set, get) => ({
     set({ actions });
   },
   setScenes: (scenes) => set({ scenes }),
+  updateScene: (scene: Scene) =>
+    set((state) => ({
+      scenes: {
+        ...state.scenes,
+        [scene.id]: scene,
+      },
+    })),
   setTimeOfDay: (time) => set((state) => ({ gameState: { ...state.gameState, timeOfDay: time } })),
   advanceTime: () => set((state) => {
     const order: Array<'morning' | 'afternoon' | 'dusk' | 'night'> = ['morning', 'afternoon', 'dusk', 'night'];

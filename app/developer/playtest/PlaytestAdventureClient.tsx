@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useGameStore } from '@/store/gameStore';
+import { useLoadScenesAndActions } from '../page';
 
 export default function PlaytestAdventureClient() {
+  useLoadScenesAndActions();
   const searchParams = useSearchParams();
   const game = searchParams?.get('game') || 'cute-animals';
   const scenes = useGameStore((state) => state.scenes);

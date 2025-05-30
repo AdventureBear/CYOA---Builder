@@ -6,6 +6,7 @@ import { Action } from '@/app/types';
 import { useSearchParams } from 'next/navigation';
 import ActionModal from '@/components/Dev/ActionModal';
 import DeveloperNav from '@/components/Dev/DeveloperNav';
+import { useLoadScenesAndActions } from '../page';
 
 const defaultAction: Action = {
   id: '',
@@ -48,6 +49,7 @@ function ActionRow({ action, onEdit, onDelete, idx }: {
 }
 
 export default function ActionsManagerClient() {
+  useLoadScenesAndActions();
   const actionsObj = useGameStore((state) => state.actions);
   const setActions = useGameStore((state) => state.setActions);
   const actions: Action[] = actionsObj ? Object.values(actionsObj) : [];

@@ -1,4 +1,6 @@
 'use client'
+import { useEffect } from 'react';
+import { useGameStore } from '@/store/gameStore';
 import Link from 'next/link';
 
 const games = [
@@ -6,7 +8,26 @@ const games = [
   { id: 'my-new-game', name: 'My New Game' },
 ];
 
+// Custom hook to load scenes and actions if missing
+export function useLoadScenesAndActions(gameId: string = 'cute-animals') {
+  const scenes = useGameStore((s) => s.scenes);
+  const actions = useGameStore((s) => s.actions);
+  const setScenes = useGameStore((s) => s.setScenes);
+  const setActions = useGameStore((s) => s.setActions);
+
+  useEffect(() => {
+    async function fetchData() {
+      const res = await fetch(`/api/games/${gameId}/`);
+      const { scenes, actions } = await res.json();
+      setScenes(scenes);
+      setActions(actions);
+    }
+    if (!scenes || !actions) fetchData();
+  }, [gameId, scenes, actions, setScenes, setActions]);
+}
+
 export default function DeveloperDashboard() {
+  useLoadScenesAndActions();
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#1a202c', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
       <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 24, letterSpacing: 1, textAlign: 'center' }}>CYOA Game Builder Dashboard</h1>
