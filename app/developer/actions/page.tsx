@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 import ActionsManagerClient from './ActionsManagerClient';
-import DeveloperNav from '@/components/Dev/DeveloperNav';
 
 
 export default function ActionsManagerPage() {
