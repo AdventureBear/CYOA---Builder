@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import ReactFlow, {
   useNodesState,
   Background,
@@ -39,7 +39,8 @@ import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
    
  function buildGraph(
     scenes: Record<string, Scene>,
-    handleEdit: (sceneId: string) => void
+    handleEdit: (sceneId: string) => void,
+    handleNeighbors: (sceneId: string) => void
   ): { nodes: Node[]; edges: Edge[] } {
     const nodes: Node[] = [];
     const pairInfo = new Map<
@@ -68,6 +69,7 @@ import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
         data: {
           label: scene.id,
           onEdit: () => handleEdit(scene.id),
+          onNeighbors: () => handleNeighbors(scene.id),
         },
       });
   
@@ -151,61 +153,89 @@ export default function SceneFlow() {
   const scenes = useGameStore((s) => s.scenes);
  const [nodes, setNodes, onNodesChange] = useNodesState([]);
 
- const [selectedScene, setSelectedScene] = React.useState<Scene | null>(null);
- const [modalOpen, setModalOpen] = React.useState(false);
- 
- const handleEdit = React.useCallback((sceneId: string) => {
-  if (!scenes) return;
-  const scene = scenes[sceneId];
+  const [selectedScene, setSelectedScene] = React.useState<Scene | null>(null);
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const handleNeighbors = (sceneId: string) => setSelectedNodeId(sceneId);
 
-  if (scene) {
-    setSelectedScene(scene);
-    setModalOpen(true);
-  }
-}, [scenes]);
- 
- const handleSave = async (updatedScene: Scene) => {
-   const scenesObj = useGameStore.getState().scenes;
-   const setScenes = useGameStore.getState().setScenes;
-   const scenesArr = Object.values(scenesObj || {});
-   const editIndex = scenesArr.findIndex(s => s.id === updatedScene.id);
-   const game = 'cute-animals'; // Or get from search params if available
-   try {
-     await saveSceneAndUpdateStore({
-       form: updatedScene,
-       editIndex,
-       scenes: scenesArr,
-       scenesObj,
-       setScenes,
-       game,
-     });
-     setModalOpen(false);
-   } catch (err) {
-     alert(err instanceof Error ? err.message : 'Failed to save scene');
-   }
- };
+  const handleEdit = React.useCallback((sceneId: string) => {
+    if (!scenes) return;
+    const scene = scenes[sceneId];
+    if (scene) {
+      setSelectedScene(scene);
+      setModalOpen(true);
+    }
+  }, [scenes]);
+
+  const handleSave = async (updatedScene: Scene) => {
+    const scenesObj = useGameStore.getState().scenes;
+    const setScenes = useGameStore.getState().setScenes;
+    const scenesArr = Object.values(scenesObj || {});
+    const editIndex = scenesArr.findIndex(s => s.id === updatedScene.id);
+    const game = 'cute-animals'; // Or get from search params if available
+    try {
+      await saveSceneAndUpdateStore({
+        form: updatedScene,
+        editIndex,
+        scenes: scenesArr,
+        scenesObj,
+        setScenes,
+        game,
+      });
+      setModalOpen(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to save scene');
+    }
+  };
 
  // nodeTypes for React Flow
 const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
 
-  /* build graph once whenever scenes changes */
-  // const { nodes: initialNodes, edges } = useMemo(
-  //   () => buildGraph(scenes || {}),
-  //   [scenes]
-  // );
-
-  const { nodes: initialNodes, edges } = useMemo(
-    () => buildGraph(scenes || {}, handleEdit),
+  const { nodes: initialNodes, edges: initialEdges } = useMemo(
+    () => buildGraph(scenes || {}, handleEdit, handleNeighbors),
     [scenes, handleEdit]
   );
 
+  // Highlight logic
+  const highlightedEdgeIds = new Set<string>();
+  const highlightedNodeIds = new Set<string>();
+  if (selectedNodeId) {
+    initialEdges.forEach(edge => {
+      if (edge.source === selectedNodeId || edge.target === selectedNodeId) {
+        highlightedEdgeIds.add(edge.id);
+        highlightedNodeIds.add(edge.source);
+        highlightedNodeIds.add(edge.target);
+      }
+    });
+  }
 
+  const nodesWithHighlight = initialNodes.map(node => ({
+    ...node,
+    style: highlightedNodeIds.has(node.id)
+      ? { ...node.style, border: '3px solid #3399ff', boxShadow: '0 0 10px #3399ff' }
+      : node.style,
+  }));
+
+  const edgesWithHighlight = initialEdges.map(edge => {
+    let style = edge.style || {};
+    if (selectedNodeId && highlightedEdgeIds.has(edge.id)) {
+      if (edge.source === selectedNodeId && edge.target === selectedNodeId) {
+        style = { ...style, stroke: 'yellow', strokeWidth: 3 };
+      } else if (edge.source === selectedNodeId) {
+        style = { ...style, stroke: 'green', strokeWidth: 3 };
+      } else if (edge.target === selectedNodeId) {
+        style = { ...style, stroke: 'red', strokeWidth: 3 };
+      }
+    }
+    return { ...edge, style };
+  });
+
+  console.log('Visualizer nodes:', nodesWithHighlight, 'edges:', edgesWithHighlight);
 
   useEffect(() => {
     setNodes(initialNodes)
   }, [initialNodes, setNodes])
-  
-  /* make nodes drag-able */
+
   if (!scenes) return <p>Loading graph…</p>;
 
   const initialViewport = { x: 150, y: 150, zoom: 1.2 };
@@ -215,7 +245,7 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
       <DeveloperNav />
       <ReactFlow
         nodes={nodes}
-        edges={edges}
+        edges={edgesWithHighlight}
         onNodesChange={onNodesChange}
         nodeTypes={nodeTypes}
         defaultViewport={initialViewport}
