@@ -233,5 +233,123 @@
     ],
     "actions": [],
     "locationImage": ""
+  },
+  "whispering_brook": {
+    "id": "whispering_brook",
+    "location": "A moonlit brook in the forest, water tumbling over mossy stones.",
+    "description": "The water's music carries a hidden melody.",
+    "actions": [
+      "listen_to_brook"
+    ],
+    "choices": [
+      {
+        "text": "Focus on the melody",
+        "nextAction": "answer_lirael"
+      },
+      {
+        "text": "Step away from the brook",
+        "nextNodeId": "forest_edge"
+      }
+    ]
+  },
+  "ancient_oak": {
+    "id": "ancient_oak",
+    "location": "High in an ancient oak's branches, the wind carries a second melody.",
+    "description": "The air is alive with the rustle of leaves—another verse waiting to be heard.",
+    "actions": [
+      "climb_oak"
+    ],
+    "choices": [
+      {
+        "text": "Climb and listen to the wind's breath",
+        "nextAction": "answer_tamsin"
+      },
+      {
+        "text": "Return to the brook",
+        "nextNodeId": "whispering_brook"
+      }
+    ]
+  },
+  "hollow_log": {
+    "id": "hollow_log",
+    "location": "A fallen tree hollowed by time, its darkness filled with echoes.",
+    "description": "Inside the log, the echoes of lost songs swirl and blend.",
+    "actions": [
+      "crawl_inside_log"
+    ],
+    "choices": [
+      {
+        "text": "Listen to the echoes",
+        "nextAction": "answer_eldrin"
+      },
+      {
+        "text": "Crawl back outside",
+        "nextNodeId": "ancient_oak"
+      }
+    ]
+  },
+  "twilight_clearing": {
+    "id": "twilight_clearing",
+    "location": "A twilight clearing bathed in the glow of fireflies.",
+    "description": "The hush of twilight holds another secret verse.",
+    "actions": [
+      "hum_with_fireflies"
+    ],
+    "choices": [
+      {
+        "text": "Hum softly with the fireflies",
+        "nextAction": "answer_nyra"
+      },
+      {
+        "text": "Leave the clearing quietly",
+        "nextNodeId": "hollow_log"
+      }
+    ]
+  },
+  "spirit_stone_circle": {
+    "id": "spirit_stone_circle",
+    "location": "A circle of ancient stones inscribed with runes of power.",
+    "description": "The stones seem to pulse with the forest’s oldest magic.",
+    "actions": [
+      "trace_stone_runes"
+    ],
+    "choices": [
+      {
+        "text": "Trace the runes carefully",
+        "nextAction": "answer_aelor"
+      },
+      {
+        "text": "Step back from the circle",
+        "nextNodeId": "twilight_clearing"
+      }
+    ]
+  },
+  "moonlit_grove": {
+    "id": "moonlit_grove",
+    "location": "A sacred grove, lit by the moon’s silver glow.",
+    "description": "This is the heart of the forest, where the Echo of the First Song can be sung.",
+    "actions": [
+      "sing_echo_song"
+    ],
+    "choices": [
+      {
+        "text": "Sing the complete Echo of the First Song",
+        "nextAction": "complete_song"
+      }
+    ]
+  },
+  "moonlit_grove_the_second": {
+    "id": "moonlit_grove_the_second",
+    "location": "A sacred grove, lit by the moon’s silver glow.",
+    "description": "This is the heart of the forest, where the Echo of the First Song can be sung.",
+    "actions": [
+      "sing_echo_song"
+    ],
+    "choices": [
+      {
+        "text": "Sing the complete Echo of the First Song",
+        "nextAction": "complete_song"
+      }
+    ]
   }
 }

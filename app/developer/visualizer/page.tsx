@@ -13,6 +13,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Upload, X } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 import { useGameStore } from '@/store/gameStore';
 import { Scene } from '@/app/types';
@@ -152,6 +153,7 @@ import { Button } from '@/components/ui/button';
 
 /* ---------- component ---------------------------------------------- */
 export default function SceneFlow() {
+  const { toast } = useToast();
   useLoadScenesAndActions();
   const scenes = useGameStore((s) => s.scenes);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -161,7 +163,6 @@ export default function SceneFlow() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [importJson, setImportJson] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
-  const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const handleNeighbors = (sceneId: string) => setSelectedNodeId(sceneId);
@@ -299,7 +300,6 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
 
   async function handleImport() {
     setImportError(null);
-    setImportSuccess(null);
     setImporting(true);
     let parsed: unknown;
     try {
@@ -335,6 +335,11 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
       return;
     }
     // Save each scene
+    if (scenesToImport.length === 0) {
+      toast.error('No valid scenes found in JSON.');
+      setImporting(false);
+      return;
+    }
     try {
       for (const scene of scenesToImport) {
         await fetch('/api/saveScene', {
@@ -343,10 +348,20 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
           body: JSON.stringify({ scene, game: 'cute-animals' }),
         });
       }
-      setImportSuccess(`Imported ${scenesToImport.length} scene(s) successfully!`);
+      toast.success(`Imported ${scenesToImport.length} scene(s) successfully!`);
       setImportJson('');
-      // Optionally reload scenes
-      window.location.reload();
+      setTimeout(async () => {
+        setImportModalOpen(false);
+        // Instead of reload, fetch latest scenes and actions and update store
+        try {
+          const res = await fetch('/api/games/cute-animals/');
+          const { scenes, actions } = await res.json();
+          useGameStore.getState().setScenes(scenes);
+          useGameStore.getState().setActions(actions);
+        } catch (e) {
+          toast.error('Imported, but failed to refresh scenes.');
+        }
+      }, 1200);
     } catch (e) {
       setImportError('Failed to import scene(s).');
     } finally {
@@ -468,7 +483,6 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
             <Button variant="secondary" onClick={() => setImportModalOpen(false)} type="button">Close</Button>
             {importing && <span className="text-slate-500">Importing…</span>}
             {importError && <span className="text-red-600 font-semibold">{importError}</span>}
-            {importSuccess && <span className="text-green-600 font-semibold">{importSuccess}</span>}
           </div>
         </div>
       </Modal>

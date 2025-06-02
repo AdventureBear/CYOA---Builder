@@ -159,14 +159,14 @@ function SceneActionsBox({ form, setForm, actionsObj, onEditAction, onUpdateActi
 // SceneListing component
 function SceneListing({ scenes, type, onEdit, onDelete, onAdd }: {
   scenes: Scene[] | string[];
-  type: 'active' | 'orphaned' | 'missing';
-  onEdit?: (idx: number) => void;
-  onDelete?: (idx: number) => void;
+  type: 'active' | 'orphaned' | 'missing' | 'disconnected';
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
   onAdd?: (id: string) => void;
 }) {
   // Determine border and header color based on type
-  const borderColor = type === 'active' ? 'border-green-500' : type === 'missing' ? 'border-yellow-300' : 'border-red-300';
-  const headerBg = type === 'active' ? 'bg-green-50' : type === 'missing' ? 'bg-yellow-50' : 'bg-red-50';
+  const borderColor = type === 'active' ? 'border-green-500' : type === 'missing' ? 'border-yellow-300' : type === 'disconnected' ? 'border-blue-300' : 'border-red-300';
+  const headerBg = type === 'active' ? 'bg-green-50' : type === 'missing' ? 'bg-yellow-50' : type === 'disconnected' ? 'bg-blue-50' : 'bg-red-50';
   const headerText = 'text-slate-900';
   return (
     <div className={`border ${borderColor} rounded-lg mb-0 overflow-hidden bg-white`}>
@@ -179,44 +179,45 @@ function SceneListing({ scenes, type, onEdit, onDelete, onAdd }: {
         </div>
       )}
       <ul className="list-none p-0 m-0 bg-white">
-        {scenes.map((scene, idx) => {
+        {scenes.map((scene) => {
           const id = typeof scene === 'string' ? scene : scene.id;
           const location = typeof scene === 'string' ? undefined : scene.location;
           const description = typeof scene === 'string' ? undefined : scene.description;
-          const isLast = idx === scenes.length - 1;
           return (
             <li
               key={id}
-              className={`flex items-center gap-4 bg-white border-b border-slate-200 shadow-sm px-3 py-2 text-[15px] w-full min-w-0 ${isLast ? 'rounded-b-lg' : ''} ${
-                (type === 'active' || type === 'missing') ? 'cursor-pointer transition hover:bg-slate-100' : ''
+              className={`flex items-center gap-4 bg-white border-b border-slate-200 shadow-sm px-3 py-2 text-[15px] w-full min-w-0 ${
+                (type === 'active' || type === 'missing' || type === 'disconnected') ? 'cursor-pointer transition hover:bg-slate-100' : ''
               }`}
               onClick={
-                (type === 'active' && onEdit) ? () => onEdit(idx)
+                (type === 'active' && onEdit) ? () => onEdit(id)
                   : (type === 'missing' && onAdd) ? () => onAdd(id)
+                  : (type === 'disconnected' && onEdit) ? () => onEdit(id)
                   : undefined
               }
               onKeyDown={
-                (type === 'active' && onEdit) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onEdit(idx); }
+                (type === 'active' && onEdit) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onEdit(id); }
                   : (type === 'missing' && onAdd) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onAdd(id); }
+                  : (type === 'disconnected' && onEdit) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onEdit(id); }
                   : undefined
               }
-              role={(type === 'active' || type === 'missing') ? 'button' : undefined}
-              tabIndex={(type === 'active' || type === 'missing') ? 0 : undefined}
+              role={(type === 'active' || type === 'missing' || type === 'disconnected') ? 'button' : undefined}
+              tabIndex={(type === 'active' || type === 'missing' || type === 'disconnected') ? 0 : undefined}
             >
               <div className="flex-[1.2] font-bold text-black truncate">{location || ''}</div>
               <div className="flex-1 text-slate-500 text-[14px] truncate">({id})</div>
               <div className="flex-[4] text-slate-700 text-[14px] truncate">{description ? description.slice(0, 60) : ''}</div>
               <div className="flex gap-2 flex-1 justify-end">
-                {(type === 'active' || type === 'orphaned') && onEdit && (
+                {(type === 'active' || type === 'orphaned' || type === 'disconnected') && onEdit && (
                   <button
                     className="bg-blue-600 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-blue-700 transition"
-                    onClick={e => { e.stopPropagation(); onEdit(idx); }}
+                    onClick={e => { e.stopPropagation(); onEdit(id); }}
                   >Edit</button>
                 )}
-                {(type === 'active' || type === 'orphaned') && onDelete && (
+                {(type === 'active' || type === 'orphaned' || type === 'disconnected') && onDelete && (
                   <button
                     className="bg-red-500 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-red-600 transition"
-                    onClick={e => { e.stopPropagation(); onDelete(idx); }}
+                    onClick={e => { e.stopPropagation(); onDelete(id); }}
                   >Delete</button>
                 )}
                 {type === 'missing' && onAdd && (
@@ -234,6 +235,23 @@ function SceneListing({ scenes, type, onEdit, onDelete, onAdd }: {
   );
 }
 
+// Helper: Find all scene IDs reachable from a given entry point
+function findReachableScenes(scenes: Scene[], entryId: string): Set<string> {
+  const map = new Map(scenes.map(s => [s.id, s]));
+  const visited = new Set<string>();
+  function dfs(id: string) {
+    if (visited.has(id)) return;
+    visited.add(id);
+    const scene = map.get(id);
+    if (!scene) return;
+    for (const choice of scene.choices || []) {
+      if (choice.nextNodeId) dfs(choice.nextNodeId);
+    }
+  }
+  dfs(entryId);
+  return visited;
+}
+
 export default function SceneManagerClient() {
   useLoadScenesAndActions();
   const searchParams = useSearchParams();
@@ -244,16 +262,19 @@ export default function SceneManagerClient() {
   const [showModal, setShowModal] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [form, setForm] = useState<Scene>(defaultScene);
-  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+  const [deleteIndex, setDeleteIndex] = useState<string | null>(null);
   const game = searchParams?.get('game') || 'cute-animals';
-// State for modal-on-modal action editing
-const [showActionModal, setShowActionModal] = useState(false);
-const [editingActionId, setEditingActionId] = useState<string | null>(null);
+  // State for modal-on-modal action editing
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [editingActionId, setEditingActionId] = useState<string | null>(null);
 
-  
-  // All scene IDs in teh store, memoized to avoid re-rendering when scenesObj changes
+  // All scene IDs in the store, memoized to avoid re-rendering when scenesObj changes
   const scenes: Scene[] = useMemo(() => scenesObj ? Object.values(scenesObj) : [], [scenesObj]);
 
+  // Find disconnected scenes (always call these hooks at the top level)
+  const entryId = 'forest_clearing';
+  const reachable = useMemo(() => findReachableScenes(scenes, entryId), [scenes]);
+  const disconnectedScenes = useMemo(() => scenes.filter(s => !reachable.has(s.id)), [scenes, reachable]);
 
   const orphanedSceneIds = useMemo(() => {
     if (!scenes || !Array.isArray(scenes) || scenes.length === 0) return []
@@ -318,10 +339,11 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
     setEditIndex(null);
     setShowModal(true);
   }
-  function openEditModal(idx: number) {
-    if (!scenes) return;
-    setForm(scenes[idx]);
-    setEditIndex(idx);
+  function openEditModal(id: string) {
+    const scene = scenes.find(s => s.id === id);
+    if (!scene) return;
+    setForm(scene);
+    setEditIndex(scenes.findIndex(s => s.id === id));
     setShowModal(true);
   }
   function closeModal() {
@@ -364,32 +386,30 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
       alert(err instanceof Error ? err.message : 'Failed to save scene');
     }
   }
-  function confirmDelete(idx: number) {
-    setDeleteIndex(idx);
+  function confirmDelete(id: string) {
+    setDeleteIndex(id);
   }
   async function handleDelete() {
-    if (deleteIndex !== null && scenesObj && scenes[deleteIndex]) {
+    if (deleteIndex !== null && scenesObj && scenesObj[deleteIndex]) {
       const updatedScenes = { ...scenesObj };
-      delete updatedScenes[scenes[deleteIndex].id];
+      delete updatedScenes[deleteIndex];
       setScenes(updatedScenes); setDeleteIndex(null);
-       // Call backend to delete scene
-    try {
-      const res = await fetch('/api/deleteScene', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: scenes[deleteIndex].id, game }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to delete scene');
+      // Call backend to delete scene
+      try {
+        const res = await fetch('/api/deleteScene', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: deleteIndex, game }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Failed to delete scene');
+        }
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Failed to delete scene');
       }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete scene');
+      setDeleteIndex(null);
     }
-    setDeleteIndex(null);
-    }
-
-     
   }
   function cancelDelete() {
     setDeleteIndex(null);
@@ -440,6 +460,18 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
             onDelete={confirmDelete}
           />
         </div>
+        {/* Disconnected Scenes Section */}
+        {disconnectedScenes.length > 0 && (
+          <div className="mt-8">
+            <h4 className="text-[18px] font-bold text-blue-700 mb-1">Disconnected Scenes</h4>
+            <SceneListing
+              scenes={disconnectedScenes}
+              type="disconnected"
+              onEdit={openEditModal}
+              onDelete={confirmDelete}
+            />
+          </div>
+        )}
         {/* Missing Scenes Section */}
         {missingSceneIds.length > 0 && (
           <div className="mt-8">
@@ -568,7 +600,7 @@ const [editingActionId, setEditingActionId] = useState<string | null>(null);
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]">
           <div className="bg-white rounded-xl p-8 min-w-[320px] shadow-2xl text-center">
             <h3 className="text-[22px] font-bold mb-4">Delete Scene?</h3>
-            <p className="text-slate-700 mb-6">Are you sure you want to delete <strong>{scenes[deleteIndex]?.id}</strong>?</p>
+            <p className="text-slate-700 mb-6">Are you sure you want to delete <strong>{deleteIndex}</strong>?</p>
             <div className="flex justify-center gap-4">
               <button onClick={cancelDelete} className="bg-slate-500 text-white rounded-lg px-5 py-2 font-semibold cursor-pointer">Cancel</button>
               <button onClick={handleDelete} className="bg-red-500 text-white rounded-lg px-5 py-2 font-semibold cursor-pointer">Delete</button>
