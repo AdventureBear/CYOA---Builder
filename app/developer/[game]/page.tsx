@@ -12,7 +12,6 @@ export default function GameLandingPage({ params }: { params: { game: string } }
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#1a202c', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-      <Link href="/developer" style={{ alignSelf: 'flex-start', marginBottom: 24, color: '#2563eb', fontWeight: 600, fontSize: 18, textDecoration: 'none' }}>← Back to All Games</Link>
       <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px #0002', padding: 48, maxWidth: 420, width: '100%', textAlign: 'center' }}>
         <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 24, letterSpacing: 1 }}>{game.name}</h1>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 16 }}>

@@ -15,7 +15,6 @@ import 'reactflow/dist/style.css';
 
 import { useGameStore } from '@/store/gameStore';
 import { Scene } from '@/app/types';
-import DeveloperNav from '../../../components/Dev/DeveloperNav';
 import SceneNode from '@/components/Dev/SceneNode';
 import Modal from '@/components/ui/Modal';
 import SceneForm from '@/components/Dev/SceneForm';
@@ -274,9 +273,6 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
 
   return (
     <div className="min-h-screen w-full h-full flex flex-col">
-      <div className="w-full relative z-20 shadow bg-white py-3">
-        <DeveloperNav />
-      </div>
       <div className="mx-auto mt-8 rounded-xl shadow" style={{ width: '80vw', background: '#fff' }}>
         <div className="w-full h-[600px]">
           <ReactFlow

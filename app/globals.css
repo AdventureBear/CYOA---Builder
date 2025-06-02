@@ -1,5 +1,6 @@
 html, body {
-  background: #1a1a1a !important;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
   margin: 0;
   padding: 0;
   /* width: 100vw;
