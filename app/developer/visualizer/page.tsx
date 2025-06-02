@@ -12,6 +12,7 @@ import ReactFlow, {
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { Upload, X } from 'lucide-react';
 
 import { useGameStore } from '@/store/gameStore';
 import { Scene } from '@/app/types';
@@ -409,9 +410,51 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
         <div className="p-4 min-w-[340px] w-full">
           <div className="flex justify-between items-center mb-2">
             <h3 className="font-bold text-lg">Bulk Import Scenes</h3>
-            <button onClick={() => setImportModalOpen(false)} className="text-slate-500 hover:text-slate-800 text-xl font-bold px-2">×</button>
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              onClick={() => setImportModalOpen(false)}
+              aria-label="Close"
+              className="mb-4"
+            >
+              <X size={24} />
+            </Button>
           </div>
-          <label className="block font-semibold mb-1">Paste Scene JSON</label>
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-semibold text-base text-slate-700">Scene JSON</span>
+            <Button
+              type="button"
+              className="flex items-center gap-2  px-4 py-2"
+              asChild
+            >
+              <label className="flex items-center cursor-pointer m-0">
+                <Upload size={20} className="mr-2" /> <span >Upload File</span>
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={e => {
+                    setImportError(null);
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      try {
+                        const text = event.target?.result as string;
+                        JSON.parse(text); // Validate JSON
+                        setImportJson(text);
+                      } catch {
+                        setImportError('Uploaded file is not valid JSON.');
+                      }
+                    };
+                    reader.readAsText(file);
+                  }}
+                  disabled={importing}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            </Button>
+          </div>
           <textarea
             value={importJson}
             onChange={e => setImportJson(e.target.value)}
