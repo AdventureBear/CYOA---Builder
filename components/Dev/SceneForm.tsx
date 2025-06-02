@@ -138,6 +138,10 @@ export default function SceneForm({ scene, actionsObj, allScenes, onSave, onCanc
   const [form, setForm] = useState<Scene>(scene);
   const [showActionModal, setShowActionModal] = useState(false);
   const [editingActionId, setEditingActionId] = useState<string | null>(null);
+  const [newSceneModalIdx, setNewSceneModalIdx] = useState<number | null>(null);
+  const [newSceneIdInput, setNewSceneIdInput] = useState('');
+  const [showNextNodeWarning, setShowNextNodeWarning] = useState(false);
+  const [pendingSave, setPendingSave] = useState<null | Scene>(null);
 
   useEffect(() => {
     setForm(scene);
@@ -182,9 +186,24 @@ export default function SceneForm({ scene, actionsObj, allScenes, onSave, onCanc
       setActionsObj(updatedActions);
     }
   }
+  function hasBlankNextNodeId(choices: { nextNodeId?: string }[]) {
+    return choices.some(c => !c.nextNodeId || c.nextNodeId.trim() === '');
+  }
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (hasBlankNextNodeId(form.choices)) {
+      setShowNextNodeWarning(true);
+      setPendingSave(form);
+      return;
+    }
     onSave(form);
+  }
+  function handleAcknowledgeWarning() {
+    setShowNextNodeWarning(false);
+    if (pendingSave) {
+      onSave(pendingSave);
+      setPendingSave(null);
+    }
   }
 
   return (
@@ -254,7 +273,32 @@ export default function SceneForm({ scene, actionsObj, allScenes, onSave, onCanc
         {form.choices.map((choice, idx) => (
           <div key={idx} className="flex items-center gap-2 mb-1">
             <input placeholder="Text" value={choice.text} onChange={e => handleChoiceChange(idx, 'text', e.target.value)} required className="basis-4/5 min-w-[80px] px-1 py-0.5 rounded border border-slate-300 text-[14px] bg-white" />
-            <input placeholder="Next Node ID" value={choice.nextNodeId} onChange={e => handleChoiceChange(idx, 'nextNodeId', e.target.value)} required className="basis-1/5 min-w-[60px] px-1 py-0.5 rounded border border-slate-300 text-[14px] bg-white" />
+            <div className="basis-1/5 flex gap-1 items-center">
+              <select
+                value={
+                  choice.nextNodeId === undefined || choice.nextNodeId === null || choice.nextNodeId === ''
+                    ? ''
+                    : allScenes.some(s => s.id === choice.nextNodeId)
+                      ? choice.nextNodeId
+                      : '__NEW__'
+                }
+                onChange={e => {
+                  if (e.target.value === '__NEW__') {
+                    setNewSceneModalIdx(idx);
+                    setNewSceneIdInput('');
+                  } else {
+                    handleChoiceChange(idx, 'nextNodeId', e.target.value);
+                  }
+                }}
+                className={`min-w-[60px] px-1 py-0.5 rounded border ${!choice.nextNodeId || choice.nextNodeId.trim() === '' ? 'border-red-500' : 'border-slate-300'} text-[14px] bg-white`}
+              >
+                <option value="">Select…</option>
+                {allScenes.filter(s => s.id !== form.id).map(s => (
+                  <option key={s.id} value={s.id}>{s.id}</option>
+                ))}
+                <option value="__NEW__">New Scene</option>
+              </select>
+            </div>
             {form.choices.length > 1 && (
               <button type="button" onClick={() => removeChoice(idx)} className="bg-red-500 text-white border-none rounded px-2 font-semibold cursor-pointer text-[13px] ml-0.5">Remove</button>
             )}
@@ -280,6 +324,50 @@ export default function SceneForm({ scene, actionsObj, allScenes, onSave, onCanc
           actions={Object.values(actionsObj)}
           scenes={allScenes}
         />
+      )}
+      {/* New Scene Modal */}
+      {newSceneModalIdx !== null && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 24, minWidth: 320, boxShadow: '0 4px 24px #0002', textAlign: 'center' }}>
+            <h4 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Add New Scene ID</h4>
+            <input
+              value={newSceneIdInput}
+              onChange={e => setNewSceneIdInput(e.target.value)}
+              placeholder="New scene ID"
+              style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15, marginBottom: 16 }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+              <button type="button" onClick={() => { setNewSceneModalIdx(null); setNewSceneIdInput(''); }} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (newSceneModalIdx !== null && newSceneIdInput.trim()) {
+                    handleChoiceChange(newSceneModalIdx, 'nextNodeId', newSceneIdInput.trim());
+                    setNewSceneModalIdx(null);
+                    setNewSceneIdInput('');
+                  }
+                }}
+                style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}
+                disabled={!newSceneIdInput.trim()}
+              >Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Next Node ID blank warning modal */}
+      {showNextNodeWarning && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000 }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 24, minWidth: 320, boxShadow: '0 4px 24px #0002', textAlign: 'center' }}>
+            <h4 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Warning</h4>
+            <div style={{ fontSize: 16, marginBottom: 18 }}>
+              Scene may cause game interruption if nextNode is left blank.
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+              <button type="button" onClick={() => { setShowNextNodeWarning(false); setPendingSave(null); }} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              <button type="button" onClick={handleAcknowledgeWarning} style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Save Anyway</button>
+            </div>
+          </div>
+        </div>
       )}
     </form>
   );

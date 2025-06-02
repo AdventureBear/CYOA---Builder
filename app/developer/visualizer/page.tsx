@@ -20,6 +20,7 @@ import Modal from '@/components/ui/Modal';
 import SceneForm from '@/components/Dev/SceneForm';
 import { useLoadScenesAndActions } from '@/lib/useLoadScenesAndActions';
 import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
+import { Button } from '@/components/ui/button';
 
 
 
@@ -267,6 +268,17 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
 
   console.log('Visualizer nodes:', nodesWithHighlight, 'edges:', edgesWithHighlight);
 
+  // Helper for blank scene
+  const blankScene: Scene = {
+    id: '',
+    name: '',
+    description: '',
+    location: '',
+    season: '',
+    isRequired: false,
+    choices: [],
+  };
+
   if (!scenes) return <p>Loading graph…</p>;
 
   const initialViewport = { x: 0, y: 0, zoom: 1.2 };
@@ -274,6 +286,11 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
   return (
     <div className="min-h-screen w-full h-full flex flex-col">
       <div className="mx-auto mt-8 rounded-xl shadow" style={{ width: '80vw', background: '#fff' }}>
+        <div className="flex justify-end p-4">
+          <Button onClick={() => { setSelectedScene(blankScene); setModalOpen(true); }}>
+            + Add Scene
+          </Button>
+        </div>
         <div className="w-full h-[600px]">
           <ReactFlow
             nodes={nodes}
@@ -297,11 +314,14 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
         {selectedScene && (
           <SceneForm 
             scene={selectedScene}
-            onSave={handleSave}
+            onSave={async (scene) => {
+              await handleSave(scene);
+              setModalOpen(false);
+            }}
             actionsObj={useGameStore.getState().actions}
             allScenes={Object.values(useGameStore.getState().scenes || {})}
             setActionsObj={useGameStore.getState().setActions}
-            onCancel={() => setModalOpen(false)}
+            onCancel={() => { setModalOpen(false); }}
           />
         )}
       </Modal>
