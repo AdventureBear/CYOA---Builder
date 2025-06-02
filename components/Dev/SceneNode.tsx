@@ -75,6 +75,25 @@ export default function SceneNode({ data }: NodeProps) {
           >
             Edit
           </button>
+          <button
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '8px 12px',
+              background: 'none',
+              border: 'none',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: 14,
+            }}
+            onClick={e => {
+              e.stopPropagation();
+              setMenuOpen(false);
+              if (data.onHighlightNeighbors) data.onHighlightNeighbors();
+            }}
+          >
+            Highlight neighbors
+          </button>
         </div>
       )}
       {/* Node label */}

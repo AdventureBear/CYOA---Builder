@@ -40,7 +40,8 @@ import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
  function buildGraph(
     scenes: Record<string, Scene>,
     handleEdit: (sceneId: string) => void,
-    handleNeighbors: (sceneId: string) => void
+    handleNeighbors: (sceneId: string) => void,
+    handleHighlightNeighbors: (sceneId: string) => void
   ): { nodes: Node[]; edges: Edge[] } {
     const nodes: Node[] = [];
     const pairInfo = new Map<
@@ -70,6 +71,7 @@ import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
           label: scene.id,
           onEdit: () => handleEdit(scene.id),
           onNeighbors: () => handleNeighbors(scene.id),
+          onHighlightNeighbors: () => handleHighlightNeighbors(scene.id),
         },
       });
   
@@ -151,7 +153,7 @@ import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
 export default function SceneFlow() {
   useLoadScenesAndActions();
   const scenes = useGameStore((s) => s.scenes);
- const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
 
   const [selectedScene, setSelectedScene] = React.useState<Scene | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
@@ -166,6 +168,12 @@ export default function SceneFlow() {
       setModalOpen(true);
     }
   }, [scenes]);
+
+  // New: highlight neighbors handler
+  const handleHighlightNeighbors = (sceneId: string) => {
+    setSelectedNodeId(sceneId);
+    // setModalOpen(true);
+  };
 
   const handleSave = async (updatedScene: Scene) => {
     const scenesObj = useGameStore.getState().scenes;
@@ -192,74 +200,103 @@ export default function SceneFlow() {
 const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
 
   const { nodes: initialNodes, edges: initialEdges } = useMemo(
-    () => buildGraph(scenes || {}, handleEdit, handleNeighbors),
+    () => buildGraph(scenes || {}, handleEdit, handleNeighbors, handleHighlightNeighbors),
     [scenes, handleEdit]
   );
 
+  // Set nodes directly from initialNodes (no dagre layout)
+  useEffect(() => {
+    setNodes(initialNodes);
+  }, [initialNodes, setNodes]);
+
   // Highlight logic
-  const highlightedEdgeIds = new Set<string>();
-  const highlightedNodeIds = new Set<string>();
-  if (selectedNodeId) {
-    initialEdges.forEach(edge => {
-      if (edge.source === selectedNodeId || edge.target === selectedNodeId) {
-        highlightedEdgeIds.add(edge.id);
-        highlightedNodeIds.add(edge.source);
-        highlightedNodeIds.add(edge.target);
-      }
+  const outgoing = new Set<string>();
+  const incoming = new Set<string>();
+  const twoWay = new Set<string>();
+  if (selectedNodeId && scenes) {
+    // Outgoing: selected node's choices
+    const selectedScene = scenes[selectedNodeId];
+    if (selectedScene && selectedScene.choices) {
+      selectedScene.choices.forEach(ch => {
+        if (ch.nextNodeId) outgoing.add(ch.nextNodeId);
+      });
+    }
+    // Incoming: any scene whose choices point to selected node
+    Object.values(scenes).forEach(scene => {
+      if (scene.id === selectedNodeId) return;
+      scene.choices?.forEach(ch => {
+        if (ch.nextNodeId === selectedNodeId) incoming.add(scene.id);
+        // Check for two-way
+        if (ch.nextNodeId === selectedNodeId && selectedScene.choices?.some(c2 => c2.nextNodeId === scene.id)) {
+          twoWay.add(scene.id);
+        }
+      });
     });
   }
 
-  const nodesWithHighlight = initialNodes.map(node => ({
-    ...node,
-    style: highlightedNodeIds.has(node.id)
-      ? { ...node.style, border: '3px solid #3399ff', boxShadow: '0 0 10px #3399ff' }
-      : node.style,
-  }));
+  const nodesWithHighlight = initialNodes.map(node => {
+    let style = node.style || {};
+    if (node.id === selectedNodeId) {
+      style = { ...style, border: '3px solid #3399ff', boxShadow: '0 0 10px #3399ff' };
+    } else if (outgoing.has(node.id) || incoming.has(node.id)) {
+      style = { ...style, border: '3px solid orange', boxShadow: '0 0 10px orange' };
+    }
+    return { ...node, style };
+  });
 
   const edgesWithHighlight = initialEdges.map(edge => {
-    let style = edge.style || {};
-    if (selectedNodeId && highlightedEdgeIds.has(edge.id)) {
-      if (edge.source === selectedNodeId && edge.target === selectedNodeId) {
-        style = { ...style, stroke: 'yellow', strokeWidth: 3 };
-      } else if (edge.source === selectedNodeId) {
-        style = { ...style, stroke: 'green', strokeWidth: 3 };
-      } else if (edge.target === selectedNodeId) {
-        style = { ...style, stroke: 'red', strokeWidth: 3 };
+    let style = { ...edge.style };
+    let isOutgoing = false, isIncoming = false, isTwoWay = false;
+    if (selectedNodeId) {
+      if (edge.source === selectedNodeId && outgoing.has(edge.target)) {
+        isOutgoing = true;
+        if (twoWay.has(edge.target)) isTwoWay = true;
+      } else if (edge.target === selectedNodeId && incoming.has(edge.source)) {
+        isIncoming = true;
+        if (twoWay.has(edge.source)) isTwoWay = true;
       }
+    }
+    if (isTwoWay) {
+      style = { ...style, strokeDasharray: '4 4', stroke: '#888', strokeWidth: 3 };
+    } else if (isOutgoing) {
+      style = { ...style, stroke: 'green', strokeWidth: 3 };
+    } else if (isIncoming) {
+      style = { ...style, stroke: 'red', strokeWidth: 3 };
     }
     return { ...edge, style };
   });
 
   console.log('Visualizer nodes:', nodesWithHighlight, 'edges:', edgesWithHighlight);
 
-  useEffect(() => {
-    setNodes(initialNodes)
-  }, [initialNodes, setNodes])
-
   if (!scenes) return <p>Loading graph…</p>;
 
-  const initialViewport = { x: 150, y: 150, zoom: 1.2 };
+  const initialViewport = { x: 0, y: 0, zoom: 1.2 };
 
   return (
-    <div style={{ width: '100%', height: '100vh' }}>
-      <DeveloperNav />
-      <ReactFlow
-        nodes={nodes}
-        edges={edgesWithHighlight}
-        onNodesChange={onNodesChange}
-        nodeTypes={nodeTypes}
-        defaultViewport={initialViewport}
-        panOnScroll
-        zoomOnScroll
-        minZoom={0.2}
-        maxZoom={2}
-        proOptions={{ hideAttribution: true }}
-      >
-        <Background gap={16} size={1} />
-        <MiniMap pannable zoomable />
-        <Controls position="top-right" />
-      </ReactFlow>
-  
+    <div className="min-h-screen w-full h-full flex flex-col">
+      <div className="w-full relative z-20 shadow bg-white py-3">
+        <DeveloperNav />
+      </div>
+      <div className="mx-auto mt-8 rounded-xl shadow" style={{ width: '80vw', background: '#fff' }}>
+        <div className="w-full h-[600px]">
+          <ReactFlow
+            nodes={nodes}
+            edges={edgesWithHighlight}
+            onNodesChange={onNodesChange}
+            nodeTypes={nodeTypes}
+            defaultViewport={initialViewport}
+            panOnScroll
+            zoomOnScroll
+            minZoom={0.2}
+            maxZoom={2}
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background gap={16} size={1} />
+            <MiniMap pannable zoomable />
+            <Controls position="top-right" />
+          </ReactFlow>
+        </div>
+      </div>
       <Modal open={modalOpen}>
         {selectedScene && (
           <SceneForm 
