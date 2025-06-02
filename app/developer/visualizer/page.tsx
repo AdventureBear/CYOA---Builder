@@ -158,6 +158,11 @@ export default function SceneFlow() {
   const [selectedScene, setSelectedScene] = React.useState<Scene | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [importJson, setImportJson] = useState('');
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const handleNeighbors = (sceneId: string) => setSelectedNodeId(sceneId);
 
   const handleEdit = React.useCallback((sceneId: string) => {
@@ -279,6 +284,75 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
     choices: [],
   };
 
+  // Validate a scene object
+  function isValidScene(obj: unknown): obj is Scene {
+    if (typeof obj !== 'object' || obj === null) return false;
+    const o = obj as Record<string, unknown>;
+    return (
+      typeof o.id === 'string' &&
+      typeof o.description === 'string' &&
+      typeof o.location === 'string' &&
+      Array.isArray(o.choices)
+    );
+  }
+
+  async function handleImport() {
+    setImportError(null);
+    setImportSuccess(null);
+    setImporting(true);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(importJson);
+    } catch (e) {
+      setImportError('Invalid JSON');
+      setImporting(false);
+      return;
+    }
+    let scenesToImport: Scene[] = [];
+    if (Array.isArray(parsed)) {
+      scenesToImport = parsed.filter(isValidScene);
+      if (scenesToImport.length !== parsed.length) {
+        setImportError('Some items in the array are not valid scenes.');
+        setImporting(false);
+        return;
+      }
+    } else if (isValidScene(parsed)) {
+      scenesToImport = [parsed];
+    } else if (parsed && typeof parsed === 'object') {
+      // Try object of scenes
+      const arr = Object.values(parsed);
+      if (arr.every(isValidScene)) {
+        scenesToImport = arr;
+      } else {
+        setImportError('Object contains invalid scene(s).');
+        setImporting(false);
+        return;
+      }
+    } else {
+      setImportError('JSON must be a Scene, array of Scenes, or object of Scenes.');
+      setImporting(false);
+      return;
+    }
+    // Save each scene
+    try {
+      for (const scene of scenesToImport) {
+        await fetch('/api/saveScene', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scene, game: 'cute-animals' }),
+        });
+      }
+      setImportSuccess(`Imported ${scenesToImport.length} scene(s) successfully!`);
+      setImportJson('');
+      // Optionally reload scenes
+      window.location.reload();
+    } catch (e) {
+      setImportError('Failed to import scene(s).');
+    } finally {
+      setImporting(false);
+    }
+  }
+
   if (!scenes) return <p>Loading graph…</p>;
 
   const initialViewport = { x: 0, y: 0, zoom: 1.2 };
@@ -287,9 +361,14 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
     <div className="min-h-screen w-full h-full flex flex-col">
       <div className="mx-auto mt-8 rounded-xl shadow" style={{ width: '80vw', background: '#fff' }}>
         <div className="flex justify-end p-4">
-          <Button onClick={() => { setSelectedScene(blankScene); setModalOpen(true); }}>
-            + Add Scene
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => { setSelectedScene(blankScene); setModalOpen(true); }}>
+              + Add Scene
+            </Button>
+            <Button variant="secondary" onClick={() => setImportModalOpen(true)}>
+              Bulk Import Scenes
+            </Button>
+          </div>
         </div>
         <div className="w-full h-[600px]">
           <ReactFlow
@@ -324,6 +403,31 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
             onCancel={() => { setModalOpen(false); }}
           />
         )}
+      </Modal>
+      {/* Bulk Import Modal */}
+      <Modal open={importModalOpen}>
+        <div className="p-4 min-w-[340px] w-full">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-bold text-lg">Bulk Import Scenes</h3>
+            <button onClick={() => setImportModalOpen(false)} className="text-slate-500 hover:text-slate-800 text-xl font-bold px-2">×</button>
+          </div>
+          <label className="block font-semibold mb-1">Paste Scene JSON</label>
+          <textarea
+            value={importJson}
+            onChange={e => setImportJson(e.target.value)}
+            rows={25}
+            className="w-full border rounded px-2 py-1 text-[14px] font-mono"
+            placeholder="Paste a Scene object, array, or object of scenes here..."
+            disabled={importing}
+          />
+          <div className="flex gap-2 mt-2">
+            <Button onClick={handleImport} disabled={importing || !importJson.trim()} type="button">Import</Button>
+            <Button variant="secondary" onClick={() => setImportModalOpen(false)} type="button">Close</Button>
+            {importing && <span className="text-slate-500">Importing…</span>}
+            {importError && <span className="text-red-600 font-semibold">{importError}</span>}
+            {importSuccess && <span className="text-green-600 font-semibold">{importSuccess}</span>}
+          </div>
+        </div>
       </Modal>
     </div>
   );
