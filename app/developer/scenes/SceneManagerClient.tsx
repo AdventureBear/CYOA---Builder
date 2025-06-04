@@ -5,9 +5,12 @@ import { useSearchParams } from 'next/navigation';
 import { useGameStore } from '@/store/gameStore';
 import type { Scene, Action } from '@/app/types';
 import ActionModal from '@/components/Dev/ActionModal';
-import DeveloperNav from '@/components/Dev/DeveloperNav';
 import { useLoadScenesAndActions } from '@/lib/useLoadScenesAndActions';
 import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
+import React from 'react';
+import { SceneListing } from '@/components/Dev/SceneManager/SceneListing';
+import { SceneActionsBox } from '@/components/Dev/SceneManager/SceneActionsBox';
+import { findReachableScenes, getSceneCategories } from '@/lib/sceneUtils';
 
 const defaultScene = {
   id: '',
@@ -22,235 +25,10 @@ const defaultScene = {
 };
 
 
+// Scene categorization helpers (exported for reuse)
+// export function findReachableScenes(scenes: Scene[], entryId: string): Set<string> { ... }
+// export function getSceneCategories(scenes: Scene[], actionsObj: Record<string, Action> | null, entryId: string) { ... }
 
-// async function saveSceneToDisk(scene: Scene, game: string) {
-//   const res = await fetch('/api/saveScene', {
-//     method: 'POST',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify({ scene, game }),
-//   });
-//   if (!res.ok) {
-//     const data = await res.json();
-//     throw new Error(data.error || 'Failed to save scene');
-//   }
-// }
-
-interface SceneActionRow {
-  id: string;
-  trigger: string;
-  outcome: string;
-}
-
-interface SceneActionsBoxProps {
-  form: Scene;
-  setForm: (scene: Scene) => void;
-  actionsObj: Record<string, Action> | null;
-  onEditAction: (actionId: string) => void;
-  onUpdateActionOutcome: (actionId: string, outcome: string) => void;
-}
-
-function SceneActionsBox({ form, setForm, actionsObj, onEditAction, onUpdateActionOutcome }: SceneActionsBoxProps) {
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newActionId, setNewActionId] = useState('');
-  const [selectedExisting, setSelectedExisting] = useState('');
-  const actions = actionsObj ? Object.values(actionsObj) : [];
-  const triggers = ['onEnter', 'onExit', 'onChoice', 'onItem', 'onFlag', 'onRep', 'onHealth', 'onAlignment', 'onRandom'];
-
-  // Map form.actions (string[]) to editable rows (SceneActionRow[])
-  const actionRows: SceneActionRow[] = (form.actions || []).map((id: string) => {
-    // Try to get trigger/outcome from actionsObj, else default
-    const found = actionsObj && actionsObj[id];
-    return {
-      id,
-      trigger: found && (found as Action).trigger ? (found as Action).trigger : 'onEnter',
-      outcome: found && Array.isArray((found as Action).outcomes) && (found as Action).outcomes.length > 0 ? (found as Action).outcomes[0].description || '' : '',
-    };
-  });
-
-  function updateActions(newRows: SceneActionRow[]) {
-    setForm({ ...form, actions: newRows.map(row => row.id) });
-  }
-
-  function handleAddAction() {
-    setShowAddModal(true);
-    setNewActionId('');
-    setSelectedExisting('');
-  }
-  function handleSaveNewAction() {
-    const actionId = selectedExisting || newActionId.trim();
-    if (!actionId) return;
-    if ((form.actions || []).includes(actionId)) return;
-    updateActions([...actionRows, { id: actionId, trigger: 'onEnter', outcome: '' }]);
-    setShowAddModal(false);
-  }
-  function handleDelete(idx: number) {
-    const newRows = actionRows.filter((_, i) => i !== idx);
-    updateActions(newRows);
-  }
-  function handleTriggerChange(idx: number, value: string) {
-    const newRows = actionRows.map((a, i) => i === idx ? { ...a, trigger: value } : a);
-    updateActions(newRows);
-  }
-  function handleOutcomeChange(idx: number, value: string) {
-    const newRows = actionRows.map((a, i) => i === idx ? { ...a, outcome: value } : a);
-    updateActions(newRows);
-    // Persist outcome to global actions store
-    onUpdateActionOutcome(actionRows[idx].id, value);
-  }
-
-  return (
-    <div style={{ background: '#f9f6e7', border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, marginBottom: 16, width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-        <label style={{ fontWeight: 600, fontSize: 16 }}>Actions</label>
-        <button type="button" onClick={handleAddAction} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginLeft: 2 }}>+</button>
-      </div>
-      {/* Header row */}
-      {actionRows.length > 0 && (
-        <div style={{ display: 'flex', gap: 8, fontWeight: 600, fontSize: 14, marginBottom: 2 }}>
-          <div style={{ flex: 2 }}>Action</div>
-          <div style={{ flex: 1 }}>Trigger</div>
-          <div style={{ flex: 3 }}>Outcome</div>
-          <div style={{ width: 80 }}></div>
-        </div>
-      )}
-      {/* Action rows */}
-      {actionRows.map((a, idx) => (
-        <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <input value={a.id} readOnly style={{ flex: 2, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14, background: '#f9fafb' }} />
-          <select value={a.trigger} onChange={e => handleTriggerChange(idx, e.target.value)} style={{ flex: 1, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }}>
-            {triggers.map((t: string) => <option key={t} value={t}>{t}</option>)}
-          </select>
-          <input value={a.outcome || ''} onChange={e => handleOutcomeChange(idx, e.target.value)} placeholder="Outcome note" style={{ flex: 3, padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }} />
-          <button type="button" onClick={() => onEditAction(a.id)} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, fontSize: 13, cursor: 'pointer', marginRight: 2 }}>Edit</button>
-          <button type="button" onClick={() => handleDelete(idx)} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 10px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Delete</button>
-        </div>
-      ))}
-      {/* If no actions, show only Add button */}
-      {actionRows.length === 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
-          <button type="button" onClick={handleAddAction} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginLeft: 2 }}>+</button>
-        </div>
-      )}
-      {/* Add Action Modal */}
-      {showAddModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
-          <div style={{ background: '#fff', borderRadius: 10, padding: 24, minWidth: 320, boxShadow: '0 4px 24px #0002', textAlign: 'center' }}>
-            <h4 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Add Action</h4>
-            <div style={{ marginBottom: 12 }}>
-              <select value={selectedExisting} onChange={e => setSelectedExisting(e.target.value)} style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15, marginBottom: 8 }}>
-                <option value="">Select existing action...</option>
-                {actions.map((a: Action) => <option key={a.id} value={a.id}>{a.id}</option>)}
-              </select>
-              <div style={{ fontSize: 13, color: '#64748b', margin: '6px 0' }}>or add a new action ID</div>
-              <input value={newActionId} onChange={e => setNewActionId(e.target.value)} placeholder="New action ID" style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 15 }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
-              <button type="button" onClick={() => setShowAddModal(false)} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-              <button type="button" onClick={handleSaveNewAction} style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Save</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-    // <h1>Scene Actions</h1>
-  );
-}
-
-// SceneListing component
-function SceneListing({ scenes, type, onEdit, onDelete, onAdd }: {
-  scenes: Scene[] | string[];
-  type: 'active' | 'orphaned' | 'missing' | 'disconnected';
-  onEdit?: (id: string) => void;
-  onDelete?: (id: string) => void;
-  onAdd?: (id: string) => void;
-}) {
-  // Determine border and header color based on type
-  const borderColor = type === 'active' ? 'border-green-500' : type === 'missing' ? 'border-yellow-300' : type === 'disconnected' ? 'border-blue-300' : 'border-red-300';
-  const headerBg = type === 'active' ? 'bg-green-50' : type === 'missing' ? 'bg-yellow-50' : type === 'disconnected' ? 'bg-blue-50' : 'bg-red-50';
-  const headerText = 'text-slate-900';
-  return (
-    <div className={`border ${borderColor} rounded-lg mb-0 overflow-hidden bg-white`}>
-      {scenes.length > 0 && (
-        <div className={`flex items-center gap-4 ${headerBg} font-bold text-[15px] ${headerText} px-3 py-2 border-b border-slate-200`}>
-          <div className="flex-[1.2]">Location</div>
-          <div className="flex-1">ID</div>
-          <div className="flex-[4]">Description</div>
-          <div className="flex flex-1 justify-end gap-2">Actions</div>
-        </div>
-      )}
-      <ul className="list-none p-0 m-0 bg-white">
-        {scenes.map((scene) => {
-          const id = typeof scene === 'string' ? scene : scene.id;
-          const location = typeof scene === 'string' ? undefined : scene.location;
-          const description = typeof scene === 'string' ? undefined : scene.description;
-          return (
-            <li
-              key={id}
-              className={`flex items-center gap-4 bg-white border-b border-slate-200 shadow-sm px-3 py-2 text-[15px] w-full min-w-0 ${
-                (type === 'active' || type === 'missing' || type === 'disconnected') ? 'cursor-pointer transition hover:bg-slate-100' : ''
-              }`}
-              onClick={
-                (type === 'active' && onEdit) ? () => onEdit(id)
-                  : (type === 'missing' && onAdd) ? () => onAdd(id)
-                  : (type === 'disconnected' && onEdit) ? () => onEdit(id)
-                  : undefined
-              }
-              onKeyDown={
-                (type === 'active' && onEdit) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onEdit(id); }
-                  : (type === 'missing' && onAdd) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onAdd(id); }
-                  : (type === 'disconnected' && onEdit) ? (e) => { if (e.key === 'Enter' || e.key === ' ') onEdit(id); }
-                  : undefined
-              }
-              role={(type === 'active' || type === 'missing' || type === 'disconnected') ? 'button' : undefined}
-              tabIndex={(type === 'active' || type === 'missing' || type === 'disconnected') ? 0 : undefined}
-            >
-              <div className="flex-[1.2] font-bold text-black truncate">{location || ''}</div>
-              <div className="flex-1 text-slate-500 text-[14px] truncate">({id})</div>
-              <div className="flex-[4] text-slate-700 text-[14px] truncate">{description ? description.slice(0, 60) : ''}</div>
-              <div className="flex gap-2 flex-1 justify-end">
-                {(type === 'active' || type === 'orphaned' || type === 'disconnected') && onEdit && (
-                  <button
-                    className="bg-blue-600 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-blue-700 transition"
-                    onClick={e => { e.stopPropagation(); onEdit(id); }}
-                  >Edit</button>
-                )}
-                {(type === 'active' || type === 'orphaned' || type === 'disconnected') && onDelete && (
-                  <button
-                    className="bg-red-500 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-red-600 transition"
-                    onClick={e => { e.stopPropagation(); onDelete(id); }}
-                  >Delete</button>
-                )}
-                {type === 'missing' && onAdd && (
-                  <button
-                    className="bg-green-500 text-white rounded px-3 py-1 font-semibold text-[13px] hover:bg-green-600 transition"
-                    onClick={e => { e.stopPropagation(); onAdd(id); }}
-                  >Add</button>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-// Helper: Find all scene IDs reachable from a given entry point
-function findReachableScenes(scenes: Scene[], entryId: string): Set<string> {
-  const map = new Map(scenes.map(s => [s.id, s]));
-  const visited = new Set<string>();
-  function dfs(id: string) {
-    if (visited.has(id)) return;
-    visited.add(id);
-    const scene = map.get(id);
-    if (!scene) return;
-    for (const choice of scene.choices || []) {
-      if (choice.nextNodeId) dfs(choice.nextNodeId);
-    }
-  }
-  dfs(entryId);
-  return visited;
-}
 
 export default function SceneManagerClient() {
   useLoadScenesAndActions();
@@ -443,7 +221,6 @@ export default function SceneManagerClient() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 p-8">
-      <DeveloperNav />
       <div className="max-w-[900px] mx-auto">
         <div className="flex gap-4 mb-4">
           <Link href="/developer" className="text-blue-600 underline font-medium">&larr; Back to Dashboard</Link>
