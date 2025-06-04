@@ -1,12 +1,5 @@
-import DeveloperNav from '@/components/Dev/DeveloperNav';
+import DeveloperLayout from '@/components/Dev/DeveloperLayout';
 
-export default function DeveloperLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen w-full bg-slate-100 shadow z-20">
-      {/* <div className="w-full bg-white pb-3 shadow z-20"> */}
-        <DeveloperNav />
-      {/* </div> */}
-      {children}
-    </div>
-  );
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return <DeveloperLayout>{children}</DeveloperLayout>;
 } 

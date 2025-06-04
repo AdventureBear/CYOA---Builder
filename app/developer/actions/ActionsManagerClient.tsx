@@ -1,11 +1,11 @@
 'use client';
-import Link from 'next/link';
+// import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Action } from '@/app/types';
 import { useSearchParams } from 'next/navigation';
 import ActionModal from '@/components/Dev/ActionModal';
-import DeveloperNav from '@/components/Dev/DeveloperNav';
+// import DeveloperNav from '@/components/Dev/DeveloperNav';
 import { useLoadScenesAndActions } from '@/lib/useLoadScenesAndActions';
 
 const defaultAction: Action = {
@@ -63,6 +63,8 @@ export default function ActionsManagerClient() {
   const scenesObj = useGameStore((state) => state.scenes);
   const scenes = scenesObj ? Object.values(scenesObj) : [];
   const existingActionIds = new Set(actions.map(a => a.id));
+  
+  
   // Build referencedActionIds: all action IDs referenced in scenes (actions[] or choices[].nextAction)
   const referencedActionIds = new Set<string>();
   scenes.forEach(scene => {
@@ -133,13 +135,13 @@ export default function ActionsManagerClient() {
 
   return (
     <div className="min-h-screen bg-blue-50 text-slate-900 p-8">
-      <DeveloperNav />
-      <div className="max-w-[700px] mx-auto">
-        <div className="flex gap-4 mb-4">
+    
+      <div className="max-w-[80vw] mx-auto">
+        {/* <div className="flex gap-4 mb-4">
           <Link href="/developer" className="text-blue-600 underline font-medium">&larr; Back to Dashboard</Link>
           <Link href="/developer/visualizer" className="text-blue-600 underline font-medium">Storyline Visualizer</Link>
           <Link href="/developer/scenes" className="text-blue-600 underline font-medium ml-4">Go to Scene Manager</Link>
-        </div>
+        </div> */}
         <h2 className="text-[32px] font-bold mb-2">Actions Manager</h2>
         <h4 className="text-[18px] font-bold text-black mb-1 px-3 pt-3">All Actions</h4>
         <div className="border border-green-500 rounded-lg overflow-hidden bg-white mb-8">

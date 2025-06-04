@@ -16,13 +16,15 @@ import { Upload, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 import { useGameStore } from '@/store/gameStore';
-import { Scene } from '@/app/types';
+import { Action, Scene } from '@/app/types';
 import SceneNode from '@/components/Dev/SceneNode';
 import Modal from '@/components/ui/Modal';
 import SceneForm from '@/components/Dev/SceneForm';
 import { useLoadScenesAndActions } from '@/lib/useLoadScenesAndActions';
 import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
 import { Button } from '@/components/ui/button';
+import ActionModal from '@/components/Dev/ActionModal';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 
 
@@ -159,12 +161,18 @@ export default function SceneFlow() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
 
   const [selectedScene, setSelectedScene] = React.useState<Scene | null>(null);
+  const [selectedAction, setSelectedAction] = React.useState<Action | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [importJson, setImportJson] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importActionModalOpen, setImportActionModalOpen] = useState(false);
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [importActionJson, setImportActionJson] = useState('');
+  const [importActionError, setImportActionError] = useState<string | null>(null);
+  const [importingActions, setImportingActions] = useState(false);
   const handleNeighbors = (sceneId: string) => setSelectedNodeId(sceneId);
 
   const handleEdit = React.useCallback((sceneId: string) => {
@@ -286,6 +294,50 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
     choices: [],
   };
 
+  //helper for blank action
+  const blankAction: Action = {
+    id: '',
+    trigger: 'onEnter',
+    conditions: [],
+    outcomes: [],
+    failMessage: '',
+  };
+  // "find_message": {
+  //   "id": "find_message",
+  //   "trigger": "onEnter",
+  //   "conditions": [
+  //     {
+  //       "type": "flagSet",
+  //       "key": "robin_asked"
+  //     },
+  //     {
+  //       "type": "flagNotSet",
+  //       "key": "found_message"
+  //     },
+  //     {
+  //       "type": "flagSet",
+  //       "key": "helped_bird"
+  //     }
+  //   ],
+    // "outcomes": [
+    //   {
+    //     "description": "You spot a tiny note wedged in the the birds nest. It's from Robin's cousin!",
+    //     "stateChanges": [
+    //       {
+    //         "type": "setFlag",
+    //         "key": "found_message"
+    //       }
+    //     ],
+    //     "choices": [
+    //       {
+    //         "text": "Read the message",
+    //         "resultMessage": "The note says: 'Meet me at the meadow at dusk.'",
+    //         "resultButtonText": "Put the note away"
+    //       }
+    //     ]
+    //   }
+    // ]
+
   // Validate a scene object
   function isValidScene(obj: unknown): obj is Scene {
     if (typeof obj !== 'object' || obj === null) return false;
@@ -375,18 +427,29 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
 
   return (
     <div className="min-h-screen w-full h-full flex flex-col">
-      <div className="mx-auto mt-8 rounded-xl shadow" style={{ width: '80vw', background: '#fff' }}>
-        <div className="flex justify-end p-4">
-          <div className="flex gap-2">
-            <Button onClick={() => { setSelectedScene(blankScene); setModalOpen(true); }}>
-              + Add Scene
-            </Button>
-            <Button variant="secondary" onClick={() => setImportModalOpen(true)}>
-              Bulk Import Scenes
-            </Button>
-          </div>
-        </div>
-        <div className="w-full h-[600px]">
+      {/* Add/Import Controls above the card */}
+      <div className="flex justify-end gap-3 px-8 pt-8 pb-4" style={{ width: '80vw', margin: '0 auto' }}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="default">+ Add</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => { setSelectedScene(blankScene); setModalOpen(true); }}>Scene</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { setSelectedAction(blankAction); setShowActionModal(true); }}>Action</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">Import</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setImportModalOpen(true)}>Scenes</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setImportActionModalOpen(true)}>Actions</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <div className="mx-auto rounded-xl shadow" style={{ width: '80vw', background: '#fff' }}>
+        <div className="w-full h-[70vh]">
           <ReactFlow
             nodes={nodes}
             edges={edgesWithHighlight}
@@ -483,6 +546,169 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
             <Button variant="secondary" onClick={() => setImportModalOpen(false)} type="button">Close</Button>
             {importing && <span className="text-slate-500">Importing…</span>}
             {importError && <span className="text-red-600 font-semibold">{importError}</span>}
+          </div>
+        </div>
+      </Modal>
+      {/* Action Add/Edit Modal */}
+      <Modal open={showActionModal}>
+        {selectedAction && (
+          <ActionModal
+            action={selectedAction}
+            isEditing={!!selectedAction.id && !!(useGameStore.getState().actions?.[selectedAction.id])}
+            onSave={async (updatedAction) => {
+              // Update store
+              const actionsObj = useGameStore.getState().actions || {};
+              const setActions = useGameStore.getState().setActions;
+              const updatedActions = { ...actionsObj, [updatedAction.id]: updatedAction };
+              setActions(updatedActions);
+              // Persist to backend
+              try {
+                await fetch('/api/saveAction', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ action: updatedAction, game: 'cute-animals' }),
+                });
+                toast.success('Action saved!');
+              } catch (e) {
+                toast.error('Failed to save action.');
+              }
+              setShowActionModal(false);
+              setSelectedAction(null);
+            }}
+            onClose={() => { setShowActionModal(false); setSelectedAction(null); }}
+            actions={Object.values(useGameStore.getState().actions || {})}
+            scenes={Object.values(useGameStore.getState().scenes || {})}
+          />
+        )}
+      </Modal>
+      {/* Bulk Import Actions Modal */}
+      <Modal open={importActionModalOpen}>
+        <div className="p-4 min-w-[340px] w-full">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-bold text-lg">Bulk Import Actions</h3>
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              onClick={() => setImportActionModalOpen(false)}
+              aria-label="Close"
+              className="mb-4"
+            >
+              <X size={24} />
+            </Button>
+          </div>
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-semibold text-base text-slate-700">Action JSON</span>
+            <Button
+              type="button"
+              className="flex items-center gap-2  px-4 py-2"
+              asChild
+            >
+              <label className="flex items-center cursor-pointer m-0">
+                <Upload size={20} className="mr-2" /> <span >Upload File</span>
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={e => {
+                    setImportActionError(null);
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      try {
+                        const text = event.target?.result as string;
+                        JSON.parse(text); // Validate JSON
+                        setImportActionJson(text);
+                      } catch {
+                        setImportActionError('Uploaded file is not valid JSON.');
+                      }
+                    };
+                    reader.readAsText(file);
+                  }}
+                  disabled={importingActions}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            </Button>
+          </div>
+          <textarea
+            value={importActionJson}
+            onChange={e => setImportActionJson(e.target.value)}
+            rows={25}
+            className="w-full border rounded px-2 py-1 text-[14px] font-mono"
+            placeholder="Paste an Action object, array, or object of actions here..."
+            disabled={importingActions}
+          />
+          <div className="flex gap-2 mt-2">
+            <Button onClick={async () => {
+              setImportActionError(null);
+              setImportingActions(true);
+              let parsed: unknown;
+              try {
+                parsed = JSON.parse(importActionJson);
+              } catch (e) {
+                setImportActionError('Invalid JSON');
+                setImportingActions(false);
+                return;
+              }
+              // Validate Action(s)
+              const isValidAction = (obj: unknown): obj is Action =>
+                !!obj && typeof (obj as Action).id === 'string' && typeof (obj as Action).trigger === 'string' && Array.isArray((obj as Action).outcomes);
+              let actionsToImport: Action[] = [];
+              if (Array.isArray(parsed)) {
+                actionsToImport = parsed.filter(isValidAction);
+                if (actionsToImport.length !== parsed.length) {
+                  setImportActionError('Some items in the array are not valid actions.');
+                  setImportingActions(false);
+                  return;
+                }
+              } else if (isValidAction(parsed)) {
+                actionsToImport = [parsed];
+              } else if (parsed && typeof parsed === 'object') {
+                const arr = Object.values(parsed);
+                if (arr.every(isValidAction)) {
+                  actionsToImport = arr;
+                } else {
+                  setImportActionError('Object contains invalid action(s).');
+                  setImportingActions(false);
+                  return;
+                }
+              } else {
+                setImportActionError('JSON must be an Action, array of Actions, or object of Actions.');
+                setImportingActions(false);
+                return;
+              }
+              if (actionsToImport.length === 0) {
+                toast.error('No valid actions found in JSON.');
+                setImportingActions(false);
+                return;
+              }
+              try {
+                for (const action of actionsToImport) {
+                  await fetch('/api/saveAction', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, game: 'cute-animals' }),
+                  });
+                }
+                // Update store
+                const res = await fetch('/api/games/cute-animals/');
+                const { actions } = await res.json();
+                useGameStore.getState().setActions(actions);
+                toast.success(`Imported ${actionsToImport.length} action(s) successfully!`);
+                setImportActionJson('');
+                setTimeout(() => {
+                  setImportActionModalOpen(false);
+                }, 1200);
+              } catch (e) {
+                setImportActionError('Failed to import action(s).');
+              } finally {
+                setImportingActions(false);
+              }
+            }} disabled={importingActions || !importActionJson.trim()} type="button">Import</Button>
+            <Button variant="secondary" onClick={() => setImportActionModalOpen(false)} type="button">Close</Button>
+            {importingActions && <span className="text-slate-500">Importing…</span>}
+            {importActionError && <span className="text-red-600 font-semibold">{importActionError}</span>}
           </div>
         </div>
       </Modal>
