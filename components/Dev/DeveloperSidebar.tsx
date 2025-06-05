@@ -57,7 +57,7 @@ export function DeveloperSidebar({ onPanel }: { onPanel: (panel: PanelType | nul
   );
 }
 
-type PanelType = 'scene' | 'action' | 'visualizer' | 'threader' | 'import' | null;
+export type PanelType = 'scene' | 'action' | 'visualizer' | 'threader' | 'import' | null;
 
 export function SlidingPanel({ openPanel, onClose }: { openPanel: PanelType; onClose: () => void }) {
   const [accordionOpen, setAccordionOpen] = useState({
@@ -201,7 +201,7 @@ export function SlidingPanel({ openPanel, onClose }: { openPanel: PanelType; onC
       break;
   }
   return (
-    <div className={`h-screen bg-white shadow-lg border-r border-slate-200 z-40 transition-all duration-300 ${openPanel ? 'translate-x-0' : '-translate-x-[300px] pointer-events-none opacity-0'}`} style={{ width: 280, minWidth: 280 }}>
+    <div className={`fixed left-16 bg-white shadow-lg border-r border-slate-200 z-40 transition-all duration-300 ${openPanel ? 'translate-x-0' : '-translate-x-[300px] pointer-events-none opacity-0'}`} style={{ width: 280, minWidth: 280, top: 40, height: 'calc(100vh - 40px)' }}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
         <span className="font-bold text-lg">{header}</span>
         <button className="text-slate-500 hover:text-blue-600 text-xl font-bold" onClick={onClose} aria-label="Close">×</button>
@@ -217,7 +217,9 @@ export function DeveloperSidebarsWrapper({ children }: { children: React.ReactNo
     <div className="flex h-full">
       <DeveloperSidebar onPanel={setOpenPanel} />
       <SlidingPanel openPanel={openPanel} onClose={() => setOpenPanel(null)} />
-      <div className="flex-1 min-w-0">{children}</div>
+      <div className="flex-1 w-full min-w-0 flex flex-col min-h-0">
+        {children}
+      </div>    
     </div>
   );
 }

@@ -10,7 +10,7 @@ import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
 import React from 'react';
 import { SceneListing } from '@/components/Dev/SceneManager/SceneListing';
 import { SceneActionsBox } from '@/components/Dev/SceneManager/SceneActionsBox';
-import { findReachableScenes, getSceneCategories } from '@/lib/sceneUtils';
+import { findReachableScenes } from '@/lib/sceneUtils';
 
 const defaultScene = {
   id: '',
@@ -23,12 +23,6 @@ const defaultScene = {
   actions: [],
   locationImage: '',
 };
-
-
-// Scene categorization helpers (exported for reuse)
-// export function findReachableScenes(scenes: Scene[], entryId: string): Set<string> { ... }
-// export function getSceneCategories(scenes: Scene[], actionsObj: Record<string, Action> | null, entryId: string) { ... }
-
 
 export default function SceneManagerClient() {
   useLoadScenesAndActions();

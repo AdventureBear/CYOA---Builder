@@ -10,6 +10,7 @@ import ReactFlow, {
   Node,
   Position,
   MarkerType,
+  BackgroundVariant,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Upload, X } from 'lucide-react';
@@ -155,9 +156,13 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 
 /* ---------- component ---------------------------------------------- */
 export default function SceneFlow() {
+  console.log('SceneFlow mounted');
   const { toast } = useToast();
   useLoadScenesAndActions();
   const scenes = useGameStore((s) => s.scenes);
+  const actions = useGameStore((s) => s.actions);
+  console.log('scenes from store:', scenes);
+  console.log('actions from store:', actions);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
 
   const [selectedScene, setSelectedScene] = React.useState<Scene | null>(null);
@@ -249,16 +254,6 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
     });
   }
 
-  const nodesWithHighlight = initialNodes.map(node => {
-    let style = node.style || {};
-    if (node.id === selectedNodeId) {
-      style = { ...style, border: '3px solid #3399ff', boxShadow: '0 0 10px #3399ff' };
-    } else if (outgoing.has(node.id) || incoming.has(node.id)) {
-      style = { ...style, border: '3px solid orange', boxShadow: '0 0 10px orange' };
-    }
-    return { ...node, style };
-  });
-
   const edgesWithHighlight = initialEdges.map(edge => {
     let style = { ...edge.style };
     let isOutgoing = false, isIncoming = false, isTwoWay = false;
@@ -281,7 +276,7 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
     return { ...edge, style };
   });
 
-  console.log('Visualizer nodes:', nodesWithHighlight, 'edges:', edgesWithHighlight);
+  console.log('nodes:', nodes, 'edges:', edgesWithHighlight);
 
   // Helper for blank scene
   const blankScene: Scene = {
@@ -426,30 +421,30 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
   const initialViewport = { x: 0, y: 0, zoom: 1.2 };
 
   return (
-    <div className="min-h-screen w-full h-full flex flex-col">
-      {/* Add/Import Controls above the card */}
-      <div className="flex justify-end gap-3 px-8 pt-8 pb-4" style={{ width: '80vw', margin: '0 auto' }}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="default">+ Add</Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => { setSelectedScene(blankScene); setModalOpen(true); }}>Scene</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => { setSelectedAction(blankAction); setShowActionModal(true); }}>Action</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">Import</Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setImportModalOpen(true)}>Scenes</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setImportActionModalOpen(true)}>Actions</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="mx-auto rounded-xl shadow" style={{ width: '80vw', background: '#fff' }}>
-        <div className="w-full h-[70vh]">
+    <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col rounded-xl shadow bg-white m-4 min-h-0">
+        {/* Controls inside the card */}
+        <div className="flex justify-end gap-3 px-8 pt-8 pb-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="default">+ Add</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => { setSelectedScene(blankScene); setModalOpen(true); }}>Scene</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { setSelectedAction(blankAction); setShowActionModal(true); }}>Action</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">Import</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setImportModalOpen(true)}>Scenes</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setImportActionModalOpen(true)}>Actions</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="flex-1 min-h-0">
           <ReactFlow
             nodes={nodes}
             edges={edgesWithHighlight}
@@ -461,8 +456,22 @@ const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
             minZoom={0.2}
             maxZoom={2}
             proOptions={{ hideAttribution: true }}
+            style={{ width: '100%', height: '100%' }}
           >
-            <Background gap={16} size={1} />
+                  <Background
+        id="1"
+        gap={10}
+        color="#b1b1f1"
+        variant={BackgroundVariant.Dots}
+      />
+ 
+      <Background
+        id="2"
+        gap={100}
+        color="#ccc"
+        variant={BackgroundVariant.Lines}
+      />
+            {/* <Background gap={16} size={1} /> */}
             <MiniMap pannable zoomable />
             <Controls position="top-right" />
           </ReactFlow>

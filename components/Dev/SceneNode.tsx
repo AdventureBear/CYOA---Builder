@@ -26,7 +26,8 @@ export default function SceneNode({ data }: NodeProps) {
   }, [menuOpen]);
 
   return (
-    <div style={{ background: 'white', border: '1px solid #ccc', padding: 8, position: 'relative', minHeight: 40 }}>
+    // <div style={{ background: 'white', border: '1px solid #ccc', padding: 8, position: 'relative', minHeight: 40 }}>
+    <div className="bg-white border border-slate-200 p-2 relative min-h-[40px] w-24 h-24">
       {/* Handles for edges */}
       <Handle type="target" position={Position.Left} style={{ background: '#bbb', width: 10, height: 10, borderRadius: '50%' }} />
       <Handle type="source" position={Position.Right} style={{ background: '#bbb', width: 10, height: 10, borderRadius: '50%' }} />
