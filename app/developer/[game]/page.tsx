@@ -76,6 +76,7 @@ export default function GameEditorPage() {
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
     const isInitialLayoutDone = useRef(false);
+    const clickTimer = useRef<NodeJS.Timeout | null>(null);
 
     const handleEdit = useCallback((sceneId: string) => {
         if (!scenes) return;
@@ -85,17 +86,65 @@ export default function GameEditorPage() {
     const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
     
     const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
-        if (focusNodeId) return; // Disable selection in focus mode
-        setSelectedNodeId(currentId => currentId === node.id ? null : node.id);
+        if (clickTimer.current) {
+            clearTimeout(clickTimer.current);
+        }
+        clickTimer.current = setTimeout(() => {
+            if (focusNodeId) return; // Disable selection in focus mode
+            setSelectedNodeId(currentId => currentId === node.id ? null : node.id);
+        }, 150);
     }, [focusNodeId]);
     
     const onNodeDoubleClick: NodeMouseHandler = useCallback((event, node) => {
+        if (clickTimer.current) {
+            clearTimeout(clickTimer.current);
+            clickTimer.current = null;
+        }
         setFocusNodeId(node.id);
         setSelectedNodeId(null);
     }, []);
 
     const exitFocusMode = useCallback(() => {
         setFocusNodeId(null);
+    }, []);
+
+    const findAllAncestors = useCallback((sceneId: string, scenes: Record<string, Scene>): Set<string> => {
+        const ancestors = new Set<string>();
+        const find = (sId: string) => {
+            // Find parents from choices
+            Object.values(scenes).forEach(potentialParent => {
+                if (potentialParent.choices?.some(c => c.nextNodeId === sId)) {
+                    if (!ancestors.has(potentialParent.id)) {
+                        ancestors.add(potentialParent.id);
+                        find(potentialParent.id);
+                    }
+                }
+            });
+            // Find parent from parentSceneId
+            const explicitParentId = scenes[sId]?.parentSceneId;
+            if (explicitParentId && !ancestors.has(explicitParentId)) {
+                ancestors.add(explicitParentId);
+                find(explicitParentId);
+            }
+        };
+        find(sceneId);
+        return ancestors;
+    }, []);
+
+    const findAllDescendants = useCallback((sceneId: string, scenes: Record<string, Scene>): Set<string> => {
+        const descendants = new Set<string>();
+        const find = (sId: string) => {
+            scenes[sId]?.choices?.forEach(choice => {
+                if (choice.nextNodeId) {
+                    if (!descendants.has(choice.nextNodeId)) {
+                        descendants.add(choice.nextNodeId);
+                        find(choice.nextNodeId);
+                    }
+                }
+            });
+        };
+        find(sceneId);
+        return descendants;
     }, []);
 
     const handleAutoLayout = useCallback(() => {
@@ -117,37 +166,6 @@ export default function GameEditorPage() {
         );
 
     }, [rfNodes, rfEdges, setRfNodes]);
-
-    const findAllAncestors = useCallback((sceneId: string, scenes: Record<string, Scene>, ancestors = new Set<string>()): Set<string> => {
-        // Find parents from choices
-        Object.values(scenes).forEach(potentialParent => {
-            if (potentialParent.choices?.some(c => c.nextNodeId === sceneId)) {
-                if (!ancestors.has(potentialParent.id)) {
-                    ancestors.add(potentialParent.id);
-                    findAllAncestors(potentialParent.id, scenes, ancestors);
-                }
-            }
-        });
-        // Find parent from parentSceneId
-        const explicitParentId = scenes[sceneId]?.parentSceneId;
-        if (explicitParentId && !ancestors.has(explicitParentId)) {
-            ancestors.add(explicitParentId);
-            findAllAncestors(explicitParentId, scenes, ancestors);
-        }
-        return ancestors;
-    }, []);
-
-    const findAllDescendants = useCallback((sceneId: string, scenes: Record<string, Scene>, descendants = new Set<string>()): Set<string> => {
-        scenes[sceneId]?.choices?.forEach(choice => {
-            if (choice.nextNodeId) {
-                if (!descendants.has(choice.nextNodeId)) {
-                    descendants.add(choice.nextNodeId);
-                    findAllDescendants(choice.nextNodeId, scenes, descendants);
-                }
-            }
-        });
-        return descendants;
-    }, []);
 
     // Initial layout effect
     useEffect(() => {
@@ -186,60 +204,58 @@ export default function GameEditorPage() {
     useEffect(() => {
         if (!isInitialLayoutDone.current || !scenes) return;
 
-        setRfNodes(prevNodes => {
-            if (focusNodeId) {
-                const ancestorIds = findAllAncestors(focusNodeId, scenes);
-                const descendantIds = findAllDescendants(focusNodeId, scenes);
-                const connectedIds = new Set<string>([focusNodeId, ...Array.from(ancestorIds), ...Array.from(descendantIds)]);
-                return prevNodes.map(n => ({ ...n, hidden: !connectedIds.has(n.id) }));
-            }
+        if (focusNodeId) {
+            const ancestorIds = findAllAncestors(focusNodeId, scenes);
+            const descendantIds = findAllDescendants(focusNodeId, scenes);
+            const connectedIds = new Set<string>([focusNodeId, ...Array.from(ancestorIds), ...Array.from(descendantIds)]);
             
-            if (selectedNodeId) {
-                const connectedIds = new Set<string>([selectedNodeId]);
-                scenes[selectedNodeId]?.choices?.forEach(c => c.nextNodeId && connectedIds.add(c.nextNodeId));
-                Object.values(scenes).forEach(scene => {
-                    if (scene.choices?.some(c => c.nextNodeId === selectedNodeId)) {
-                        connectedIds.add(scene.id);
-                    }
-                });
-                return prevNodes.map(n => ({
-                    ...n,
-                    hidden: false,
-                    style: { ...n.style, opacity: connectedIds.has(n.id) ? 1 : 0.25, transition: 'opacity 0.2s' }
-                }));
-            }
+            setRfNodes(prevNodes => prevNodes.map(n => ({
+                ...n,
+                hidden: !connectedIds.has(n.id),
+                style: { ...n.style, opacity: 1 }
+            })));
+            setRfEdges(prevEdges => prevEdges.map(e => ({
+                ...e,
+                hidden: !(connectedIds.has(e.source) && connectedIds.has(e.target)),
+                style: { ...e.style, opacity: 1 },
+                labelStyle: { opacity: 1 },
+                animated: true,
+            })));
+
+        } else if (selectedNodeId) {
+            const parents = new Set<string>();
+            Object.values(scenes).forEach(scene => {
+                if (scene.choices?.some(c => c.nextNodeId === selectedNodeId)) {
+                    parents.add(scene.id);
+                }
+            });
+            const children = new Set<string>();
+            scenes[selectedNodeId]?.choices?.forEach(c => c.nextNodeId && children.add(c.nextNodeId));
             
-            // Default: all visible, full opacity
-            return prevNodes.map(n => ({ ...n, hidden: false, style: { ...n.style, opacity: 1 } }));
-        });
+            const primaryNodes = new Set<string>([selectedNodeId, ...Array.from(parents), ...Array.from(children)]);
 
-        setRfEdges(prevEdges => {
-            if (focusNodeId) {
-                const ancestorIds = findAllAncestors(focusNodeId, scenes);
-                const descendantIds = findAllDescendants(focusNodeId, scenes);
-                const connectedIds = new Set<string>([focusNodeId, ...Array.from(ancestorIds), ...Array.from(descendantIds)]);
-                return prevEdges.map(e => ({ ...e, hidden: !(connectedIds.has(e.source) && connectedIds.has(e.target)) }));
-            }
+            setRfNodes(prevNodes => prevNodes.map(n => ({
+                ...n,
+                hidden: false,
+                style: { ...n.style, opacity: primaryNodes.has(n.id) ? 1 : 0.25, transition: 'opacity 0.2s' }
+            })));
 
-            if (selectedNodeId) {
-                const connectedIds = new Set<string>([selectedNodeId]);
-                scenes[selectedNodeId]?.choices?.forEach(c => c.nextNodeId && connectedIds.add(c.nextNodeId));
-                Object.values(scenes).forEach(scene => {
-                    if (scene.choices?.some(c => c.nextNodeId === selectedNodeId)) {
-                        connectedIds.add(scene.id);
-                    }
-                });
-
-                return prevEdges.map(e => ({
+            setRfEdges(prevEdges => prevEdges.map(e => {
+                const shouldHighlight = primaryNodes.has(e.source) && primaryNodes.has(e.target);
+                return {
                     ...e,
                     hidden: false,
-                    style: { ...e.style, opacity: (connectedIds.has(e.source) && connectedIds.has(e.target)) ? 1 : 0.15, transition: 'opacity 0.2s' },
-                    animated: connectedIds.has(e.source) && connectedIds.has(e.target),
-                }));
-            }
-            
-            return prevEdges.map(e => ({ ...e, hidden: false, style: { ...e.style, opacity: 1 }, animated: false }));
-        });
+                    style: { ...e.style, opacity: shouldHighlight ? 1 : 0.15, transition: 'opacity 0.2s' },
+                    labelStyle: { opacity: shouldHighlight ? 1 : 0.15, transition: 'opacity 0.2s' },
+                    animated: shouldHighlight,
+                };
+            }));
+
+        } else {
+            // Default: all visible, full opacity
+            setRfNodes(prevNodes => prevNodes.map(n => ({ ...n, hidden: false, style: { ...n.style, opacity: 1 } })));
+            setRfEdges(prevEdges => prevEdges.map(e => ({ ...e, hidden: false, style: { ...e.style, opacity: 1 }, animated: false, labelStyle: { opacity: 1 } })));
+        }
 
     }, [scenes, focusNodeId, selectedNodeId, setRfNodes, setRfEdges, findAllAncestors, findAllDescendants]);
 
