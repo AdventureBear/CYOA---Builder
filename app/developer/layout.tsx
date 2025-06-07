@@ -11,7 +11,7 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
   const params = useParams();
 
   // Ensure gameId is always a string, or null if not present
-  const gameId = params ? (Array.isArray(params.game) ? params.game[0] : params.game) : null;
+  const gameId = params ? (Array.isArray(params.game) ? params.game[0] : params.game) as string | null : null;
 
   const handlePanel = (panel: PanelType) => {
     // This logic ensures clicking the same icon toggles the panel off
@@ -30,7 +30,7 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
       <div className="flex flex-1 min-h-0 h-[calc(100vh-40px)]">
         <DeveloperSidebar onPanel={handlePanel} activePanel={openPanel} />
         <SlidingPanel openPanel={openPanel} onClose={() => setOpenPanel(null)} gameId={gameId} />
-        <main className="flex-1 min-w-0 flex flex-col min-h-0 relative">
+        <main className="flex-1 min-w-0 flex flex-col min-h-0 relative pl-16">
           {children}
         </main>
       </div>

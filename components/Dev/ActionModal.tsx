@@ -5,6 +5,7 @@ interface ActionModalProps {
   action: Action;
   onSave: (action: Action) => Promise<void> | void;
   onClose: () => void;
+  onDelete?: () => void;
   isEditing?: boolean;
   game?: string;
   actions: Action[];
@@ -19,7 +20,7 @@ const defaultAction: Action = {
   failMessage: '',
 };
 
-export default function ActionModal({ action, onSave, onClose, isEditing = false, actions = [], scenes = [] }: ActionModalProps) {
+export default function ActionModal({ action, onSave, onClose, onDelete, isEditing = false, actions = [], scenes = [] }: ActionModalProps) {
   console.log('actions:', actions, 'scenes:', scenes);
   const [form, setForm] = useState<Action>(action || defaultAction);
   const [loading, setLoading] = useState(false);
@@ -322,10 +323,19 @@ export default function ActionModal({ action, onSave, onClose, isEditing = false
             </div>
           ))}
         </div>
-        {/* Footer Buttons */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, background: '#fff', borderRadius: '0 0 12px 12px', padding: '14px 24px 14px 24px', margin: '0 0 0 0', borderTop: '1px solid #e2e8f0' }}>
-          <button type="button" onClick={onClose} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-          <button type="submit" disabled={loading} style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer', opacity: loading ? 0.7 : 1 }}>{loading ? 'Saving...' : isEditing ? 'Save' : 'Add'}</button>
+        {/* Sticky Footer */}
+        <div style={{ position: 'sticky', bottom: 0, background: '#f8fafc', padding: '12px 24px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+          <div>
+            {isEditing && onDelete && (
+              <button type="button" onClick={onDelete} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button type="button" onClick={onClose} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+            <button type="submit" style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 16px', fontWeight: 600, cursor: 'pointer' }} disabled={loading}>
+              {loading ? 'Saving...' : 'Save Action'}
+            </button>
+          </div>
         </div>
         {error && <div style={{ color: '#ef4444', textAlign: 'center', marginTop: 8 }}>{error}</div>}
       </form>

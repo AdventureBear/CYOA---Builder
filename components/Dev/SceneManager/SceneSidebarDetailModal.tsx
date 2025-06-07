@@ -4,9 +4,8 @@ import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SceneContextMenu from '@/components/Dev/SceneContextMenu';
 
-export function SceneSidebarDetailModal({ scene, parentScenes, onEdit, onDelete, onCopy, onClose, anchorRect, sidebarRect }: {
+export function SceneSidebarDetailModal({ scene, onEdit, onDelete, onCopy, onClose, anchorRect, sidebarRect }: {
   scene: Scene;
-  parentScenes: string[];
   onEdit?: () => void;
   onDelete?: () => void;
   onCopy?: () => void;
@@ -104,11 +103,11 @@ export function SceneSidebarDetailModal({ scene, parentScenes, onEdit, onDelete,
         aria-label="Close modal"
       />
       {/* Modal */}
-      <div ref={modalRef} style={style} className="bg-white  shadow-xl p-4 rounded" onClick={e => e.stopPropagation()}>
+      <div ref={modalRef} style={style} className="bg-white shadow-xl p-4 rounded-lg" onClick={e => e.stopPropagation()}>
         {/* Top row: Location and ID */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex flex-col gap-0.5">
-            <span className="text-[13px] font-bold text-slate-700">{scene.location || 'No location'} <span className="text-slate-400">({scene.id})</span></span>
+            <span className="text-[13px] font-bold text-slate-700">{scene.location || 'No location'} <span className="text-slate-400 font-normal">({scene.id})</span></span>
           </div>
           <div className="flex items-center">
             {onEdit && (
@@ -118,24 +117,27 @@ export function SceneSidebarDetailModal({ scene, parentScenes, onEdit, onDelete,
             )}
           </div>
         </div>
-        {/* Parent Scenes */}
-        <div className="mb-1 text-[13px] font-semibold text-slate-700">Parent Scene(s): <span className="font-normal text-slate-600">{parentScenes.length ? parentScenes.join(', ') : 'None'}</span></div>
-        {/* Leads to */}
-        <div className="mb-1 text-[13px] font-semibold text-slate-700">Leads to: <span className="font-normal text-slate-600">{(scene.choices || []).map(c => c.nextNodeId).filter(Boolean).join(', ') || 'None'}</span></div>
-        {/* Actions */}
-        <div className="mb-1 text-[12px] text-slate-500">Actions: <span className="text-slate-600">{(scene.actions || []).join(', ') || 'None'}</span></div>
-        {/* Description */}
-        <div className="mb-2 text-[14px] text-slate-800">{scene.description || <span className="italic text-slate-400">No description</span>}</div>
-        {/* Choices */}
+
         <div className="mb-2">
-          {(scene.choices || []).length > 0 && (
-            <div className="text-[14px] text-slate-700">
-              {(scene.choices || []).map((choice, idx) => (
-                <div key={idx} className="mb-0.5">{choiceLetters[idx]}) {choice.text}</div>
-              ))}
-            </div>
-          )}
+            <div className="mb-1 text-[13px] font-semibold text-slate-700">Actions</div>
+            <div className="text-[14px] text-slate-600">{(scene.actions || []).join(', ') || 'None'}</div>
         </div>
+       
+        <div className="mb-2">
+            <div className="mb-1 text-[13px] font-semibold text-slate-700">Description</div>
+            <div className="text-[14px] text-slate-600">{scene.description || <span className="italic text-slate-400">No description</span>}</div>
+        </div>
+
+        {(scene.choices || []).length > 0 && (
+            <div className="mb-2">
+                <div className="mb-1 text-[13px] font-semibold text-slate-700">Choices</div>
+                <ol className="list-alpha pl-5 text-[14px] text-slate-600 space-y-1">
+                    {(scene.choices || []).map((choice, idx) => (
+                        <li key={idx}>{choice.text}</li>
+                    ))}
+                </ol>
+            </div>
+        )}
       </div>
       {isMenuOpen && (
         <SceneContextMenu

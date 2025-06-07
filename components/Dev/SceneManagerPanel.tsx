@@ -33,12 +33,7 @@ function AccordionSection({ title, open, onClick, children, color }: { title: st
 }
 
 export default function SceneManagerPanel({ gameId }: { gameId: string }) {
-    const [accordionOpen, setAccordionOpen] = useState({
-        all: true,
-        disconnected: false,
-        missing: false,
-        orphaned: false,
-    });
+    const { sceneManagerAccordion, toggleSceneManagerAccordion } = useUiStore();
     const [detailSceneId, setDetailSceneId] = useState<string | null>(null);
     const [detailSceneRect, setDetailSceneRect] = useState<{ top: number; height: number } | null>(null);
     const sidebarRef = useRef<HTMLDivElement>(null);
@@ -52,10 +47,6 @@ export default function SceneManagerPanel({ gameId }: { gameId: string }) {
         return getSceneCategories(scenes, actionsObj, 'forest_clearing');
     }, [scenes, actionsObj]);
     
-    function getParentScenes(sceneId: string) {
-        return scenes.filter(s => (s.choices || []).some(c => c.nextNodeId === sceneId)).map(s => s.id);
-    }
-    
     function getSceneById(id: string) {
         return scenes.find(s => s.id === id);
     }
@@ -68,28 +59,28 @@ export default function SceneManagerPanel({ gameId }: { gameId: string }) {
             <input type="text" placeholder="Search..." className="flex-1 px-2 py-1 rounded border border-slate-200 text-[13px] bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-200" />
         </div>
         <div className="overflow-y-auto h-[calc(100%-65px)] px-2 pt-2" ref={sidebarRef} style={{ position: 'relative' }}>
-            <AccordionSection title="All Scenes" open={accordionOpen.all} onClick={() => setAccordionOpen(a => ({ ...a, all: !a.all }))} color="#e6fae6">
+            <AccordionSection title="All Scenes" open={sceneManagerAccordion.all} onClick={() => toggleSceneManagerAccordion('all')} color="#e6fae6">
                 {scenes.filter(scene => !orphanedSceneIds.includes(scene.id)).map((scene) => (
                 <div key={scene.id} onClick={e => { setDetailSceneId(scene.id); setDetailSceneRect((e.currentTarget as HTMLElement).getBoundingClientRect()); setSidebarRect(sidebarRef.current?.getBoundingClientRect() ?? null); }} style={{ position: 'relative', cursor: 'pointer' }} >
                     <SceneSidebarListItem scene={scene} />
                 </div>
                 ))}
             </AccordionSection>
-            <AccordionSection title="Disconnected Scenes" open={accordionOpen.disconnected} onClick={() => setAccordionOpen(a => ({ ...a, disconnected: !a.disconnected }))} color="#e6f0fa">
+            <AccordionSection title="Disconnected Scenes" open={sceneManagerAccordion.disconnected} onClick={() => toggleSceneManagerAccordion('disconnected')} color="#e6f0fa">
                 {disconnectedScenes.map((scene) => (
                 <div key={scene.id} onClick={e => { setDetailSceneId(scene.id); setDetailSceneRect((e.currentTarget as HTMLElement).getBoundingClientRect()); setSidebarRect(sidebarRef.current?.getBoundingClientRect() ?? null); }} style={{ position: 'relative', cursor: 'pointer' }} >
                     <SceneSidebarListItem scene={scene} />
                 </div>
                 ))}
             </AccordionSection>
-            <AccordionSection title="Missing Scenes" open={accordionOpen.missing} onClick={() => setAccordionOpen(a => ({ ...a, missing: !a.missing }))} color="#fffbe6">
+            <AccordionSection title="Missing Scenes" open={sceneManagerAccordion.missing} onClick={() => toggleSceneManagerAccordion('missing')} color="#fffbe6">
                 {missingSceneIds.map((id) => (
                 <div key={id} onClick={e => { setDetailSceneId(id); setDetailSceneRect((e.currentTarget as HTMLElement).getBoundingClientRect()); setSidebarRect(sidebarRef.current?.getBoundingClientRect() ?? null); }} style={{ position: 'relative', cursor: 'pointer' }} >
                     <SceneSidebarListItem scene={{ id, name: id, description: '', location: '', season: '', isRequired: false, choices: [], actions: [], locationImage: '' }} />
                 </div>
                 ))}
             </AccordionSection>
-            <AccordionSection title="Orphaned Scenes" open={accordionOpen.orphaned} onClick={() => setAccordionOpen(a => ({ ...a, orphaned: !a.orphaned }))} color="#fae6e6">
+            <AccordionSection title="Orphaned Scenes" open={sceneManagerAccordion.orphaned} onClick={() => toggleSceneManagerAccordion('orphaned')} color="#fae6e6">
                 {orphanedSceneIds.map((id) => {
                 const scene = scenes.find(s => s.id === id);
                 return scene ? (
@@ -102,11 +93,9 @@ export default function SceneManagerPanel({ gameId }: { gameId: string }) {
 
             {detailSceneId && (() => {
                 const scene = getSceneById(detailSceneId) || { id: detailSceneId, name: detailSceneId, description: '', location: '', season: '', isRequired: false, choices: [], actions: [], locationImage: '' };
-                const parentScenes = getParentScenes(detailSceneId);
                 return createPortal(
                 <SceneSidebarDetailModal
                     scene={scene}
-                    parentScenes={parentScenes}
                     onClose={() => setDetailSceneId(null)}
                     onEdit={() => {
                         setDetailSceneId(null);

@@ -26,6 +26,8 @@ interface GameStore {
   pushChoice: (choiceText: string) => void;
   popChoice: () => void;
   resetChoiceStack: () => void;
+  removeScene: (sceneId: string) => void;
+  fetchAndSetGameData: (gameId: string) => Promise<void>;
 }
 
 
@@ -73,6 +75,20 @@ const storeImpl: StateCreator<GameStore, [], [], GameStore> = (set, get) => ({
   pushChoice: (choiceText) => set((state) => ({ choiceStack: [...state.choiceStack, choiceText] })),
   popChoice: () => set((state) => ({ choiceStack: state.choiceStack.slice(0, -1) })),
   resetChoiceStack: () => set({ choiceStack: [] }),
+  removeScene: (sceneId) => set((state) => {
+    if (!state.scenes) return {};
+    const newScenes = { ...state.scenes };
+    delete newScenes[sceneId];
+    return { scenes: newScenes };
+  }),
+  fetchAndSetGameData: async (gameId: string) => {
+    try {
+      const response = await fetch(`/api/games/${gameId}`);
+      // ... existing code ...
+    } catch (error) {
+      console.error('Error fetching and setting game data:', error);
+    }
+  },
 });
 
 const isServer = typeof window === 'undefined';

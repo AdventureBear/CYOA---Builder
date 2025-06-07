@@ -30,12 +30,25 @@ export default function ActionManagerPanel({ gameId }: { gameId: string }) {
     const actions = useMemo(() => actionsObj ? Object.values(actionsObj) : [], [actionsObj]);
     const scenes = useMemo(() => scenesObj ? Object.values(scenesObj) : [], [scenesObj]);
 
-    const { routerActions, nonRouterActions, missingActionIds, orphanedActions } = useMemo(() => {
+    const { routerActions, nonRouterActions, missingActionIds, orphanedActions, actionToScenesMap } = useMemo(() => {
         const existingActionIds = new Set(actions.map(a => a.id));
         const referencedActionIds = new Set<string>();
+        const actionToScenesMap = new Map<string, string[]>();
+
         scenes.forEach(scene => {
-            (scene.actions || []).forEach(actionId => actionId && referencedActionIds.add(actionId));
-            (scene.choices || []).forEach(choice => choice.nextAction && referencedActionIds.add(choice.nextAction));
+            const processActionReference = (actionId: string | undefined) => {
+                if (!actionId) return;
+                referencedActionIds.add(actionId);
+                if (!actionToScenesMap.has(actionId)) {
+                    actionToScenesMap.set(actionId, []);
+                }
+                const sceneList = actionToScenesMap.get(actionId)!;
+                if (!sceneList.includes(scene.id)) {
+                    sceneList.push(scene.id);
+                }
+            };
+            (scene.actions || []).forEach(actionId => processActionReference(actionId));
+            (scene.choices || []).forEach(choice => processActionReference(choice.nextAction));
         });
 
         const routerActions = actions.filter(a => a.id.startsWith('route_'));
@@ -43,7 +56,7 @@ export default function ActionManagerPanel({ gameId }: { gameId: string }) {
         const missingActionIds = Array.from(referencedActionIds).filter(id => !existingActionIds.has(id));
         const orphanedActions = actions.filter(a => !a.id.startsWith('route_') && !referencedActionIds.has(a.id));
 
-        return { routerActions, nonRouterActions, missingActionIds, orphanedActions };
+        return { routerActions, nonRouterActions, missingActionIds, orphanedActions, actionToScenesMap };
     }, [actions, scenes]);
 
     const handleSave = async (updatedAction: Action) => {
@@ -75,6 +88,7 @@ export default function ActionManagerPanel({ gameId }: { gameId: string }) {
     if (!actionsObj) return <div className="p-4">Loading actions...</div>;
 
     const detailAction = detailActionId ? actions.find(a => a.id === detailActionId) : null;
+    const scenesUsingAction = detailActionId ? actionToScenesMap.get(detailActionId) || [] : [];
 
     return <>
         <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100">
@@ -98,7 +112,8 @@ export default function ActionManagerPanel({ gameId }: { gameId: string }) {
 
         {detailAction && (
             <ActionSidebarDetailModal 
-                action={detailAction} 
+                action={detailAction}
+                scenesUsingAction={scenesUsingAction}
                 onClose={() => setDetailActionId(null)} 
                 onEdit={() => handleEdit(detailAction)}
                 onCopy={() => handleCopy(detailAction)}

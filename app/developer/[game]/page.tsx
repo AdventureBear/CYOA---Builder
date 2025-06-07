@@ -13,6 +13,9 @@ import ReactFlow, {
     Position,
     MarkerType,
     NodeMouseHandler,
+    addEdge,
+    useReactFlow,
+    Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { PlusSquare, Play, CornerUpLeft, Wand2 } from 'lucide-react';
@@ -29,6 +32,8 @@ import { useUiStore } from '@/store/uiStore';
 import { useGameStore } from '@/store/gameStore';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import dagre from 'dagre';
+import FloatingEdge from '@/components/Dev/FloatingEdge';
+import SceneContextMenu, { ContextualControl } from '@/components/Dev/SceneContextMenu';
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -399,6 +404,6 @@ export default function GameEditorPage() {
                 <MiniMap />
                 <Background color={focusNodeId ? '#eef2f9' : '#aaa'} gap={16} />
             </ReactFlow>
-    </div>
+        </div>
   );
 } 
