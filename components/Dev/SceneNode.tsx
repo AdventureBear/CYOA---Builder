@@ -3,9 +3,9 @@ import { NodeProps, Handle, Position } from 'reactflow';
 import React from 'react';
 import { useParams } from 'next/navigation';
 
-export default function SceneNode({ data, selected }: NodeProps<{
+export default function SceneNode({ id, data, selected }: NodeProps<{
   label: string;
-  onEdit: () => void;
+  onEdit: (id: string) => void;
 }>) {
   const params = useParams();
   const gameId = params?.game as string;
@@ -20,7 +20,7 @@ export default function SceneNode({ data, selected }: NodeProps<{
       <div className="text-sm font-bold truncate pr-6">{data.label}</div>
       
       <button
-        onClick={data.onEdit}
+        onClick={() => data.onEdit(id)}
         className="text-xs text-blue-600 hover:underline mt-1"
       >
         Edit

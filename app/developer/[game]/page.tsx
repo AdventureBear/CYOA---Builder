@@ -16,24 +16,25 @@ import ReactFlow, {
     addEdge,
     useReactFlow,
     Panel,
+    Connection,
+    ReactFlowProvider,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { PlusSquare, Play, CornerUpLeft, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import { useLoadGameData } from '@/lib/useLoadGameData';
-import { Scene } from '@/app/types';
+import { Scene, Choice } from '@/app/types';
 import SceneNode from '@/components/Dev/SceneNode';
 import SceneForm from '@/components/Dev/SceneForm';
 import Modal from '@/components/ui/Modal';
 import AddSceneModal from '@/components/Dev/AddSceneModal';
 import { saveSceneAndUpdateStore, deleteSceneAndUpdateStore } from '@/lib/sceneHandlers';
-import { useUiStore } from '@/store/uiStore';
+import { useUiStore, ContextualControl } from '@/store/uiStore';
 import { useGameStore } from '@/store/gameStore';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import dagre from 'dagre';
-import FloatingEdge from '@/components/Dev/FloatingEdge';
-import SceneContextMenu, { ContextualControl } from '@/components/Dev/SceneContextMenu';
+import NewChoiceModal from '@/components/Dev/NewChoiceModal';
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -68,7 +69,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'LR') => 
   return { nodes, edges };
 };
 
-export default function GameEditorPage() {
+function GameEditor() {
     const params = useParams();
     const gameId = params?.game as string;
     const { scenes, actions, loading, error, setScenes, setActions } = useLoadGameData(gameId);
@@ -83,12 +84,17 @@ export default function GameEditorPage() {
         setEditingScene,
         deletingScene,
         setDeletingScene,
+        deletingAction,
+        setDeletingAction,
     } = useUiStore();
     
-    const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-    const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
+    const [newChoiceConnection, setNewChoiceConnection] = useState<Connection | null>(null);
+    const [selectedElement, setSelectedElement] = useState<{ type: 'node' | 'edge'; id: string } | null>(null);
+    const [focusElement, setFocusElement] = useState<{ type: 'node' | 'edge'; id: string } | null>(null);
     const isInitialLayoutDone = useRef(false);
     const clickTimer = useRef<NodeJS.Timeout | null>(null);
+
+    const { fitView, getNodes, getEdges } = useReactFlow();
 
     const handleEdit = useCallback((sceneId: string) => {
         if (!scenes) return;
@@ -100,68 +106,90 @@ export default function GameEditorPage() {
     const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
         if (clickTimer.current) {
             clearTimeout(clickTimer.current);
+            clickTimer.current = null;
+            // This is a double click, handled by onNodeDoubleClick
+            return;
         }
         clickTimer.current = setTimeout(() => {
-            if (focusNodeId) return; // Disable selection in focus mode
-            setSelectedNodeId(currentId => currentId === node.id ? null : node.id);
-        }, 150);
-    }, [focusNodeId]);
-    
-    const onNodeDoubleClick: NodeMouseHandler = useCallback((event, node) => {
+            if (focusElement) return; // Disable single-click selection in focus mode
+            setSelectedElement(prev => (prev?.type === 'node' && prev.id === node.id) ? null : { type: 'node', id: node.id });
+        }, 200);
+    }, [focusElement]);
+
+    const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
         if (clickTimer.current) {
             clearTimeout(clickTimer.current);
             clickTimer.current = null;
+            // This is a double click, handled by onEdgeDoubleClick
+            return;
         }
-        setFocusNodeId(node.id);
-        setSelectedNodeId(null);
+        clickTimer.current = setTimeout(() => {
+            if (focusElement) return; // Disable single-click selection in focus mode
+            setSelectedElement(prev => (prev?.type === 'edge' && prev.id === edge.id) ? null : { type: 'edge', id: edge.id });
+        }, 200);
+    }, [focusElement]);
+
+    const onNodeDoubleClick: NodeMouseHandler = useCallback((event, node) => {
+        setFocusElement({ type: 'node', id: node.id });
+        setSelectedElement(null);
+    }, []);
+
+    const onEdgeDoubleClick = useCallback((event: React.MouseEvent, edge: Edge) => {
+        setFocusElement({ type: 'edge', id: edge.id });
+        setSelectedElement(null);
     }, []);
 
     const exitFocusMode = useCallback(() => {
-        setFocusNodeId(null);
+        setFocusElement(null);
+        // After exiting focus, fit the whole view
+        setTimeout(() => fitView({ padding: 0.1 }), 50);
+    }, [fitView]);
+
+    const findDirectParents = useCallback((sceneId: string, scenes: Record<string, Scene>): string[] => {
+        return Object.values(scenes)
+            .filter(s => s.choices?.some(c => c.nextNodeId === sceneId))
+            .map(s => s.id);
+    }, []);
+
+    const findDirectChildren = useCallback((sceneId: string, scenes: Record<string, Scene>): string[] => {
+        return scenes[sceneId]?.choices?.map(c => c.nextNodeId).filter(Boolean) as string[] || [];
     }, []);
 
     const findAllAncestors = useCallback((sceneId: string, scenes: Record<string, Scene>): Set<string> => {
         const ancestors = new Set<string>();
         const find = (sId: string) => {
-            // Find parents from choices
-            Object.values(scenes).forEach(potentialParent => {
-                if (potentialParent.choices?.some(c => c.nextNodeId === sId)) {
-                    if (!ancestors.has(potentialParent.id)) {
-                        ancestors.add(potentialParent.id);
-                        find(potentialParent.id);
-                    }
+            const parents = findDirectParents(sId, scenes);
+            parents.forEach(pId => {
+                if (!ancestors.has(pId)) {
+                    ancestors.add(pId);
+                    find(pId);
                 }
             });
-            // Find parent from parentSceneId
-            const explicitParentId = scenes[sId]?.parentSceneId;
-            if (explicitParentId && !ancestors.has(explicitParentId)) {
-                ancestors.add(explicitParentId);
-                find(explicitParentId);
-            }
         };
         find(sceneId);
         return ancestors;
-    }, []);
+    }, [findDirectParents]);
 
     const findAllDescendants = useCallback((sceneId: string, scenes: Record<string, Scene>): Set<string> => {
         const descendants = new Set<string>();
         const find = (sId: string) => {
-            scenes[sId]?.choices?.forEach(choice => {
-                if (choice.nextNodeId) {
-                    if (!descendants.has(choice.nextNodeId)) {
-                        descendants.add(choice.nextNodeId);
-                        find(choice.nextNodeId);
-                    }
+            const children = findDirectChildren(sId, scenes);
+            children.forEach(cId => {
+                if (!descendants.has(cId)) {
+                    descendants.add(cId);
+                    find(cId);
                 }
             });
         };
         find(sceneId);
         return descendants;
-    }, []);
+    }, [findDirectChildren]);
 
     const handleAutoLayout = useCallback(() => {
-        const nodesToLayout = rfNodes.filter(n => !n.hidden);
-        const edgesToLayout = rfEdges.filter(e => {
+        const allNodes = getNodes();
+        const allEdges = getEdges();
+        const nodesToLayout = allNodes.filter(n => !n.hidden);
+        const edgesToLayout = allEdges.filter(e => {
             const sourceVisible = nodesToLayout.some(n => n.id === e.source);
             const targetVisible = nodesToLayout.some(n => n.id === e.target);
             return sourceVisible && targetVisible;
@@ -177,11 +205,11 @@ export default function GameEditorPage() {
             }))
         );
 
-    }, [rfNodes, rfEdges, setRfNodes]);
+    }, [getNodes, getEdges, setRfNodes]);
 
     // Initial layout effect
     useEffect(() => {
-        if (!scenes || isInitialLayoutDone.current) return;
+        if (!scenes || rfNodes.length > 0) return; // Prevent re-running after initial setup
 
         const initialNodes: Node[] = Object.values(scenes).map(scene => ({
             id: scene.id,
@@ -189,7 +217,7 @@ export default function GameEditorPage() {
             position: { x: 0, y: 0 },
             data: { 
                 label: scene.id, 
-                onEdit: () => handleEdit(scene.id),
+                onEdit: handleEdit, // Pass the handleEdit function itself
             },
         }));
 
@@ -212,67 +240,88 @@ export default function GameEditorPage() {
 
         setRfNodes(layoutedNodes);
         setRfEdges(layoutedEdges);
-        isInitialLayoutDone.current = true;
-    }, [scenes, handleEdit, setRfNodes, setRfEdges]);
+    }, [scenes, handleEdit, setRfNodes, setRfEdges, rfNodes.length]);
 
-    // Focus and selection effect
+    // This effect ensures that the onEdit handler on each node is always fresh
     useEffect(() => {
-        if (!isInitialLayoutDone.current || !scenes) return;
+        setRfNodes((currentNodes) =>
+            currentNodes.map((node) => ({
+                ...node,
+                data: {
+                    ...node.data,
+                    onEdit: handleEdit,
+                },
+            }))
+        );
+    }, [handleEdit, setRfNodes]);
 
-        if (focusNodeId) {
-            const ancestorIds = findAllAncestors(focusNodeId, scenes);
-            const descendantIds = findAllDescendants(focusNodeId, scenes);
-            const connectedIds = new Set<string>([focusNodeId, ...Array.from(ancestorIds), ...Array.from(descendantIds)]);
-            
-            setRfNodes(prevNodes => prevNodes.map(n => ({
-                ...n,
-                hidden: !connectedIds.has(n.id),
-                style: { ...n.style, opacity: 1 }
-            })));
-            setRfEdges(prevEdges => prevEdges.map(e => ({
-                ...e,
-                hidden: !(connectedIds.has(e.source) && connectedIds.has(e.target)),
-                style: { ...e.style, opacity: 1 },
-                labelStyle: { opacity: 1 },
-                animated: true,
-            })));
+    // Main effect for highlighting and focus
+    useEffect(() => {
+        if (!scenes) return;
 
-        } else if (selectedNodeId) {
-            const parents = new Set<string>();
-            Object.values(scenes).forEach(scene => {
-                if (scene.choices?.some(c => c.nextNodeId === selectedNodeId)) {
-                    parents.add(scene.id);
-                }
-            });
-            const children = new Set<string>();
-            scenes[selectedNodeId]?.choices?.forEach(c => c.nextNodeId && children.add(c.nextNodeId));
-            
-            const primaryNodes = new Set<string>([selectedNodeId, ...Array.from(parents), ...Array.from(children)]);
+        const allNodes = getNodes();
+        const allEdges = getEdges();
 
-            setRfNodes(prevNodes => prevNodes.map(n => ({
-                ...n,
-                hidden: false,
-                style: { ...n.style, opacity: primaryNodes.has(n.id) ? 1 : 0.25, transition: 'opacity 0.2s' }
-            })));
-
-            setRfEdges(prevEdges => prevEdges.map(e => {
-                const shouldHighlight = primaryNodes.has(e.source) && primaryNodes.has(e.target);
-                return {
-                    ...e,
-                    hidden: false,
-                    style: { ...e.style, opacity: shouldHighlight ? 1 : 0.15, transition: 'opacity 0.2s' },
-                    labelStyle: { opacity: shouldHighlight ? 1 : 0.15, transition: 'opacity 0.2s' },
-                    animated: shouldHighlight,
-                };
-            }));
-
-        } else {
-            // Default: all visible, full opacity
+        // If nothing is selected or focused, reset all styles
+        if (!selectedElement && !focusElement) {
             setRfNodes(prevNodes => prevNodes.map(n => ({ ...n, hidden: false, style: { ...n.style, opacity: 1 } })));
             setRfEdges(prevEdges => prevEdges.map(e => ({ ...e, hidden: false, style: { ...e.style, opacity: 1 }, animated: false, labelStyle: { opacity: 1 } })));
+            return;
         }
 
-    }, [scenes, focusNodeId, selectedNodeId, setRfNodes, setRfEdges, findAllAncestors, findAllDescendants]);
+        let visibleNodeIds = new Set<string>();
+        let highlightedNodeIds = new Set<string>();
+
+        if (focusElement) {
+            let focusIds = new Set<string>();
+            if (focusElement.type === 'node') {
+                focusIds = new Set([focusElement.id, ...Array.from(findAllAncestors(focusElement.id, scenes)), ...Array.from(findAllDescendants(focusElement.id, scenes))]);
+            } else { // focusElement.type === 'edge'
+                const edge = allEdges.find(e => e.id === focusElement.id);
+                if (edge) {
+                    const sourceAncestors = findAllAncestors(edge.source, scenes);
+                    const sourceDescendants = findAllDescendants(edge.source, scenes);
+                    const targetAncestors = findAllAncestors(edge.target, scenes);
+                    const targetDescendants = findAllDescendants(edge.target, scenes);
+                    focusIds = new Set([edge.source, edge.target, ...Array.from(sourceAncestors), ...Array.from(sourceDescendants), ...Array.from(targetAncestors), ...Array.from(targetDescendants)]);
+                }
+            }
+            visibleNodeIds = focusIds;
+            highlightedNodeIds = focusIds;
+
+        } else if (selectedElement) {
+            visibleNodeIds = new Set(Object.keys(scenes)); // All nodes are visible
+            if (selectedElement.type === 'node') {
+                const parents = findDirectParents(selectedElement.id, scenes);
+                const children = findDirectChildren(selectedElement.id, scenes);
+                highlightedNodeIds = new Set([selectedElement.id, ...parents, ...children]);
+            } else { // selectedElement.type === 'edge'
+                const edge = allEdges.find(e => e.id === selectedElement.id);
+                if (edge) {
+                    highlightedNodeIds = new Set([edge.source, edge.target]);
+                }
+            }
+        }
+
+        setRfNodes(allNodes.map(n => ({
+            ...n,
+            hidden: !visibleNodeIds.has(n.id),
+            style: { ...n.style, opacity: highlightedNodeIds.has(n.id) ? 1 : 0.2, transition: 'opacity 0.2s' }
+        })));
+
+        setRfEdges(allEdges.map(e => {
+            const isVisible = visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target);
+            const isHighlighted = highlightedNodeIds.has(e.source) && highlightedNodeIds.has(e.target);
+            return {
+                ...e,
+                hidden: !isVisible,
+                style: { ...e.style, opacity: isHighlighted ? 1 : 0.1, transition: 'opacity 0.2s' },
+                labelStyle: { opacity: isHighlighted ? 1 : 0.1, transition: 'opacity 0.2s' },
+                animated: isHighlighted
+            };
+        }));
+
+    }, [selectedElement, focusElement, scenes, getNodes, getEdges, setRfNodes, setRfEdges, findDirectParents, findDirectChildren, findAllAncestors, findAllDescendants]);
 
     const handleAddScene = (newSceneId: string) => {
         if (!scenes || !setScenes) return;
@@ -288,22 +337,50 @@ export default function GameEditorPage() {
         setAddSceneModalOpen(false);
     };
 
-    const handleDeleteScene = async () => {
-        if (!deletingScene || !scenes || !setScenes) return;
+    const confirmSceneDelete = async () => {
+        if (!deletingScene) return;
         try {
-            await deleteSceneAndUpdateStore({
-                sceneId: deletingScene.id,
-                gameId,
-                scenes,
-                setScenes,
+            const response = await fetch('/api/deleteScene', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sceneId: deletingScene.id, gameId }),
             });
+            if (!response.ok) throw new Error('Failed to delete scene');
+            
+            const newScenes = { ...scenes };
+            delete newScenes[deletingScene.id];
+            setScenes(newScenes as Record<string, Scene>);
+
             setDeletingScene(null);
-            setEditingScene(null);
-        } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to delete scene');
-            setDeletingScene(null);
+            // Also close the main form if the deleted scene was being edited
+            if (editingScene?.id === deletingScene.id) {
+                setEditingScene(null);
+            }
+        } catch (error) {
+            console.error('Error deleting scene:', error);
+            alert('Failed to delete scene.');
         }
     };
+
+    const confirmActionDelete = async () => {
+        if (!deletingAction) return;
+        try {
+            const response = await fetch(`/api/deleteAction`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ actionId: deletingAction.id, game: gameId }),
+            });
+            if (!response.ok) throw new Error('Failed to delete action');
+            const newActions = { ...actions };
+            delete newActions[deletingAction.id];
+            setActions(newActions);
+            setDeletingAction(null);
+        } catch (error) {
+            console.error(error);
+            // Optionally, show an error to the user
+            alert('Failed to delete action.');
+        }
+    }
 
     const handleSave = async (updatedScene: Scene) => {
         if (!scenes || !setScenes) return;
@@ -311,9 +388,13 @@ export default function GameEditorPage() {
         const editIndex = scenesArr.findIndex(s => s.id === updatedScene.id);
         try {
             await saveSceneAndUpdateStore({
-                form: updatedScene, game: gameId, scenesObj: scenes,
-                setScenes: setScenes, scenes: scenesArr,
+                form: updatedScene,
+                game: gameId,
+                scenes: scenesArr,
+                scenesObj: scenes,
+                setScenes: setScenes,
                 editIndex: editIndex !== -1 ? editIndex : null,
+                setRfEdges: setRfEdges,
             });
             setEditingScene(null);
         } catch (err) {
@@ -323,16 +404,16 @@ export default function GameEditorPage() {
 
     const handlePlaytest = useCallback(() => {
         if (gameId) {
-            const playUrl = `/scene/forest_clearing?game=${gameId}`;
+            const playUrl = `/play/${gameId}`;
             window.open(playUrl, '_blank');
         }
     }, [gameId]);
 
     useEffect(() => {
-        const controls = [
-            { label: 'Create Scene', icon: PlusSquare, onClick: () => setAddSceneModalOpen(true) },
-            { label: 'Playtest', icon: Play, onClick: handlePlaytest },
-            { label: 'Auto-Layout', icon: Wand2, onClick: handleAutoLayout },
+        const controls: ContextualControl[] = [
+            { id: 'create-scene', label: 'Create Scene', icon: PlusSquare, onClick: () => setAddSceneModalOpen(true) },
+            { id: 'playtest', label: 'Playtest', icon: Play, onClick: handlePlaytest },
+            { id: 'auto-layout', label: 'Auto-Layout', icon: Wand2, onClick: handleAutoLayout },
         ];
         
         setContextualControls(controls);
@@ -341,7 +422,60 @@ export default function GameEditorPage() {
             clearContextualControls();
         };
     }, [setContextualControls, clearContextualControls, handlePlaytest, handleAutoLayout]);
-    
+
+    const onConnect = useCallback((connection: Connection) => {
+        setNewChoiceConnection(connection);
+    }, []);
+
+    const handleCreateNewChoice = async (choiceText: string) => {
+        if (!newChoiceConnection || !scenes || !setScenes) return;
+
+        const { source, target } = newChoiceConnection;
+        if (!source || !target) return;
+
+        const sourceScene = scenes[source];
+        if (!sourceScene) return;
+
+        const newChoice: Choice = { text: choiceText, nextNodeId: target };
+
+        const updatedScene: Scene = {
+            ...sourceScene,
+            choices: [...(sourceScene.choices || []), newChoice],
+        };
+
+        try {
+            const response = await fetch('/api/saveScene', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scene: updatedScene, game: gameId }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to save new choice to server.');
+            }
+
+            // 1. Update the store
+            const newScenes = { ...scenes, [updatedScene.id]: updatedScene };
+            setScenes(newScenes);
+
+            // 2. If the updated scene is currently being edited, refresh the editor's data
+            if (editingScene?.id === updatedScene.id) {
+                setEditingScene(updatedScene);
+            }
+
+            // 3. Add the edge to the graph
+            setRfEdges((eds) => addEdge({ ...newChoiceConnection, animated: true, label: choiceText }, eds));
+
+        } catch (error) {
+            console.error(error);
+            alert(`Error: Could not save new choice. ${error instanceof Error ? error.message : ''}`);
+        } finally {
+            // 4. Close the modal regardless of outcome
+            setNewChoiceConnection(null);
+        }
+    };
+
     if (loading || !scenes) return <div className="h-screen w-full flex items-center justify-center">Loading game data...</div>;
     if (error) return <div className="h-screen w-full flex items-center justify-center text-red-500">{error}</div>;
 
@@ -350,10 +484,25 @@ export default function GameEditorPage() {
             <ConfirmationModal
                 isOpen={!!deletingScene}
                 onClose={() => setDeletingScene(null)}
-                onConfirm={handleDeleteScene}
+                onConfirm={confirmSceneDelete}
                 title="Delete Scene"
                 message={`Are you sure you want to delete the scene "${deletingScene?.id}"? This action cannot be undone.`}
                 confirmText="Delete"
+            />
+            {deletingAction && (
+                <ConfirmationModal
+                    isOpen={!!deletingAction}
+                    onClose={() => setDeletingAction(null)}
+                    onConfirm={confirmActionDelete}
+                    title="Delete Action"
+                    message={`Are you sure you want to delete the action "${deletingAction?.id}"? This action cannot be undone.`}
+                    confirmText="Delete"
+                />
+            )}
+            <NewChoiceModal
+                isOpen={!!newChoiceConnection}
+                onClose={() => setNewChoiceConnection(null)}
+                onSubmit={handleCreateNewChoice}
             />
             {isAddSceneModalOpen && (
                 <AddSceneModal
@@ -376,7 +525,7 @@ export default function GameEditorPage() {
                 )}
             </Modal>
             
-            {focusNodeId && (
+            {focusElement && (
                 <Button
                     onClick={exitFocusMode}
                     className="absolute top-4 right-4 z-10"
@@ -391,10 +540,14 @@ export default function GameEditorPage() {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onNodeClick={onNodeClick}
+                onEdgeClick={onEdgeClick}
                 onNodeDoubleClick={onNodeDoubleClick}
+                onEdgeDoubleClick={onEdgeDoubleClick}
                 onPaneClick={() => {
-                    setSelectedNodeId(null);
-                    setFocusNodeId(null);
+                    setSelectedElement(null);
+                    if (focusElement) {
+                        exitFocusMode();
+                    }
                 }}
                 nodeTypes={nodeTypes}
                 fitView
@@ -402,8 +555,16 @@ export default function GameEditorPage() {
             >
                 <Controls />
                 <MiniMap />
-                <Background color={focusNodeId ? '#eef2f9' : '#aaa'} gap={16} />
+                <Background color={focusElement ? '#eef2f9' : '#aaa'} gap={16} />
             </ReactFlow>
-        </div>
+    </div>
+  );
+}
+
+export default function GameEditorPage() {
+    return (
+        <ReactFlowProvider>
+            <GameEditor />
+        </ReactFlowProvider>
   );
 } 

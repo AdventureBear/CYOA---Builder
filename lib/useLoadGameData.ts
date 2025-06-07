@@ -1,35 +1,35 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
 
 export function useLoadGameData(gameId: string) {
-  const { setScenes, setActions, scenes, actions } = useGameStore();
-  const loading = !scenes || !actions;
-  const error = null; // We can add error handling later
+  const { scenes, actions, setScenes, setActions } = useGameStore();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchGameData() {
-      if (!gameId) return;
-      try {
-        const res = await fetch(`/api/games/${gameId}/`);
-        if (!res.ok) {
-          throw new Error(`Failed to fetch game data for ${gameId}`);
+    if (!gameId) return;
+
+    const fetchData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`/api/game/${gameId}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Failed to fetch game data: ${response.statusText}`);
+            }
+            const { scenes, actions } = await response.json();
+            setScenes(scenes);
+            setActions(actions);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        } finally {
+            setLoading(false);
         }
-        const { scenes, actions } = await res.json();
-        setScenes(scenes);
-        setActions(actions);
-      } catch (e) {
-        // Handle error state
-        console.error(e);
-      }
-    }
+    };
 
-    // Only fetch if data is not already in the store for the current game
-    // This simple check might need to be more robust if you switch between games often
-    if ((!scenes || !actions) && gameId) {
-        fetchGameData();
-    }
-
-  }, [gameId, setScenes, setActions, scenes, actions]);
+    fetchData();
+  }, [gameId, setScenes, setActions]);
 
   return { scenes, actions, loading, error, setScenes, setActions };
 } 

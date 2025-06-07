@@ -229,6 +229,10 @@
       {
         "text": "There is one choice",
         "nextNodeId": ""
+      },
+      {
+        "text": "go to the meadow",
+        "nextNodeId": "meadow_morning"
       }
     ],
     "actions": [],

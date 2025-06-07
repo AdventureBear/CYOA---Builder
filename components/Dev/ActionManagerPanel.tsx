@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useGameStore } from '@/store/gameStore';
+import { useUiStore } from '@/store/uiStore';
 import { Action, Scene } from '@/app/types';
 import ActionModal from '@/components/Dev/ActionModal';
 import { ActionSidebarListItem } from './ActionManager/ActionSidebarListItem';
@@ -21,10 +22,10 @@ function AccordionSection({ title, open, onClick, children, color }: { title: st
 
 export default function ActionManagerPanel({ gameId }: { gameId: string }) {
     const { actions: actionsObj, scenes: scenesObj, setActions } = useGameStore();
+    const { editingAction, setEditingAction, setDeletingAction } = useUiStore();
 
     const [accordionOpen, setAccordionOpen] = useState({ router: true, all: true, missing: false, orphaned: false });
     const [detailActionId, setDetailActionId] = useState<string | null>(null);
-    const [editingAction, setEditingAction] = useState<Action | null>(null);
     const [detailActionRect, setDetailActionRect] = useState<{ top: number; height: number } | null>(null);
 
     const actions = useMemo(() => actionsObj ? Object.values(actionsObj) : [], [actionsObj]);
@@ -60,10 +61,21 @@ export default function ActionManagerPanel({ gameId }: { gameId: string }) {
     }, [actions, scenes]);
 
     const handleSave = async (updatedAction: Action) => {
-        setActions({ ...actionsObj, [updatedAction.id]: updatedAction });
-        // In a real app, you'd also save to disk here
-        // await saveActionToDisk(updatedAction, gameId);
-        setEditingAction(null);
+        try {
+            const response = await fetch('/api/saveAction', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: updatedAction, game: gameId }),
+            });
+            if (!response.ok) throw new Error('Failed to save action');
+            
+            // The existing endpoint doesn't return the updated list, so we update the local state manually.
+            setActions({ ...actionsObj, [updatedAction.id]: updatedAction });
+            setEditingAction(null);
+        } catch (error) {
+            console.error(error);
+            // Optionally, show an error to the user
+        }
     };
 
     const handleEdit = (action: Action) => {
@@ -78,11 +90,8 @@ export default function ActionManagerPanel({ gameId }: { gameId: string }) {
     }
 
     const handleDelete = (action: Action) => {
-        if (!actionsObj) return;
-        const newActions = {...actionsObj};
-        delete newActions[action.id];
-        setActions(newActions);
         setDetailActionId(null);
+        setDeletingAction(action);
     }
 
     if (!actionsObj) return <div className="p-4">Loading actions...</div>;
