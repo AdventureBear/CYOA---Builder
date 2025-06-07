@@ -351,5 +351,20 @@
         "nextAction": "complete_song"
       }
     ]
+  },
+  "nut_grove_copy": {
+    "id": "nut_grove_copy",
+    "location": "Nut Grove",
+    "description": "Hazel finds a grove full of nuts, but also sees a hungry hedgehog.",
+    "actions": [
+      "share_nuts",
+      "find_shoelace"
+    ],
+    "choices": [
+      {
+        "text": "Return to the clearing",
+        "nextNodeId": "forest_clearing"
+      }
+    ]
   }
 }

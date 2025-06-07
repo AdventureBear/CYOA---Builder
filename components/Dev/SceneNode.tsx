@@ -1,104 +1,44 @@
 // components/SceneNode.tsx
 import { NodeProps, Handle, Position } from 'reactflow';
-import { FaBars } from 'react-icons/fa';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { SceneContextMenu } from './SceneManager/SceneSidebarDetailModal';
+import { Play } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
-export default function SceneNode({ data }: NodeProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+export default function SceneNode({ data, selected }: NodeProps<{ label: string; onEdit: () => void }>) {
+  const params = useParams();
+  const gameId = params?.game as string;
 
-  // Close menu on outside click
-  useEffect(() => {
-    function handleClick(event: MouseEvent) {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node)
-      ) {
-        setMenuOpen(false);
-      }
-    }
-    if (menuOpen) {
-      document.addEventListener('mousedown', handleClick);
-    } else {
-      document.removeEventListener('mousedown', handleClick);
-    }
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [menuOpen]);
+  const handlePlay = (e: React.MouseEvent) => {
+    e.stopPropagation(); // prevent node selection
+    const sceneUrl = `/scene/${data.label}?game=${gameId}`;
+    window.open(sceneUrl, '_blank');
+  };
 
   return (
-    // <div style={{ background: 'white', border: '1px solid #ccc', padding: 8, position: 'relative', minHeight: 40 }}>
-    <div className="bg-white border border-slate-200 p-2 relative min-h-[40px] w-24 h-24">
-      {/* Handles for edges */}
-      <Handle type="target" position={Position.Left} style={{ background: '#bbb', width: 10, height: 10, borderRadius: '50%' }} />
-      <Handle type="source" position={Position.Right} style={{ background: '#bbb', width: 10, height: 10, borderRadius: '50%' }} />
-      {/* Hamburger menu button */}
-      <button
-        style={{ position: 'absolute', top: 4, right: 4, background: 'none', border: 'none', cursor: 'pointer', zIndex: 2 }}
-        onClick={e => { e.stopPropagation(); setMenuOpen(v => !v); }}
-        tabIndex={0}
-        aria-label="Open menu"
-      >
-        <FaBars size={18} />
-      </button>
-      {/* Dropdown menu */}
-      {menuOpen && (
-        <div
-          ref={menuRef}
-          style={{
-            position: 'absolute',
-            top: 28,
-            right: 4,
-            background: 'white',
-            border: '1px solid #ccc',
-            borderRadius: 6,
-            boxShadow: '0 2px 8px #0002',
-            zIndex: 10,
-            minWidth: 80,
-          }}
-          onClick={e => e.stopPropagation()}
-        >
-          <button
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: '8px 12px',
-              background: 'none',
-              border: 'none',
-              textAlign: 'left',
-              cursor: 'pointer',
-              fontSize: 14,
-            }}
-            onClick={e => {
-              e.stopPropagation();
-              setMenuOpen(false);
-              if (data.onEdit) data.onEdit();
-            }}
-          >
-            Edit
-          </button>
-          <button
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: '8px 12px',
-              background: 'none',
-              border: 'none',
-              textAlign: 'left',
-              cursor: 'pointer',
-              fontSize: 14,
-            }}
-            onClick={e => {
-              e.stopPropagation();
-              setMenuOpen(false);
-              if (data.onHighlightNeighbors) data.onHighlightNeighbors();
-            }}
-          >
-            Highlight neighbors
-          </button>
-        </div>
-      )}
+    <div
+      className={`bg-white border p-2 relative min-h-[40px] w-40 rounded-md ${selected ? 'border-blue-500 shadow-lg' : 'border-slate-300'}`}
+      style={{ userSelect: 'none', cursor: 'context-menu' }}
+    >
+      <Handle type="target" position={Position.Left} className="!bg-slate-400" />
+      <Handle type="source" position={Position.Right} className="!bg-slate-400" />
       {/* Node label */}
-      <div>{data.label}</div>
+      <div className="text-sm font-bold truncate">{data.label}</div>
+      
+      <button 
+        onClick={handlePlay}
+        className="absolute top-1 right-1 p-1 rounded-full hover:bg-green-100 text-green-600 opacity-80 hover:opacity-100 transition-all"
+        title="Play from this scene"
+      >
+        <Play size={16} />
+      </button>
+
+      <button
+        onClick={data.onEdit}
+        className="text-xs text-blue-600 hover:underline mt-1"
+      >
+        Edit
+      </button>
     </div>
   );
 }

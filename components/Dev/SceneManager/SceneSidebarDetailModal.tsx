@@ -2,6 +2,28 @@ import React, { useRef, useState, useEffect } from 'react';
 import type { Scene } from '@/app/types';
 import { MoreVertical, Edit, Copy, Trash2 } from 'lucide-react';
 
+export function SceneContextMenu({ onEdit, onCopy, onDelete, onClose, style, menuRef }: {
+  onEdit?: () => void;
+  onCopy?: () => void;
+  onDelete?: () => void;
+  onClose?: () => void;
+  style?: React.CSSProperties;
+  menuRef?: React.Ref<HTMLDivElement>;
+}) {
+  return (
+    <div
+      ref={menuRef}
+      className="absolute left-full top-0 ml-2 w-36 bg-white border border-slate-200 rounded shadow-lg z-1000"
+      style={style}
+      onClick={e => e.stopPropagation()}
+    >
+      <button className="flex items-center gap-2 px-4 py-2 w-full text-slate-700 hover:bg-slate-100" onClick={() => { onClose && onClose(); onEdit && onEdit(); }}><Edit size={16} /> Edit</button>
+      <button className="flex items-center gap-2 px-4 py-2 w-full text-slate-700 hover:bg-slate-100" onClick={() => { onClose && onClose(); onCopy && onCopy(); }}><Copy size={16} /> Copy</button>
+      <button className="flex items-center gap-2 px-4 py-2 w-full text-red-600 hover:bg-red-50" onClick={() => { onClose && onClose(); onDelete && onDelete(); }}><Trash2 size={16} /> Delete</button>
+    </div>
+  );
+}
+
 export function SceneSidebarDetailModal({ scene, parentScenes, onEdit, onCopy, onDelete, onClose, anchorRect }: {
   scene: Scene;
   parentScenes: string[];
@@ -97,11 +119,7 @@ export function SceneSidebarDetailModal({ scene, parentScenes, onEdit, onCopy, o
                 <MoreVertical size={22} />
               </button>
               {menuOpen && (
-                <div ref={menuRef} className="absolute left-full top-0 ml-2 w-36 bg-white border border-slate-200 rounded shadow-lg z-10">
-                  <button className="flex items-center gap-2 px-4 py-2 w-full text-slate-700 hover:bg-slate-100" onClick={() => { setMenuOpen(false); onEdit && onEdit(); }}><Edit size={16} /> Edit</button>
-                  <button className="flex items-center gap-2 px-4 py-2 w-full text-slate-700 hover:bg-slate-100" onClick={() => { setMenuOpen(false); onCopy && onCopy(); }}><Copy size={16} /> Copy</button>
-                  <button className="flex items-center gap-2 px-4 py-2 w-full text-red-600 hover:bg-red-50" onClick={() => { setMenuOpen(false); onDelete && onDelete(); }}><Trash2 size={16} /> Delete</button>
-                </div>
+                <SceneContextMenu onEdit={onEdit} onCopy={onCopy} onDelete={onDelete} onClose={() => setMenuOpen(false)} menuRef={menuRef} />
               )}
             </div>
           </div>

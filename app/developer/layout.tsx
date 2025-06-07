@@ -1,20 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
 import { DeveloperSidebar, SlidingPanel } from '@/components/Dev/DeveloperSidebar';
 import type { PanelType } from '@/components/Dev/DeveloperSidebar';
 import { WandSparkles, BookOpen, Dice5 } from 'lucide-react';
 
 export default function DeveloperLayout({ children }: { children: React.ReactNode }) {
   const [openPanel, setOpenPanel] = useState<PanelType>(null);
+  const params = useParams();
 
-  // Custom handler to toggle the scene panel
+  // Ensure gameId is always a string, or null if not present
+  const gameId = params ? (Array.isArray(params.game) ? params.game[0] : params.game) : null;
+
   const handlePanel = (panel: PanelType) => {
-    if (panel === 'scene') {
-      setOpenPanel(prev => (prev === 'scene' ? null : 'scene'));
-    } else {
-      setOpenPanel(panel);
-    }
+    // This logic ensures clicking the same icon toggles the panel off
+    setOpenPanel(prev => (prev === panel ? null : panel));
   };
 
   return (
@@ -27,9 +28,9 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
         <span className="ml-2 text-xs opacity-70">Build Your Own Choose Your Own Adventure</span>
       </div>
       <div className="flex flex-1 min-h-0 h-[calc(100vh-40px)]">
-        <DeveloperSidebar onPanel={handlePanel} />
-        <SlidingPanel openPanel={openPanel} onClose={() => setOpenPanel(null)} />
-        <main className="flex-1 min-w-0 flex flex-col min-h-0">
+        <DeveloperSidebar onPanel={handlePanel} activePanel={openPanel} />
+        <SlidingPanel openPanel={openPanel} onClose={() => setOpenPanel(null)} gameId={gameId} />
+        <main className="flex-1 min-w-0 flex flex-col min-h-0 relative">
           {children}
         </main>
       </div>
