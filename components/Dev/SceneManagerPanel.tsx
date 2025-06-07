@@ -2,6 +2,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useGameStore } from '@/store/gameStore';
+import { useUiStore } from '@/store/uiStore';
 import { getSceneCategories } from '@/lib/sceneUtils';
 import { SceneSidebarListItem } from '@/components/Dev/SceneManager/SceneSidebarListItem';
 import { SceneSidebarDetailModal } from '@/components/Dev/SceneManager/SceneSidebarDetailModal';
@@ -39,11 +40,12 @@ export default function SceneManagerPanel({ gameId }: { gameId: string }) {
         orphaned: false,
     });
     const [detailSceneId, setDetailSceneId] = useState<string | null>(null);
-    const [editingScene, setEditingScene] = useState<Scene | null>(null);
     const [detailSceneRect, setDetailSceneRect] = useState<{ top: number; height: number } | null>(null);
     const sidebarRef = useRef<HTMLDivElement>(null);
+    const [sidebarRect, setSidebarRect] = useState<DOMRect | null>(null);
 
-    const { scenes: scenesObj, actions: actionsObj, setScenes } = useGameStore();
+    const { scenes: scenesObj, actions: actionsObj } = useGameStore();
+    const { setEditingScene, setDeletingScene } = useUiStore();
     const scenes = useMemo(() => scenesObj ? Object.values(scenesObj) : [], [scenesObj]);
     
     const { disconnectedScenes, orphanedSceneIds, missingSceneIds } = useMemo(() => {
@@ -58,18 +60,6 @@ export default function SceneManagerPanel({ gameId }: { gameId: string }) {
         return scenes.find(s => s.id === id);
     }
 
-    const handleSave = async (updatedScene: Scene) => {
-        if (!scenesObj) return;
-        const scenesArr = Object.values(scenesObj);
-        const editIndex = scenesArr.findIndex(s => s.id === updatedScene.id);
-        await saveSceneAndUpdateStore({
-            form: updatedScene, game: gameId, scenesObj,
-            setScenes, scenes: scenesArr,
-            editIndex: editIndex !== -1 ? editIndex : null,
-        });
-        setEditingScene(null);
-    };
-
     if (!scenesObj) return <div className="p-4">Loading scenes...</div>;
   
     return <>
@@ -80,21 +70,21 @@ export default function SceneManagerPanel({ gameId }: { gameId: string }) {
         <div className="overflow-y-auto h-[calc(100%-65px)] px-2 pt-2" ref={sidebarRef} style={{ position: 'relative' }}>
             <AccordionSection title="All Scenes" open={accordionOpen.all} onClick={() => setAccordionOpen(a => ({ ...a, all: !a.all }))} color="#e6fae6">
                 {scenes.filter(scene => !orphanedSceneIds.includes(scene.id)).map((scene) => (
-                <div key={scene.id} onClick={e => { setDetailSceneId(scene.id); setDetailSceneRect((e.currentTarget as HTMLElement).getBoundingClientRect()); }} style={{ position: 'relative', cursor: 'pointer' }} >
+                <div key={scene.id} onClick={e => { setDetailSceneId(scene.id); setDetailSceneRect((e.currentTarget as HTMLElement).getBoundingClientRect()); setSidebarRect(sidebarRef.current?.getBoundingClientRect() ?? null); }} style={{ position: 'relative', cursor: 'pointer' }} >
                     <SceneSidebarListItem scene={scene} />
                 </div>
                 ))}
             </AccordionSection>
             <AccordionSection title="Disconnected Scenes" open={accordionOpen.disconnected} onClick={() => setAccordionOpen(a => ({ ...a, disconnected: !a.disconnected }))} color="#e6f0fa">
                 {disconnectedScenes.map((scene) => (
-                <div key={scene.id} onClick={e => { setDetailSceneId(scene.id); setDetailSceneRect((e.currentTarget as HTMLElement).getBoundingClientRect()); }} style={{ position: 'relative', cursor: 'pointer' }} >
+                <div key={scene.id} onClick={e => { setDetailSceneId(scene.id); setDetailSceneRect((e.currentTarget as HTMLElement).getBoundingClientRect()); setSidebarRect(sidebarRef.current?.getBoundingClientRect() ?? null); }} style={{ position: 'relative', cursor: 'pointer' }} >
                     <SceneSidebarListItem scene={scene} />
                 </div>
                 ))}
             </AccordionSection>
             <AccordionSection title="Missing Scenes" open={accordionOpen.missing} onClick={() => setAccordionOpen(a => ({ ...a, missing: !a.missing }))} color="#fffbe6">
                 {missingSceneIds.map((id) => (
-                <div key={id} onClick={e => { setDetailSceneId(id); setDetailSceneRect((e.currentTarget as HTMLElement).getBoundingClientRect()); }} style={{ position: 'relative', cursor: 'pointer' }} >
+                <div key={id} onClick={e => { setDetailSceneId(id); setDetailSceneRect((e.currentTarget as HTMLElement).getBoundingClientRect()); setSidebarRect(sidebarRef.current?.getBoundingClientRect() ?? null); }} style={{ position: 'relative', cursor: 'pointer' }} >
                     <SceneSidebarListItem scene={{ id, name: id, description: '', location: '', season: '', isRequired: false, choices: [], actions: [], locationImage: '' }} />
                 </div>
                 ))}
@@ -103,7 +93,7 @@ export default function SceneManagerPanel({ gameId }: { gameId: string }) {
                 {orphanedSceneIds.map((id) => {
                 const scene = scenes.find(s => s.id === id);
                 return scene ? (
-                    <div key={scene.id} onClick={e => { setDetailSceneId(scene.id); setDetailSceneRect((e.currentTarget as HTMLElement).getBoundingClientRect()); }} style={{ position: 'relative', cursor: 'pointer' }} >
+                    <div key={scene.id} onClick={e => { setDetailSceneId(scene.id); setDetailSceneRect((e.currentTarget as HTMLElement).getBoundingClientRect()); setSidebarRect(sidebarRef.current?.getBoundingClientRect() ?? null); }} style={{ position: 'relative', cursor: 'pointer' }} >
                         <SceneSidebarListItem scene={scene} />
                     </div>
                 ) : null;
@@ -122,26 +112,20 @@ export default function SceneManagerPanel({ gameId }: { gameId: string }) {
                         setDetailSceneId(null);
                         setEditingScene(scene);
                     }}
-                    onCopy={() => { alert('Copying ' + scene.id)}}
-                    onDelete={() => { alert('Deleting ' + scene.id)}}
+                    onDelete={() => {
+                        setDetailSceneId(null);
+                        setDeletingScene(scene);
+                    }}
+                    onCopy={() => {
+                        alert('Copy scene not implemented yet.');
+                        setDetailSceneId(null);
+                    }}
                     anchorRect={detailSceneRect}
+                    sidebarRect={sidebarRect}
                 />,
                 document.body
                 );
             })()}
         </div>
-        
-        <Modal open={!!editingScene}>
-            {editingScene && (
-                <SceneForm 
-                    scene={editingScene}
-                    onSave={handleSave}
-                    onCancel={() => setEditingScene(null)}
-                    actionsObj={actionsObj}
-                    allScenes={scenes}
-                    setActionsObj={() => {}} // This form shouldn't modify actions directly
-                />
-            )}
-        </Modal>
     </>;
 } 

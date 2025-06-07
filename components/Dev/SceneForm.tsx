@@ -131,10 +131,11 @@ interface SceneFormProps {
   allScenes: Scene[];
   onSave: (scene: Scene) => void;
   onCancel?: () => void;
+  onDelete?: () => void;
   setActionsObj?: (actions: Record<string, Action>) => void;
 }
 
-export default function SceneForm({ scene, actionsObj, allScenes, onSave, onCancel, setActionsObj }: SceneFormProps) {
+export default function SceneForm({ scene, actionsObj, allScenes, onSave, onCancel, onDelete, setActionsObj }: SceneFormProps) {
   const [form, setForm] = useState<Scene>(scene);
   const [showActionModal, setShowActionModal] = useState(false);
   const [editingActionId, setEditingActionId] = useState<string | null>(null);
@@ -207,127 +208,156 @@ export default function SceneForm({ scene, actionsObj, allScenes, onSave, onCanc
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4 h-full">
       <h3 className="text-[22px] font-bold mb-1.5">Edit Scene</h3>
-      {/* Basic Description section */}
-      <div className="bg-cyan-50 border border-slate-200 rounded-lg p-3 mb-4 w-full">
-        <div className="flex gap-2.5">
-          <div className="basis-1/5 flex flex-col gap-0.5 justify-stretch">
-            <div className="font-semibold text-[15px] mb-0.5">Basic Information</div>
-            {/* ID */}
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <label className="font-semibold text-[13px] min-w-[70px]">ID</label>
-              <input name="id" value={form.id} onChange={handleFormChange} required className="flex-1 px-1 py-0.5 rounded border border-slate-300 text-[14px]" disabled />
+      
+      <div className="flex-grow overflow-y-auto pr-2 -mr-2">
+        {/* Basic Description section */}
+        <div className="bg-cyan-50 border border-slate-200 rounded-lg p-3 mb-4 w-full">
+          <div className="flex gap-2.5">
+            <div className="basis-1/5 flex flex-col gap-0.5 justify-stretch">
+              <div className="font-semibold text-[15px] mb-0.5">Basic Information</div>
+              {/* ID */}
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <label className="font-semibold text-[13px] min-w-[70px]">ID</label>
+                <input name="id" value={form.id} onChange={handleFormChange} required className="flex-1 px-1 py-0.5 rounded border border-slate-300 text-[14px]" disabled />
+              </div>
+              {/* Location */}
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <label className="font-semibold text-[13px] min-w-[70px]">Location</label>
+                <input name="location" value={form.location} onChange={handleFormChange} required className="flex-1 px-1 py-0.5 rounded border border-slate-300 text-[14px]" />
+              </div>
+              {/* Season */}
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <label className="font-semibold text-[13px] min-w-[70px]">Season</label>
+                <input name="season" value={form.season} onChange={handleFormChange} className="flex-1 px-1 py-0.5 rounded border border-slate-300 text-[14px]" />
+              </div>
+              {/* Parent Scene */}
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <label className="font-semibold text-[13px] min-w-[70px]">Parent</label>
+                <select name="parentSceneId" value={form.parentSceneId || ''} onChange={handleFormChange} className="flex-1 px-1 py-0.5 rounded border border-slate-300 text-[14px]">
+                  <option value="">None</option>
+                  {allScenes.filter(s => s.id !== form.id).map(s => (
+                    <option key={s.id} value={s.id}>{s.id}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Required? */}
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <label className="font-semibold text-[13px] min-w-[70px]">Required?</label>
+                <input type="checkbox" name="isRequired" checked={form.isRequired} onChange={handleFormChange} className="ml-0" />
+              </div>
             </div>
-            {/* Location */}
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <label className="font-semibold text-[13px] min-w-[70px]">Location</label>
-              <input name="location" value={form.location} onChange={handleFormChange} required className="flex-1 px-1 py-0.5 rounded border border-slate-300 text-[14px]" />
-            </div>
-            {/* Season */}
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <label className="font-semibold text-[13px] min-w-[70px]">Season</label>
-              <input name="season" value={form.season} onChange={handleFormChange} className="flex-1 px-1 py-0.5 rounded border border-slate-300 text-[14px]" />
-            </div>
-            {/* Parent Scene */}
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <label className="font-semibold text-[13px] min-w-[70px]">Parent</label>
-              <select name="parentSceneId" value={form.parentSceneId || ''} onChange={handleFormChange} className="flex-1 px-1 py-0.5 rounded border border-slate-300 text-[14px]">
-                <option value="">None</option>
-                {allScenes.filter(s => s.id !== form.id).map(s => (
-                  <option key={s.id} value={s.id}>{s.id}</option>
-                ))}
-              </select>
-            </div>
-            {/* Required? */}
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <label className="font-semibold text-[13px] min-w-[70px]">Required?</label>
-              <input type="checkbox" name="isRequired" checked={form.isRequired} onChange={handleFormChange} className="ml-0" />
+            <div className="basis-4/5 flex flex-col justify-stretch">
+              <label className="font-semibold text-[14px] mb-0.5">Description</label>
+              <textarea name="description" value={form.description} onChange={handleFormChange} required className="w-full px-1 py-0.5 rounded border border-slate-300 text-[14px] min-h-[112px] h-[112px] mt-0 resize-vertical" />
             </div>
           </div>
-          <div className="basis-4/5 flex flex-col justify-stretch">
-            <label className="font-semibold text-[14px] mb-0.5">Description</label>
-            <textarea name="description" value={form.description} onChange={handleFormChange} required className="w-full px-1 py-0.5 rounded border border-slate-300 text-[14px] min-h-[112px] h-[112px] mt-0 resize-vertical" />
+        </div>
+
+        {/* Actions section */}
+        <SceneActionsBox
+          form={form}
+          setForm={setForm}
+          actionsObj={actionsObj}
+          onEditAction={handleOpenActionModal}
+          onUpdateActionOutcome={handleUpdateActionOutcome}
+        />
+
+        {/* Choices section */}
+        <div className="bg-rose-50 border border-slate-200 rounded-lg p-3 w-full">
+          <div className="flex items-center gap-1.5 mb-2">
+            <label className="font-semibold text-[16px]">Choices</label>
+            <button type="button" onClick={addChoice} className="bg-blue-600 text-white border-none rounded-full w-7 h-7 flex items-center justify-center font-bold text-[18px] cursor-pointer ml-0.5">+</button>
           </div>
-        </div>
-      </div>
-      {/* Actions section */}
-      <SceneActionsBox
-        form={form}
-        setForm={setForm}
-        actionsObj={actionsObj}
-        onEditAction={handleOpenActionModal}
-        onUpdateActionOutcome={handleUpdateActionOutcome}
-      />
-      {/* Choices section */}
-      <div className="bg-purple-50 border border-slate-200 rounded-lg p-3 w-full">
-        <div className="flex items-center gap-1.5 mb-2">
-          <label className="font-semibold text-[16px]">Choices</label>
-          <button type="button" onClick={addChoice} className="bg-blue-600 text-white border-none rounded-full w-7 h-7 flex items-center justify-center font-bold text-[18px] cursor-pointer ml-0.5">+</button>
-        </div>
-        {/* Headers for choices */}
-        <div className="flex gap-2 font-semibold text-[14px] mb-0.5">
-          <div className="basis-4/5">Text</div>
-          <div className="basis-1/5">Next Node ID</div>
-        </div>
-        {form.choices.map((choice, idx) => (
-          <div key={idx} className="flex items-center gap-2 mb-1">
-            <input placeholder="Text" value={choice.text} onChange={e => handleChoiceChange(idx, 'text', e.target.value)} required className="basis-4/5 min-w-[80px] px-1 py-0.5 rounded border border-slate-300 text-[14px] bg-white" />
-            <div className="basis-1/5 flex gap-1 items-center">
-              <select
-                value={
-                  choice.nextNodeId === undefined || choice.nextNodeId === null || choice.nextNodeId === ''
-                    ? ''
-                    : allScenes.some(s => s.id === choice.nextNodeId)
-                      ? choice.nextNodeId
-                      : '__NEW__'
-                }
-                onChange={e => {
-                  if (e.target.value === '__NEW__') {
-                    setNewSceneModalIdx(idx);
-                    setNewSceneIdInput('');
-                  } else {
-                    handleChoiceChange(idx, 'nextNodeId', e.target.value);
+          {/* Headers for choices */}
+          <div className="flex gap-2 font-semibold text-[14px] mb-0.5">
+            <div className="basis-4/5">Text</div>
+            <div className="basis-1/5">Next Node ID</div>
+          </div>
+          {form.choices.map((choice, idx) => (
+            <div key={idx} className="flex items-center gap-2 mb-1">
+              <input placeholder="Text" value={choice.text} onChange={e => handleChoiceChange(idx, 'text', e.target.value)} required className="basis-4/5 min-w-[80px] px-1 py-0.5 rounded border border-slate-300 text-[14px] bg-white" />
+              <div className="basis-1/5 flex gap-1 items-center">
+                <select
+                  value={
+                    choice.nextNodeId === undefined || choice.nextNodeId === null || choice.nextNodeId === ''
+                      ? ''
+                      : allScenes.some(s => s.id === choice.nextNodeId)
+                        ? choice.nextNodeId
+                        : '__NEW__'
                   }
-                }}
-                className={`min-w-[60px] px-1 py-0.5 rounded border ${!choice.nextNodeId || choice.nextNodeId.trim() === '' ? 'border-red-500' : 'border-slate-300'} text-[14px] bg-white`}
-              >
-                <option value="">Select…</option>
-                {allScenes.filter(s => s.id !== form.id).map(s => (
-                  <option key={s.id} value={s.id}>{s.id}</option>
-                ))}
-                <option value="__NEW__">New Scene</option>
-              </select>
+                  onChange={e => {
+                    if (e.target.value === '__NEW__') {
+                      setNewSceneModalIdx(idx);
+                      setNewSceneIdInput('');
+                    } else {
+                      handleChoiceChange(idx, 'nextNodeId', e.target.value);
+                    }
+                  }}
+                  className={`min-w-[60px] px-1 py-0.5 rounded border ${!choice.nextNodeId || choice.nextNodeId.trim() === '' ? 'border-red-500' : 'border-slate-300'} text-[14px] bg-white`}
+                >
+                  <option value="">Select…</option>
+                  {allScenes.filter(s => s.id !== form.id).map(s => (
+                    <option key={s.id} value={s.id}>{s.id}</option>
+                  ))}
+                  <option value="__NEW__">New Scene</option>
+                </select>
+              </div>
+              {form.choices.length > 1 && (
+                <button type="button" onClick={() => removeChoice(idx)} className="bg-red-500 text-white border-none rounded px-2 font-semibold cursor-pointer text-[13px] ml-0.5">Remove</button>
+              )}
             </div>
-            {form.choices.length > 1 && (
-              <button type="button" onClick={() => removeChoice(idx)} className="bg-red-500 text-white border-none rounded px-2 font-semibold cursor-pointer text-[13px] ml-0.5">Remove</button>
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-      <div className="flex-1" /> {/* Spacer to push buttons to bottom */}
-      <div className="flex justify-end gap-3 sticky bottom-0 bg-white pt-3 pb-2 z-2">
-        {onCancel && <button type="button" onClick={onCancel} className="bg-slate-500 text-white border-none rounded-lg px-5 py-2 font-semibold cursor-pointer">Cancel</button>}
-        <button type="submit" className="bg-green-500 text-white border-none rounded-lg px-5 py-2 font-semibold cursor-pointer">Save</button>
+
+      {/* Action Buttons */}
+      <div className="flex justify-between items-center pt-4 border-t border-slate-200">
+        <div>
+          {onDelete && (
+            <button type="button" onClick={onDelete} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors">
+              Delete Scene
+            </button>
+          )}
+        </div>
+        <div className="flex gap-4">
+          {onCancel && (
+            <button type="button" onClick={onCancel} className="bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded transition-colors">
+              Cancel
+            </button>
+          )}
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
+            Save Scene
+          </button>
+        </div>
       </div>
-      {/* Render the Actions modal as a modal-on-modal if showActionModal is true */}
+
+      {/* Modals */}
       {showActionModal && editingActionId && actionsObj && actionsObj[editingActionId] && (
         <ActionModal
           action={actionsObj[editingActionId]}
-          isEditing={true}
+          onClose={handleCloseActionModal}
+          scenes={allScenes}
+          actions={actionsObj ? Object.values(actionsObj) : []}
           onSave={async (updatedAction) => {
             if (!setActionsObj || !actionsObj) return;
             const updatedActions = { ...actionsObj, [updatedAction.id]: updatedAction };
             setActionsObj(updatedActions);
           }}
-          onClose={handleCloseActionModal}
-          actions={Object.values(actionsObj)}
-          scenes={allScenes}
         />
       )}
-      {/* New Scene Modal */}
+      {showNextNodeWarning && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[2000]">
+          <div className="bg-white p-6 rounded-lg shadow-xl text-center">
+            <h4 className="font-bold text-lg mb-2">Warning</h4>
+            <p className="mb-4">One or more choices has a blank "Next Scene".</p>
+            <button onClick={handleAcknowledgeWarning} className="bg-blue-600 text-white px-4 py-2 rounded">OK</button>
+          </div>
+        </div>
+      )}
       {newSceneModalIdx !== null && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[2000]">
           <div style={{ background: '#fff', borderRadius: 10, padding: 24, minWidth: 320, boxShadow: '0 4px 24px #0002', textAlign: 'center' }}>
             <h4 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Add New Scene ID</h4>
             <input
@@ -350,21 +380,6 @@ export default function SceneForm({ scene, actionsObj, allScenes, onSave, onCanc
                 style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}
                 disabled={!newSceneIdInput.trim()}
               >Save</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Next Node ID blank warning modal */}
-      {showNextNodeWarning && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#0008', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000 }}>
-          <div style={{ background: '#fff', borderRadius: 10, padding: 24, minWidth: 320, boxShadow: '0 4px 24px #0002', textAlign: 'center' }}>
-            <h4 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Warning</h4>
-            <div style={{ fontSize: 16, marginBottom: 18 }}>
-              Scene may cause game interruption if nextNode is left blank.
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
-              <button type="button" onClick={() => { setShowNextNodeWarning(false); setPendingSave(null); }} style={{ background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-              <button type="button" onClick={handleAcknowledgeWarning} style={{ background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 20px', fontWeight: 600, cursor: 'pointer' }}>Save Anyway</button>
             </div>
           </div>
         </div>

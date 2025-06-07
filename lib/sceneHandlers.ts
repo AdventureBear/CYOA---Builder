@@ -38,4 +38,33 @@ export async function saveSceneAndUpdateStore({
     const data = await res.json();
     throw new Error(data.error || 'Failed to save scene');
   }
+}
+
+export async function deleteSceneAndUpdateStore({
+  sceneId,
+  gameId,
+  scenes,
+  setScenes,
+}: {
+  sceneId: string;
+  gameId: string;
+  scenes: Record<string, Scene>;
+  setScenes: (scenes: Record<string, Scene>) => void;
+}) {
+  const updatedScenes = { ...scenes };
+  delete updatedScenes[sceneId];
+  setScenes(updatedScenes);
+
+  const res = await fetch('/api/deleteScene', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sceneId, gameId }),
+  });
+
+  if (!res.ok) {
+    // If the API call fails, revert the state
+    setScenes(scenes);
+    const data = await res.json();
+    throw new Error(data.error || 'Failed to delete scene');
+  }
 } 

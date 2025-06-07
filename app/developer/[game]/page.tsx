@@ -24,8 +24,10 @@ import SceneNode from '@/components/Dev/SceneNode';
 import SceneForm from '@/components/Dev/SceneForm';
 import Modal from '@/components/ui/Modal';
 import AddSceneModal from '@/components/Dev/AddSceneModal';
-import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
+import { saveSceneAndUpdateStore, deleteSceneAndUpdateStore } from '@/lib/sceneHandlers';
 import { useUiStore } from '@/store/uiStore';
+import { useGameStore } from '@/store/gameStore';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import dagre from 'dagre';
 
 const dagreGraph = new dagre.graphlib.Graph();
@@ -68,10 +70,15 @@ export default function GameEditorPage() {
     
     const [rfNodes, setRfNodes, onNodesChange] = useNodesState([]);
     const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState([]);
-
-    const [selectedScene, setSelectedScene] = useState<Scene | null>(null);
     const [isAddSceneModalOpen, setAddSceneModalOpen] = useState(false);
-    const { setContextualControls, clearContextualControls } = useUiStore();
+    const { 
+        setContextualControls, 
+        clearContextualControls, 
+        editingScene, 
+        setEditingScene,
+        deletingScene,
+        setDeletingScene,
+    } = useUiStore();
     
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
@@ -80,8 +87,8 @@ export default function GameEditorPage() {
 
     const handleEdit = useCallback((sceneId: string) => {
         if (!scenes) return;
-        setSelectedScene(scenes[sceneId] || null);
-    }, [scenes]);
+        setEditingScene(scenes[sceneId] || null);
+    }, [scenes, setEditingScene]);
 
     const nodeTypes = useMemo(() => ({ scene: SceneNode }), []);
     
@@ -175,7 +182,10 @@ export default function GameEditorPage() {
             id: scene.id,
             type: 'scene',
             position: { x: 0, y: 0 },
-            data: { label: scene.id, onEdit: () => handleEdit(scene.id) },
+            data: { 
+                label: scene.id, 
+                onEdit: () => handleEdit(scene.id),
+            },
         }));
 
         const initialEdges: Edge[] = [];
@@ -273,6 +283,23 @@ export default function GameEditorPage() {
         setAddSceneModalOpen(false);
     };
 
+    const handleDeleteScene = async () => {
+        if (!deletingScene || !scenes || !setScenes) return;
+        try {
+            await deleteSceneAndUpdateStore({
+                sceneId: deletingScene.id,
+                gameId,
+                scenes,
+                setScenes,
+            });
+            setDeletingScene(null);
+            setEditingScene(null);
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Failed to delete scene');
+            setDeletingScene(null);
+        }
+    };
+
     const handleSave = async (updatedScene: Scene) => {
         if (!scenes || !setScenes) return;
         const scenesArr = Object.values(scenes);
@@ -283,7 +310,7 @@ export default function GameEditorPage() {
                 setScenes: setScenes, scenes: scenesArr,
                 editIndex: editIndex !== -1 ? editIndex : null,
             });
-            setSelectedScene(null);
+            setEditingScene(null);
         } catch (err) {
             alert(err instanceof Error ? err.message : 'Failed to save scene');
         }
@@ -315,6 +342,14 @@ export default function GameEditorPage() {
 
   return (
         <div className="w-full h-full relative">
+            <ConfirmationModal
+                isOpen={!!deletingScene}
+                onClose={() => setDeletingScene(null)}
+                onConfirm={handleDeleteScene}
+                title="Delete Scene"
+                message={`Are you sure you want to delete the scene "${deletingScene?.id}"? This action cannot be undone.`}
+                confirmText="Delete"
+            />
             {isAddSceneModalOpen && (
                 <AddSceneModal
                     onAddScene={handleAddScene}
@@ -322,14 +357,15 @@ export default function GameEditorPage() {
                 />
             )}
 
-            <Modal open={!!selectedScene}>
-                {selectedScene && (
+            <Modal open={!!editingScene}>
+                {editingScene && (
                     <SceneForm
-                        scene={selectedScene}
+                        scene={editingScene}
                         onSave={handleSave}
-                        onCancel={() => setSelectedScene(null)}
+                        onCancel={() => setEditingScene(null)}
+                        onDelete={() => setDeletingScene(editingScene)}
                         actionsObj={actions}
-                        allScenes={Object.values(scenes)}
+                        allScenes={Object.values(scenes || {})}
                         setActionsObj={setActions}
                     />
                 )}

@@ -1,46 +1,62 @@
 import React, { useRef, useState, useEffect } from 'react';
 import type { Scene } from '@/app/types';
-import { MoreVertical, Edit, Copy, Trash2 } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import SceneContextMenu from '@/components/Dev/SceneContextMenu';
 
-export function SceneContextMenu({ onEdit, onCopy, onDelete, onClose, style, menuRef }: {
-  onEdit?: () => void;
-  onCopy?: () => void;
-  onDelete?: () => void;
-  onClose?: () => void;
-  style?: React.CSSProperties;
-  menuRef?: React.Ref<HTMLDivElement>;
-}) {
-  return (
-    <div
-      ref={menuRef}
-      className="absolute left-full top-0 ml-2 w-36 bg-white border border-slate-200 rounded shadow-lg z-1000"
-      style={style}
-      onClick={e => e.stopPropagation()}
-    >
-      <button className="flex items-center gap-2 px-4 py-2 w-full text-slate-700 hover:bg-slate-100" onClick={() => { onClose && onClose(); onEdit && onEdit(); }}><Edit size={16} /> Edit</button>
-      <button className="flex items-center gap-2 px-4 py-2 w-full text-slate-700 hover:bg-slate-100" onClick={() => { onClose && onClose(); onCopy && onCopy(); }}><Copy size={16} /> Copy</button>
-      <button className="flex items-center gap-2 px-4 py-2 w-full text-red-600 hover:bg-red-50" onClick={() => { onClose && onClose(); onDelete && onDelete(); }}><Trash2 size={16} /> Delete</button>
-    </div>
-  );
-}
-
-export function SceneSidebarDetailModal({ scene, parentScenes, onEdit, onCopy, onDelete, onClose, anchorRect }: {
+export function SceneSidebarDetailModal({ scene, parentScenes, onEdit, onDelete, onCopy, onClose, anchorRect, sidebarRect }: {
   scene: Scene;
   parentScenes: string[];
   onEdit?: () => void;
-  onCopy?: () => void;
   onDelete?: () => void;
+  onCopy?: () => void;
   onClose?: () => void;
   anchorRect?: { top: number; height: number } | null;
+  sidebarRect?: DOMRect | null;
 }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        menuButtonRef.current &&
+        !menuButtonRef.current.contains(event.target as Node)
+      ) {
+        setIsMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [menuRef]);
+
+  useEffect(() => {
+    if (isMenuOpen && modalRef.current) {
+      const modalRect = modalRef.current.getBoundingClientRect();
+      setMenuStyle({
+        position: 'fixed',
+        top: `${modalRect.top}px`,
+        left: `${modalRect.right + 4}px`,
+        zIndex: 100,
+      });
+    }
+  }, [isMenuOpen]);
+
   // Choices as A), B), C)...
   const choiceLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  // Sidebar + panel width (64 + 280)
-  const left = 64 + 280 ; // 8px gap
   // Modal height (estimate, or could use ref for dynamic)
   const modalHeight = 380;
+  const modalWidth = 450;
   let style: React.CSSProperties;
-  if (anchorRect) {
+  if (anchorRect && sidebarRect) {
+    const left = sidebarRect.right + 4;
     // If too close to bottom, pin to bottom
     const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
     if (anchorRect.top + modalHeight > windowHeight - 24) {
@@ -48,7 +64,7 @@ export function SceneSidebarDetailModal({ scene, parentScenes, onEdit, onCopy, o
         position: 'fixed',
         left,
         bottom: 24,
-        width: 450,
+        width: modalWidth,
         maxWidth: '95vw',
         zIndex: 50,
       };
@@ -57,7 +73,7 @@ export function SceneSidebarDetailModal({ scene, parentScenes, onEdit, onCopy, o
         position: 'fixed',
         left,
         top: anchorRect.top,
-        width: 450,
+        width: modalWidth,
         maxWidth: '95vw',
         zIndex: 50,
       };
@@ -68,35 +84,16 @@ export function SceneSidebarDetailModal({ scene, parentScenes, onEdit, onCopy, o
       top: '50%',
       left: '50%',
       transform: 'translate(-50%, -50%)',
-      width: 450,
+      width: modalWidth,
       maxWidth: '95vw',
       zIndex: 50,
     };
   }
 
-  // Menu open/close logic
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        menuOpen &&
-        menuRef.current &&
-        !menuRef.current.contains(e.target as Node) &&
-        menuButtonRef.current &&
-        !menuButtonRef.current.contains(e.target as Node)
-      ) {
-        setMenuOpen(false);
-      }
-    }
-    if (menuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [menuOpen]);
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMenuOpen(prev => !prev);
+  };
 
   return (
     <>
@@ -107,21 +104,18 @@ export function SceneSidebarDetailModal({ scene, parentScenes, onEdit, onCopy, o
         aria-label="Close modal"
       />
       {/* Modal */}
-      <div style={style} className="bg-white  shadow-xl p-4 rounded" onClick={e => e.stopPropagation()}>
+      <div ref={modalRef} style={style} className="bg-white  shadow-xl p-4 rounded" onClick={e => e.stopPropagation()}>
         {/* Top row: Location and ID */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex flex-col gap-0.5">
             <span className="text-[13px] font-bold text-slate-700">{scene.location || 'No location'} <span className="text-slate-400">({scene.id})</span></span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <button ref={menuButtonRef} className="p-1 rounded-full hover:bg-slate-100 transition" aria-label="More" onClick={() => setMenuOpen(v => !v)}>
-                <MoreVertical size={22} />
-              </button>
-              {menuOpen && (
-                <SceneContextMenu onEdit={onEdit} onCopy={onCopy} onDelete={onDelete} onClose={() => setMenuOpen(false)} menuRef={menuRef} />
-              )}
-            </div>
+          <div className="flex items-center">
+            {onEdit && (
+                <Button ref={menuButtonRef} onClick={handleMenuClick} variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreVertical size={16} />
+                </Button>
+            )}
           </div>
         </div>
         {/* Parent Scenes */}
@@ -143,6 +137,16 @@ export function SceneSidebarDetailModal({ scene, parentScenes, onEdit, onCopy, o
           )}
         </div>
       </div>
+      {isMenuOpen && (
+        <SceneContextMenu
+          menuRef={menuRef}
+          onEdit={onEdit}
+          onCopy={onCopy}
+          onDelete={onDelete}
+          onClose={() => setIsMenuOpen(false)}
+          style={menuStyle}
+        />
+      )}
     </>
   );
 } 
