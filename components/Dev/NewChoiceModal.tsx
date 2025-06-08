@@ -1,51 +1,53 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import Modal from '@/components/ui/Modal';
 
 interface NewChoiceModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (choiceText: string) => void;
+  onConfirm: (choiceText: string) => void;
+  onCancel: () => void;
 }
 
-export default function NewChoiceModal({ isOpen, onClose, onSubmit }: NewChoiceModalProps) {
-  const [text, setText] = useState('');
+export default function NewChoiceModal({ onConfirm, onCancel }: NewChoiceModalProps) {
+  const [choiceText, setChoiceText] = useState('');
 
-  if (!isOpen) {
-    return null;
-  }
-
-  const handleSubmit = () => {
-    if (text.trim()) {
-      onSubmit(text);
-      setText('');
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!choiceText.trim()) return;
+    onConfirm(choiceText);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]" onClick={onClose}>
-      <div className="bg-white p-6 rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-lg font-semibold mb-4">Create New Choice</h3>
-        <Input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Enter choice text..."
-          autoFocus
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              handleSubmit();
-            } else if (e.key === 'Escape') {
-              onClose();
-            }
-          }}
-        />
-        <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit}>Create</Button>
-        </div>
+    <Modal open={true}>
+      <div className="p-6">
+        <h3 className="text-lg font-bold mb-4">Enter Choice Text</h3>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            value={choiceText}
+            onChange={(e) => setChoiceText(e.target.value)}
+            placeholder="Enter the text for this choice..."
+            className="w-full p-2 border rounded mb-4"
+            autoFocus
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!choiceText.trim()}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              Create Choice
+            </button>
+          </div>
+        </form>
       </div>
-    </div>
+    </Modal>
   );
 } 

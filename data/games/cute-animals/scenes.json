@@ -339,6 +339,10 @@
       {
         "text": "Sing the complete Echo of the First Song",
         "nextAction": "complete_song"
+      },
+      {
+        "text": "new choice",
+        "nextNodeId": "moonlit_grove_the_second"
       }
     ]
   },

@@ -13,7 +13,7 @@ import ReactFlow, {
     Position,
     // MarkerType,
     NodeMouseHandler,
-    addEdge,
+
     useReactFlow,
     // Panel,
     Connection,
@@ -88,6 +88,7 @@ function GameEditor() {
         setDeletingAction,
     } = useUiStore();
     
+    const [showNewChoiceModal, setShowNewChoiceModal] = useState(false);
     const [newChoiceConnection, setNewChoiceConnection] = useState<Connection | null>(null);
     const [selectedElement, setSelectedElement] = useState<{ type: 'node' | 'edge'; id: string } | null>(null);
     const [focusElement, setFocusElement] = useState<{ type: 'node' | 'edge'; id: string } | null>(null);
@@ -423,9 +424,10 @@ function GameEditor() {
         };
     }, [setContextualControls, clearContextualControls, handlePlaytest, handleAutoLayout]);
 
-    // const onConnect = useCallback((connection: Connection) => {
-    //     setNewChoiceConnection(connection);
-    // }, []);
+    const onConnect = useCallback((connection: Connection) => {
+        setNewChoiceConnection(connection);
+        setShowNewChoiceModal(true);
+    }, []);
 
     const handleCreateNewChoice = async (choiceText: string) => {
         if (!newChoiceConnection || !scenes || !setScenes) return;
@@ -437,43 +439,30 @@ function GameEditor() {
         if (!sourceScene) return;
 
         const newChoice: Choice = { text: choiceText, nextNodeId: target };
-
         const updatedScene: Scene = {
             ...sourceScene,
             choices: [...(sourceScene.choices || []), newChoice],
         };
 
+        // Save the scene and update the store
         try {
-            const response = await fetch('/api/saveScene', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ scene: updatedScene, game: gameId }),
+            await saveSceneAndUpdateStore({
+                form: updatedScene,
+                editIndex: null,
+                scenes: Object.values(scenes),
+                scenesObj: scenes,
+                setScenes,
+                game: gameId,
+                setRfEdges,
             });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to save new choice to server.');
-            }
-
-            // 1. Update the store
-            const newScenes = { ...scenes, [updatedScene.id]: updatedScene };
-            setScenes(newScenes);
-
-            // 2. If the updated scene is currently being edited, refresh the editor's data
-            if (editingScene?.id === updatedScene.id) {
-                setEditingScene(updatedScene);
-            }
-
-            // 3. Add the edge to the graph
-            setRfEdges((eds) => addEdge({ ...newChoiceConnection, animated: true, label: choiceText }, eds));
-
         } catch (error) {
-            console.error(error);
-            alert(`Error: Could not save new choice. ${error instanceof Error ? error.message : ''}`);
-        } finally {
-            // 4. Close the modal regardless of outcome
-            setNewChoiceConnection(null);
+            console.error('Failed to save scene:', error);
+            // TODO: Show error toast
         }
+
+        // Reset state
+        setShowNewChoiceModal(false);
+        setNewChoiceConnection(null);
     };
 
     if (loading || !scenes) return <div className="h-screen w-full flex items-center justify-center">Loading game data...</div>;
@@ -499,11 +488,15 @@ function GameEditor() {
                     confirmText="Delete"
                 />
             )}
-            <NewChoiceModal
-                isOpen={!!newChoiceConnection}
-                onClose={() => setNewChoiceConnection(null)}
-                onSubmit={handleCreateNewChoice}
-            />
+            {showNewChoiceModal && (
+                <NewChoiceModal
+                    onConfirm={handleCreateNewChoice}
+                    onCancel={() => {
+                        setShowNewChoiceModal(false);
+                        setNewChoiceConnection(null);
+                    }}
+                />
+            )}
             {isAddSceneModalOpen && (
                 <AddSceneModal
                     onAddScene={handleAddScene}
@@ -543,6 +536,7 @@ function GameEditor() {
                 onEdgeClick={onEdgeClick}
                 onNodeDoubleClick={onNodeDoubleClick}
                 onEdgeDoubleClick={onEdgeDoubleClick}
+                onConnect={onConnect}
                 onPaneClick={() => {
                     setSelectedElement(null);
                     if (focusElement) {
