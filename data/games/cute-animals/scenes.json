@@ -341,7 +341,7 @@
         "nextAction": "complete_song"
       },
       {
-        "text": "new choice",
+        "text": "go there",
         "nextNodeId": "moonlit_grove_the_second"
       }
     ]
@@ -357,6 +357,10 @@
       {
         "text": "Sing the complete Echo of the First Song",
         "nextAction": "complete_song"
+      },
+      {
+        "text": "go back",
+        "nextNodeId": "moonlit_grove"
       }
     ]
   },
