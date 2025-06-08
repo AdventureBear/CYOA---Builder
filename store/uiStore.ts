@@ -14,6 +14,16 @@ export interface AccordionState {
     [key: string]: boolean;
 }
 
+interface HighlightHandlers {
+    onHighlightSceneGroup: (sceneIds: string[]) => void;
+    onResetHighlight: () => void;
+}
+
+const defaultHighlightHandlers: HighlightHandlers = {
+    onHighlightSceneGroup: () => {},
+    onResetHighlight: () => {},
+};
+
 interface UiState {
   contextualControls: ContextualControl[];
   setContextualControls: (controls: ContextualControl[]) => void;
@@ -30,6 +40,8 @@ interface UiState {
   actionManagerAccordion: AccordionState;
   toggleSceneManagerAccordion: (section: string) => void;
   toggleActionManagerAccordion: (section: string) => void;
+  highlightHandlers: HighlightHandlers;
+  setHighlightHandlers: (handlers: HighlightHandlers) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -68,4 +80,6 @@ export const useUiStore = create<UiState>((set) => ({
         [section]: !state.actionManagerAccordion[section],
       },
     })),
+  highlightHandlers: defaultHighlightHandlers,
+  setHighlightHandlers: (handlers) => set({ highlightHandlers: handlers }),
 })); 

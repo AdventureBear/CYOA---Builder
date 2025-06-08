@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { DeveloperSidebar, SlidingPanel } from '@/components/Dev/DeveloperSidebar';
 import type { PanelType } from '@/components/Dev/DeveloperSidebar';
 import { WandSparkles, BookOpen, Dice5 } from 'lucide-react';
+import { useUiStore } from '@/store/uiStore';
 
 export default function DeveloperLayout({ children }: { children: React.ReactNode }) {
   const [openPanel, setOpenPanel] = useState<PanelType>(null);
   const params = useParams();
+  const { highlightHandlers } = useUiStore();
 
   // Ensure gameId is always a string, or null if not present
   const gameId = params ? (Array.isArray(params.game) ? params.game[0] : params.game) as string | null : null;
@@ -17,14 +19,6 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
     // This logic ensures clicking the same icon toggles the panel off
     setOpenPanel(prev => (prev === panel ? null : panel));
   };
-
-  const handleHighlightSceneGroup = useCallback((sceneIds: string[]) => {
-    (window as any).highlightHandlers?.onHighlightSceneGroup?.(sceneIds);
-  }, []);
-
-  const handleResetHighlight = useCallback(() => {
-    (window as any).highlightHandlers?.onResetHighlight?.();
-  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -39,15 +33,15 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
         <DeveloperSidebar 
           onPanel={handlePanel} 
           activePanel={openPanel}
-          onHighlightSceneGroup={handleHighlightSceneGroup}
-          onResetHighlight={handleResetHighlight}
+          onHighlightSceneGroup={highlightHandlers.onHighlightSceneGroup}
+          onResetHighlight={highlightHandlers.onResetHighlight}
         />
         <SlidingPanel 
           openPanel={openPanel} 
           onClose={() => setOpenPanel(null)} 
           gameId={gameId}
-          onHighlightSceneGroup={handleHighlightSceneGroup}
-          onResetHighlight={handleResetHighlight}
+          onHighlightSceneGroup={highlightHandlers.onHighlightSceneGroup}
+          onResetHighlight={highlightHandlers.onResetHighlight}
         />
         <main className="flex-1 min-w-0 flex flex-col min-h-0 relative pl-16">
           {children}

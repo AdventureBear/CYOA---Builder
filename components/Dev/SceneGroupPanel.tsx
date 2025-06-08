@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronRight, Focus } from 'lucide-react';
-import { Scene } from '@/app/types';
+// import { Scene } from '@/app/types';
 import { findSceneGroups } from '@/lib/sceneGroupUtils';
 import { useGameStore } from '@/store/gameStore';
 

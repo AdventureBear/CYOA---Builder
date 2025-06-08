@@ -16,6 +16,7 @@ import ReactFlow, {
     useReactFlow,
     Connection,
     ReactFlowProvider,
+    ReactFlowInstance,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { PlusSquare, Play, CornerUpLeft, Wand2 } from 'lucide-react';
@@ -32,6 +33,7 @@ import { useUiStore, ContextualControl } from '@/store/uiStore';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import dagre from 'dagre';
 import NewChoiceModal from '@/components/Dev/NewChoiceModal';
+import { useHighlight } from '@/store/highlightContext';
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -92,7 +94,10 @@ function GameEditor() {
     const clickTimer = useRef<NodeJS.Timeout | null>(null);
 
     const { fitView, getNodes, getEdges } = useReactFlow();
-    const rfInstance = useRef<any>(null);
+    const rfInstance = useRef<ReactFlowInstance | null>(null);
+
+    // Provide the highlight handlers through Zustand
+    const setHighlightHandlers = useUiStore(state => state.setHighlightHandlers);
 
     const handleEdit = useCallback((sceneId: string) => {
         if (!scenes) return;
@@ -482,12 +487,12 @@ function GameEditor() {
         if (!sourceScene) return;
 
         // Check if there's already a choice going the other way
-        const targetScene = scenes[target];
-        const hasReciprocalChoice = targetScene?.choices?.some(c => c.nextNodeId === source);
+        // const targetScene = scenes[target];
+        // const hasReciprocalChoice = targetScene?.choices?.some(c => c.nextNodeId === source);
 
         // If there's already an edge between these nodes, update it instead of creating a new one
-        const existingEdgeId = createEdgeId(source, target);
-        const existingEdge = rfEdges.find(e => e.id === existingEdgeId);
+        // const existingEdgeId = createEdgeId(source, target);
+        // const existingEdge = rfEdges.find(e => e.id === existingEdgeId);
 
         const newChoice: Choice = { text: choiceText, nextNodeId: target };
         const updatedScene: Scene = {
@@ -507,10 +512,10 @@ function GameEditor() {
                     if (typeof edges === 'function') {
                         setRfEdges(currentEdges => {
                             const newEdges = edges(currentEdges);
-                            return mergeReciprocalEdges(newEdges, scenes);
+                            return mergeReciprocalEdges(newEdges);
                         });
                     } else {
-                        setRfEdges(mergeReciprocalEdges(edges, scenes));
+                        setRfEdges(mergeReciprocalEdges(edges));
                     }
                 },
             });
@@ -523,7 +528,7 @@ function GameEditor() {
     };
 
     // Modify the edge merging function to handle markers
-    const mergeReciprocalEdges = (edges: Edge[], scenes: Record<string, Scene>): Edge[] => {
+    const mergeReciprocalEdges = (edges: Edge[]): Edge[] => {
         const edgeMap = new Map<string, Edge>();
         
         edges.forEach(edge => {
@@ -645,16 +650,13 @@ function GameEditor() {
         }, 50);
     }, [getNodes, getEdges, setRfNodes, setRfEdges, fitView]);
 
-    // Make the handlers globally available
+    // Provide the highlight handlers through Zustand
     useEffect(() => {
-        (window as any).highlightHandlers = {
+        setHighlightHandlers({
             onHighlightSceneGroup: handleHighlightSceneGroup,
             onResetHighlight: handleResetHighlight,
-        };
-        return () => {
-            delete (window as any).highlightHandlers;
-        };
-    }, [handleHighlightSceneGroup, handleResetHighlight]);
+        });
+    }, [handleHighlightSceneGroup, handleResetHighlight, setHighlightHandlers]);
 
     if (loading || !scenes) return <div className="h-screen w-full flex items-center justify-center">Loading game data...</div>;
     if (error) return <div className="h-screen w-full flex items-center justify-center text-red-500">{error}</div>;
