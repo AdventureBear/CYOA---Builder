@@ -33,7 +33,6 @@ import { useUiStore, ContextualControl } from '@/store/uiStore';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import dagre from 'dagre';
 import NewChoiceModal from '@/components/Dev/NewChoiceModal';
-import { useHighlight } from '@/store/highlightContext';
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));

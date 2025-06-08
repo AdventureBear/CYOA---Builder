@@ -32,11 +32,10 @@ const links: NavLink[] = [
 interface DeveloperSidebarProps {
   onPanel: (panel: PanelType) => void;
   activePanel: PanelType;
-  onHighlightSceneGroup: (sceneIds: string[]) => void;
-  onResetHighlight: () => void;
+  
 }
 
-export function DeveloperSidebar({ onPanel, activePanel, onHighlightSceneGroup, onResetHighlight }: DeveloperSidebarProps) {
+export function DeveloperSidebar({ onPanel, activePanel }: DeveloperSidebarProps) {
   const pathname = usePathname();
   const { contextualControls } = useUiStore();
 

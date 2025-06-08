@@ -33,8 +33,6 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
         <DeveloperSidebar 
           onPanel={handlePanel} 
           activePanel={openPanel}
-          onHighlightSceneGroup={highlightHandlers.onHighlightSceneGroup}
-          onResetHighlight={highlightHandlers.onResetHighlight}
         />
         <SlidingPanel 
           openPanel={openPanel} 
