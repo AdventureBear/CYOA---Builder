@@ -13,9 +13,7 @@ import ReactFlow, {
     Position,
     MarkerType,
     NodeMouseHandler,
-
     useReactFlow,
-    // Panel,
     Connection,
     ReactFlowProvider,
 } from 'reactflow';
@@ -31,7 +29,6 @@ import Modal from '@/components/ui/Modal';
 import AddSceneModal from '@/components/Dev/AddSceneModal';
 import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
 import { useUiStore, ContextualControl } from '@/store/uiStore';
-// import { useGameStore } from '@/store/gameStore';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import dagre from 'dagre';
 import NewChoiceModal from '@/components/Dev/NewChoiceModal';
@@ -92,10 +89,10 @@ function GameEditor() {
     const [newChoiceConnection, setNewChoiceConnection] = useState<Connection | null>(null);
     const [selectedElement, setSelectedElement] = useState<{ type: 'node' | 'edge'; id: string } | null>(null);
     const [focusElement, setFocusElement] = useState<{ type: 'node' | 'edge'; id: string } | null>(null);
-    // const isInitialLayoutDone = useRef(false);
     const clickTimer = useRef<NodeJS.Timeout | null>(null);
 
     const { fitView, getNodes, getEdges } = useReactFlow();
+    const rfInstance = useRef<any>(null);
 
     const handleEdit = useCallback((sceneId: string) => {
         if (!scenes) return;
@@ -572,93 +569,185 @@ function GameEditor() {
         return Array.from(edgeMap.values());
     };
 
+    // Remove the global highlightHandlers object and keep the functions local
+    const handleHighlightSceneGroup = useCallback((sceneIds: string[]) => {
+        const nodes = getNodes();
+        const edges = getEdges();
+        const visibleNodeIds = new Set(sceneIds);
+        
+        // Find all edges that connect nodes within the group
+        const connectedEdges = edges.filter(edge => 
+            sceneIds.includes(edge.source) || sceneIds.includes(edge.target)
+        );
+        
+        // Add connected nodes
+        connectedEdges.forEach(edge => {
+            visibleNodeIds.add(edge.source);
+            visibleNodeIds.add(edge.target);
+        });
+
+        setRfNodes(nodes.map(node => ({
+            ...node,
+            hidden: !visibleNodeIds.has(node.id),
+            style: { 
+                ...node.style, 
+                opacity: visibleNodeIds.has(node.id) ? 1 : 0.2,
+                transition: 'opacity 0.2s'
+            }
+        })));
+
+        setRfEdges(edges.map(edge => {
+            const isVisible = visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target);
+            return {
+                ...edge,
+                hidden: !isVisible,
+                style: { 
+                    ...edge.style, 
+                    opacity: isVisible ? 1 : 0.1,
+                    transition: 'opacity 0.2s'
+                },
+                labelStyle: { 
+                    opacity: isVisible ? 1 : 0.1,
+                    transition: 'opacity 0.2s'
+                },
+                animated: isVisible
+            };
+        }));
+
+        setTimeout(() => {
+            fitView({
+                padding: 0.2,
+                duration: 800,
+            });
+        }, 50);
+    }, [getNodes, getEdges, setRfNodes, setRfEdges, fitView]);
+
+    const handleResetHighlight = useCallback(() => {
+        const allNodes = getNodes();
+        const allEdges = getEdges();
+        setRfNodes(allNodes.map(node => ({
+            ...node,
+            hidden: false,
+            style: { ...node.style, opacity: 1 }
+        })));
+        setRfEdges(allEdges.map(edge => ({
+            ...edge,
+            hidden: false,
+            style: { ...edge.style, opacity: 1 },
+            labelStyle: { opacity: 1 },
+            animated: false
+        })));
+        setTimeout(() => {
+            fitView({
+                padding: 0.2,
+                duration: 800,
+            });
+        }, 50);
+    }, [getNodes, getEdges, setRfNodes, setRfEdges, fitView]);
+
+    // Make the handlers globally available
+    useEffect(() => {
+        (window as any).highlightHandlers = {
+            onHighlightSceneGroup: handleHighlightSceneGroup,
+            onResetHighlight: handleResetHighlight,
+        };
+        return () => {
+            delete (window as any).highlightHandlers;
+        };
+    }, [handleHighlightSceneGroup, handleResetHighlight]);
+
     if (loading || !scenes) return <div className="h-screen w-full flex items-center justify-center">Loading game data...</div>;
     if (error) return <div className="h-screen w-full flex items-center justify-center text-red-500">{error}</div>;
 
   return (
-        <div className="w-full h-full relative">
-            <ConfirmationModal
-                isOpen={!!deletingScene}
-                onClose={() => setDeletingScene(null)}
-                onConfirm={confirmSceneDelete}
-                title="Delete Scene"
-                message={`Are you sure you want to delete the scene "${deletingScene?.id}"? This action cannot be undone.`}
-                confirmText="Delete"
-            />
-            {deletingAction && (
-                <ConfirmationModal
-                    isOpen={!!deletingAction}
-                    onClose={() => setDeletingAction(null)}
-                    onConfirm={confirmActionDelete}
-                    title="Delete Action"
-                    message={`Are you sure you want to delete the action "${deletingAction?.id}"? This action cannot be undone.`}
-                    confirmText="Delete"
-                />
-            )}
-            {showNewChoiceModal && (
-                <NewChoiceModal
-                    onConfirm={handleCreateNewChoice}
-                    onCancel={() => {
-                        setShowNewChoiceModal(false);
-                        setNewChoiceConnection(null);
-                    }}
-                />
-            )}
-            {isAddSceneModalOpen && (
-                <AddSceneModal
-                    onAddScene={handleAddScene}
-                    onClose={() => setAddSceneModalOpen(false)}
-                />
-            )}
-
-            <Modal open={!!editingScene}>
-                {editingScene && (
-                    <SceneForm
-                        scene={editingScene}
-                        onSave={handleSave}
-                        onCancel={() => setEditingScene(null)}
-                        onDelete={() => setDeletingScene(editingScene)}
-                        actionsObj={actions}
-                        allScenes={Object.values(scenes || {})}
-                        setActionsObj={setActions}
+        <div className="h-screen w-full flex">
+            <div className="flex-1 relative">
+                <div className="w-full h-full relative">
+                    <ConfirmationModal
+                        isOpen={!!deletingScene}
+                        onClose={() => setDeletingScene(null)}
+                        onConfirm={confirmSceneDelete}
+                        title="Delete Scene"
+                        message={`Are you sure you want to delete the scene "${deletingScene?.id}"? This action cannot be undone.`}
+                        confirmText="Delete"
                     />
-                )}
-            </Modal>
-            
-            {focusElement && (
-                <Button
-                    onClick={exitFocusMode}
-                    className="absolute top-4 right-4 z-10"
-                >
-                    <CornerUpLeft className="mr-2 h-4 w-4" /> Exit Focus
-                </Button>
-            )}
+                    {deletingAction && (
+                        <ConfirmationModal
+                            isOpen={!!deletingAction}
+                            onClose={() => setDeletingAction(null)}
+                            onConfirm={confirmActionDelete}
+                            title="Delete Action"
+                            message={`Are you sure you want to delete the action "${deletingAction?.id}"? This action cannot be undone.`}
+                            confirmText="Delete"
+                        />
+                    )}
+                    {showNewChoiceModal && (
+                        <NewChoiceModal
+                            onConfirm={handleCreateNewChoice}
+                            onCancel={() => {
+                                setShowNewChoiceModal(false);
+                                setNewChoiceConnection(null);
+                            }}
+                        />
+                    )}
+                    {isAddSceneModalOpen && (
+                        <AddSceneModal
+                            onAddScene={handleAddScene}
+                            onClose={() => setAddSceneModalOpen(false)}
+                        />
+                    )}
 
-            <ReactFlow
-                nodes={rfNodes}
-                edges={rfEdges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onNodeClick={onNodeClick}
-                onEdgeClick={onEdgeClick}
-                onNodeDoubleClick={onNodeDoubleClick}
-                onEdgeDoubleClick={onEdgeDoubleClick}
-                onConnect={onConnect}
-                onPaneClick={() => {
-                    setSelectedElement(null);
-                    if (focusElement) {
-                        exitFocusMode();
-                    }
-                }}
-                nodeTypes={nodeTypes}
-                fitView
-                fitViewOptions={{ padding: 0.1 }}
-            >
-                <Controls />
-                <MiniMap />
-                <Background color={focusElement ? '#eef2f9' : '#aaa'} gap={16} />
-            </ReactFlow>
-    </div>
+                    <Modal open={!!editingScene}>
+                        {editingScene && (
+                            <SceneForm
+                                scene={editingScene}
+                                onSave={handleSave}
+                                onCancel={() => setEditingScene(null)}
+                                onDelete={() => setDeletingScene(editingScene)}
+                                actionsObj={actions}
+                                allScenes={Object.values(scenes || {})}
+                                setActionsObj={setActions}
+                            />
+                        )}
+                    </Modal>
+                    
+                    {focusElement && (
+                        <Button
+                            onClick={exitFocusMode}
+                            className="absolute top-4 right-4 z-10"
+                        >
+                                <CornerUpLeft className="mr-2 h-4 w-4" /> Exit Focus
+                        </Button>
+                    )}
+
+                    <ReactFlow
+                        nodes={rfNodes}
+                        edges={rfEdges}
+                        onNodesChange={onNodesChange}
+                        onEdgesChange={onEdgesChange}
+                        onNodeClick={onNodeClick}
+                        onEdgeClick={onEdgeClick}
+                        onNodeDoubleClick={onNodeDoubleClick}
+                        onEdgeDoubleClick={onEdgeDoubleClick}
+                        onConnect={onConnect}
+                        onInit={instance => rfInstance.current = instance}
+                        onPaneClick={() => {
+                            setSelectedElement(null);
+                            if (focusElement) {
+                                exitFocusMode();
+                            }
+                        }}
+                        nodeTypes={nodeTypes}
+                        fitView
+                        fitViewOptions={{ padding: 0.1 }}
+                    >
+                        <Controls />
+                        <MiniMap />
+                        <Background color={focusElement ? '#eef2f9' : '#aaa'} gap={16} />
+                    </ReactFlow>
+                </div>
+            </div>
+        </div>
   );
 }
 

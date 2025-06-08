@@ -5,56 +5,57 @@ import {
   LayoutDashboard,
   Image,
   Rabbit,
+  Network,
 } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
 import SceneManagerPanel from './SceneManagerPanel';
 import ActionManagerPanel from './ActionManagerPanel';
+import SceneGroupPanel from './SceneGroupPanel';
+import { ReactFlowProvider } from 'reactflow';
 
+export type PanelType = 'scenes' | 'actions' | 'groups' | null;
 
-const links = [
+interface NavLink {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  panel: PanelType;
+}
+
+const links: NavLink[] = [
   { href: '/developer', label: 'Dashboard', icon: LayoutDashboard, panel: null },
   { href: '#', label: 'Scenes', icon: Image, panel: 'scenes' },
   { href: '#', label: 'Actions', icon: Rabbit, panel: 'actions' },
+  { href: '#', label: 'Scene Groups', icon: Network, panel: 'groups' },
 ];
 
-export type PanelType = 'scenes' | 'actions' | null;
+interface DeveloperSidebarProps {
+  onPanel: (panel: PanelType) => void;
+  activePanel: PanelType;
+  onHighlightSceneGroup: (sceneIds: string[]) => void;
+  onResetHighlight: () => void;
+}
 
-export function DeveloperSidebar({ onPanel, activePanel }: { onPanel: (panel: PanelType) => void; activePanel: PanelType }) {
-    const pathname = usePathname();
-    const { contextualControls } = useUiStore();
-    
-    return (
-      <aside
-        className="sticky top-10 h-[calc(100vh-40px)] bg-slate-100 flex flex-col items-center border-r border-slate-200 z-30"
-        style={{ width: 64, minWidth: 64 }}
-      >
-        <nav className="flex-1 flex flex-col gap-2 mt-4 w-full items-center">
-          {links.map(link => {
-            const Icon = link.icon;
-            const isButton = link.href === '#';
-            const isActive = isButton ? activePanel === link.panel : pathname === link.href;
+export function DeveloperSidebar({ onPanel, activePanel, onHighlightSceneGroup, onResetHighlight }: DeveloperSidebarProps) {
+  const pathname = usePathname();
+  const { contextualControls } = useUiStore();
 
-            if (isButton) {
-                return (
-                    <button
-                        key={link.label}
-                        onClick={() => onPanel(link.panel as PanelType)}
-                        className={`flex flex-col items-center justify-center w-full py-2 rounded transition-colors ${
-                            isActive ? 'bg-blue-200 text-blue-900' : 'text-slate-800 hover:bg-slate-200'
-                        }`}
-                        style={{ lineHeight: 1.1, fontSize: '10px' }}
-                        title={link.label}
-                    >
-                      <Icon size={22} className={isActive ? 'text-blue-700' : 'text-slate-500'} />
-                      <span className="mt-1 font-small text-center">{link.label}</span>
-                    </button>
-                )
-            }
+  return (
+    <aside
+      className="sticky top-10 h-[calc(100vh-40px)] bg-slate-100 flex flex-col items-center border-r border-slate-200 z-30"
+      style={{ width: 64, minWidth: 64 }}
+    >
+      <nav className="flex-1 flex flex-col gap-2 mt-4 w-full items-center">
+        {links.map(link => {
+          const Icon = link.icon;
+          const isButton = link.href === '#';
+          const isActive = isButton ? activePanel === link.panel : pathname === link.href;
 
+          if (isButton) {
             return (
-              <Link
-                key={link.href}
-                href={link.href}
+              <button
+                key={link.label}
+                onClick={() => onPanel(link.panel)}
                 className={`flex flex-col items-center justify-center w-full py-2 rounded transition-colors ${
                   isActive ? 'bg-blue-200 text-blue-900' : 'text-slate-800 hover:bg-slate-200'
                 }`}
@@ -63,36 +64,59 @@ export function DeveloperSidebar({ onPanel, activePanel }: { onPanel: (panel: Pa
               >
                 <Icon size={22} className={isActive ? 'text-blue-700' : 'text-slate-500'} />
                 <span className="mt-1 font-small text-center">{link.label}</span>
-              </Link>
+              </button>
             );
-          })}
-        
-          {contextualControls.length > 0 && (
-            <div className="w-full border-t border-slate-200 my-2"></div>
-          )}
+          }
 
-          {contextualControls.map((control) => {
-              const Icon = control.icon;
-              return (
-                  <button
-                      key={control.id}
-                      onClick={control.onClick}
-                      className={`flex flex-col items-center justify-center w-full py-2 rounded text-slate-800 hover:bg-slate-200 transition-colors`}
-                      style={{ lineHeight: 1.1, fontSize: '10px' }}
-                      title={control.label}
-                  >
-                  <Icon size={22} className={'text-slate-500'} />
-                  <span className="mt-1 font-small text-center">{control.label}</span>
-                  </button>
-              )
-          })}
-        </nav>
-      </aside>
-    );
-  }
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`flex flex-col items-center justify-center w-full py-2 rounded transition-colors ${
+                isActive ? 'bg-blue-200 text-blue-900' : 'text-slate-800 hover:bg-slate-200'
+              }`}
+              style={{ lineHeight: 1.1, fontSize: '10px' }}
+              title={link.label}
+            >
+              <Icon size={22} className={isActive ? 'text-blue-700' : 'text-slate-500'} />
+              <span className="mt-1 font-small text-center">{link.label}</span>
+            </Link>
+          );
+        })}
 
+        {contextualControls.length > 0 && (
+          <div className="w-full border-t border-slate-200 my-2"></div>
+        )}
 
-export function SlidingPanel({ openPanel, onClose, gameId }: { openPanel: PanelType; onClose: () => void; gameId: string | null; }) {
+        {contextualControls.map((control) => {
+          const Icon = control.icon;
+          return (
+            <button
+              key={control.id}
+              onClick={control.onClick}
+              className={`flex flex-col items-center justify-center w-full py-2 rounded text-slate-800 hover:bg-slate-200 transition-colors`}
+              style={{ lineHeight: 1.1, fontSize: '10px' }}
+              title={control.label}
+            >
+              <Icon size={22} className={'text-slate-500'} />
+              <span className="mt-1 font-small text-center">{control.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+    </aside>
+  );
+}
+
+interface SlidingPanelProps {
+  openPanel: PanelType;
+  onClose: () => void;
+  gameId: string | null;
+  onHighlightSceneGroup: (sceneIds: string[]) => void;
+  onResetHighlight: () => void;
+}
+
+export function SlidingPanel({ openPanel, onClose, gameId, onHighlightSceneGroup, onResetHighlight }: SlidingPanelProps) {
   let header = '';
   let content = null;
 
@@ -104,11 +128,21 @@ export function SlidingPanel({ openPanel, onClose, gameId }: { openPanel: PanelT
     case 'scenes':
       header = 'Scene Manager';
       content = <SceneManagerPanel />;
-      // content = <SceneManagerPanel gameId={gameId} />;
       break;
     case 'actions':
       header = 'Action Manager';
       content = <ActionManagerPanel gameId={gameId} />;
+      break;
+    case 'groups':
+      header = 'Scene Groups';
+      content = (
+        <ReactFlowProvider>
+          <SceneGroupPanel 
+            onHighlightSceneGroup={onHighlightSceneGroup}
+            onResetHighlight={onResetHighlight}
+          />
+        </ReactFlowProvider>
+      );
       break;
   }
 

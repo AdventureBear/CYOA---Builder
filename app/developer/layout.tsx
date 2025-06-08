@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { DeveloperSidebar, SlidingPanel } from '@/components/Dev/DeveloperSidebar';
 import type { PanelType } from '@/components/Dev/DeveloperSidebar';
@@ -18,6 +18,14 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
     setOpenPanel(prev => (prev === panel ? null : panel));
   };
 
+  const handleHighlightSceneGroup = useCallback((sceneIds: string[]) => {
+    (window as any).highlightHandlers?.onHighlightSceneGroup?.(sceneIds);
+  }, []);
+
+  const handleResetHighlight = useCallback(() => {
+    (window as any).highlightHandlers?.onResetHighlight?.();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <div className="w-full bg-blue-900 h-10 text-white flex items-center px-4 gap-2" style={{ minHeight: 40 }}>
@@ -28,8 +36,19 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
         <span className="ml-2 text-xs opacity-70">Build Your Own Choose Your Own Adventure</span>
       </div>
       <div className="flex flex-1 min-h-0 h-[calc(100vh-40px)]">
-        <DeveloperSidebar onPanel={handlePanel} activePanel={openPanel} />
-        <SlidingPanel openPanel={openPanel} onClose={() => setOpenPanel(null)} gameId={gameId} />
+        <DeveloperSidebar 
+          onPanel={handlePanel} 
+          activePanel={openPanel}
+          onHighlightSceneGroup={handleHighlightSceneGroup}
+          onResetHighlight={handleResetHighlight}
+        />
+        <SlidingPanel 
+          openPanel={openPanel} 
+          onClose={() => setOpenPanel(null)} 
+          gameId={gameId}
+          onHighlightSceneGroup={handleHighlightSceneGroup}
+          onResetHighlight={handleResetHighlight}
+        />
         <main className="flex-1 min-w-0 flex flex-col min-h-0 relative pl-16">
           {children}
         </main>
