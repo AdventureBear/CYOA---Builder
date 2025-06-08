@@ -1,6 +1,6 @@
 import { Scene } from "@/app/types";
 import { Edge } from 'reactflow';
-import { addEdge } from "reactflow";
+// import { addEdge } from "reactflow";
 
 // Save a scene and update the store
 export async function saveSceneAndUpdateStore({

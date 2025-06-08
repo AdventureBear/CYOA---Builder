@@ -1,14 +1,14 @@
 // components/SceneNode.tsx
 import { NodeProps, Handle, Position } from 'reactflow';
 import React from 'react';
-import { useParams } from 'next/navigation';
+// import { useParams } from 'next/navigation';
 
 export default function SceneNode({ id, data, selected }: NodeProps<{
   label: string;
   onEdit: (id: string) => void;
 }>) {
-  const params = useParams();
-  const gameId = params?.game as string;
+  // const params = useParams();
+  // const gameId = params?.game as string;
 
   return (
     <div

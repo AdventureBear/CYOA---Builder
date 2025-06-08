@@ -5,7 +5,7 @@ import type { Action, Scene, Condition, StateChange } from '@/app/types';
 import { useSearchParams } from 'next/navigation';
 import ReactFlow, { Background, Controls, MiniMap, Node, Edge, NodeProps } from 'reactflow';
 import 'reactflow/dist/style.css';
-import DeveloperNav from './DeveloperNav';
+// import DeveloperNav from './DeveloperNav';
 
 // Extend Choice type locally to include stateChanges for dependency search
 interface ChoiceWithStateChanges {
@@ -685,7 +685,9 @@ export default function StoryThreader() {
 
   return (
     <div style={{ padding: 32, background: '#f8fafc', minHeight: '100vh' }}>
-      <DeveloperNav />
+      {/* <DeveloperNav /> */}
+
+      **Thsi is were dev elper nave was ** 
       <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16 }}>Story Threader (Tree View)</h2>
       <div style={{ marginBottom: 24 }}>
         <label style={{ fontWeight: 600, fontSize: 16, marginRight: 8 }}>Endpoint Action:</label>

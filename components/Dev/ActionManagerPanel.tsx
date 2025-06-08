@@ -2,10 +2,11 @@
 import { useState, useMemo } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { useUiStore } from '@/store/uiStore';
-import { Action, Scene } from '@/app/types';
+import { Action } from '@/app/types';
 import ActionModal from '@/components/Dev/ActionModal';
 import { ActionSidebarListItem } from './ActionManager/ActionSidebarListItem';
 import { ActionSidebarDetailModal } from './ActionManager/ActionSidebarDetailModal';
+import { saveActionAndUpdateStore, deleteActionAndUpdateStore } from '@/lib/actionHandlers';
 
 // AccordionSection component - might move to a shared file later
 function AccordionSection({ title, open, onClick, children, color }: { title: string; open: boolean; onClick: () => void; children: React.ReactNode; color?: string }) {
@@ -62,19 +63,32 @@ export default function ActionManagerPanel({ gameId }: { gameId: string }) {
 
     const handleSave = async (updatedAction: Action) => {
         try {
-            const response = await fetch('/api/saveAction', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: updatedAction, game: gameId }),
+            await saveActionAndUpdateStore({
+                form: updatedAction,
+                actionsObj,
+                setActions,
+                game: gameId,
             });
-            if (!response.ok) throw new Error('Failed to save action');
-            
-            // The existing endpoint doesn't return the updated list, so we update the local state manually.
-            setActions({ ...actionsObj, [updatedAction.id]: updatedAction });
             setEditingAction(null);
         } catch (error) {
             console.error(error);
-            // Optionally, show an error to the user
+            alert(error instanceof Error ? error.message : 'Failed to save action');
+        }
+    };
+
+    const handleDelete = async (action: Action) => {
+        try {
+            await deleteActionAndUpdateStore({
+                actionId: action.id,
+                gameId,
+                actions: actionsObj || {},
+                setActions,
+            });
+            setDetailActionId(null);
+            setDeletingAction(null);
+        } catch (error) {
+            console.error(error);
+            alert(error instanceof Error ? error.message : 'Failed to delete action');
         }
     };
 
@@ -87,11 +101,6 @@ export default function ActionManagerPanel({ gameId }: { gameId: string }) {
         const newId = `${action.id}_copy`;
         const newAction = { ...action, id: newId };
         setEditingAction(newAction);
-    }
-
-    const handleDelete = (action: Action) => {
-        setDetailActionId(null);
-        setDeletingAction(action);
     }
 
     if (!actionsObj) return <div className="p-4">Loading actions...</div>;
@@ -143,3 +152,4 @@ export default function ActionManagerPanel({ gameId }: { gameId: string }) {
         )}
     </>;
 }
+

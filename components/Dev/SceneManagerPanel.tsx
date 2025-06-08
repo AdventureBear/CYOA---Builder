@@ -6,11 +6,11 @@ import { useUiStore } from '@/store/uiStore';
 import { getSceneCategories } from '@/lib/sceneUtils';
 import { SceneSidebarListItem } from '@/components/Dev/SceneManager/SceneSidebarListItem';
 import { SceneSidebarDetailModal } from '@/components/Dev/SceneManager/SceneSidebarDetailModal';
-import { Scene } from '@/app/types';
-import { Button } from '@/components/ui/button';
-import Modal from '@/components/ui/Modal';
-import SceneForm from '@/components/Dev/SceneForm';
-import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
+// import { Scene } from '@/app/types';
+// import { Button } from '@/components/ui/button';
+// import Modal from '@/components/ui/Modal';
+// import SceneForm from '@/components/Dev/SceneForm';
+// import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
 
 // AccordionSection component
 function AccordionSection({ title, open, onClick, children, color }: { title: string; open: boolean; onClick: () => void; children: React.ReactNode; color?: string }) {
@@ -32,7 +32,9 @@ function AccordionSection({ title, open, onClick, children, color }: { title: st
     );
 }
 
-export default function SceneManagerPanel({ gameId }: { gameId: string }) {
+// export default function SceneManagerPanel({ gameId }: { gameId: string }) {
+    export default function SceneManagerPanel() {
+
     const { sceneManagerAccordion, toggleSceneManagerAccordion } = useUiStore();
     const [detailSceneId, setDetailSceneId] = useState<string | null>(null);
     const [detailSceneRect, setDetailSceneRect] = useState<{ top: number; height: number } | null>(null);

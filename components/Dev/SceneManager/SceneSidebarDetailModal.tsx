@@ -49,7 +49,7 @@ export function SceneSidebarDetailModal({ scene, onEdit, onDelete, onCopy, onClo
   }, [isMenuOpen]);
 
   // Choices as A), B), C)...
-  const choiceLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  // const choiceLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   // Modal height (estimate, or could use ref for dynamic)
   const modalHeight = 380;
   const modalWidth = 450;

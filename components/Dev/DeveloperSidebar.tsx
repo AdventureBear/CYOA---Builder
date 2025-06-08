@@ -103,7 +103,8 @@ export function SlidingPanel({ openPanel, onClose, gameId }: { openPanel: PanelT
   switch (openPanel) {
     case 'scenes':
       header = 'Scene Manager';
-      content = <SceneManagerPanel gameId={gameId} />;
+      content = <SceneManagerPanel />;
+      // content = <SceneManagerPanel gameId={gameId} />;
       break;
     case 'actions':
       header = 'Action Manager';

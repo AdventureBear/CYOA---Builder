@@ -11,11 +11,11 @@ import ReactFlow, {
     Edge,
     Node,
     Position,
-    MarkerType,
+    // MarkerType,
     NodeMouseHandler,
     addEdge,
     useReactFlow,
-    Panel,
+    // Panel,
     Connection,
     ReactFlowProvider,
 } from 'reactflow';
@@ -29,9 +29,9 @@ import SceneNode from '@/components/Dev/SceneNode';
 import SceneForm from '@/components/Dev/SceneForm';
 import Modal from '@/components/ui/Modal';
 import AddSceneModal from '@/components/Dev/AddSceneModal';
-import { saveSceneAndUpdateStore, deleteSceneAndUpdateStore } from '@/lib/sceneHandlers';
+import { saveSceneAndUpdateStore } from '@/lib/sceneHandlers';
 import { useUiStore, ContextualControl } from '@/store/uiStore';
-import { useGameStore } from '@/store/gameStore';
+// import { useGameStore } from '@/store/gameStore';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import dagre from 'dagre';
 import NewChoiceModal from '@/components/Dev/NewChoiceModal';
@@ -91,7 +91,7 @@ function GameEditor() {
     const [newChoiceConnection, setNewChoiceConnection] = useState<Connection | null>(null);
     const [selectedElement, setSelectedElement] = useState<{ type: 'node' | 'edge'; id: string } | null>(null);
     const [focusElement, setFocusElement] = useState<{ type: 'node' | 'edge'; id: string } | null>(null);
-    const isInitialLayoutDone = useRef(false);
+    // const isInitialLayoutDone = useRef(false);
     const clickTimer = useRef<NodeJS.Timeout | null>(null);
 
     const { fitView, getNodes, getEdges } = useReactFlow();
@@ -423,9 +423,9 @@ function GameEditor() {
         };
     }, [setContextualControls, clearContextualControls, handlePlaytest, handleAutoLayout]);
 
-    const onConnect = useCallback((connection: Connection) => {
-        setNewChoiceConnection(connection);
-    }, []);
+    // const onConnect = useCallback((connection: Connection) => {
+    //     setNewChoiceConnection(connection);
+    // }, []);
 
     const handleCreateNewChoice = async (choiceText: string) => {
         if (!newChoiceConnection || !scenes || !setScenes) return;

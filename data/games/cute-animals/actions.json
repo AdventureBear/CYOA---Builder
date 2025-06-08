@@ -27,9 +27,10 @@
         ],
         "choices": [
           {
-            "text": "Read the message",
+            "text": "Read the message and learn what it says",
             "resultMessage": "The note says: 'Meet me at the meadow at dusk.'",
-            "resultButtonText": "Put the note away"
+            "resultButtonText": "Put the note away",
+            "nextScene": "oak_tree"
           }
         ]
       }
