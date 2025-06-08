@@ -11,7 +11,7 @@ import ReactFlow, {
     Edge,
     Node,
     Position,
-    // MarkerType,
+    MarkerType,
     NodeMouseHandler,
 
     useReactFlow,
@@ -229,7 +229,6 @@ function GameEditor() {
             },
         }));
 
-        // Track bidirectional relationships
         const edgeMap = new Map<string, {
             source: string;
             target: string;
@@ -237,7 +236,6 @@ function GameEditor() {
             labels: string[];
         }>();
 
-        // First pass: collect all edges
         Object.values(scenes).forEach(scene => {
             scene.choices?.forEach(choice => {
                 if (choice.nextNodeId && scenes[choice.nextNodeId]) {
@@ -246,12 +244,10 @@ function GameEditor() {
                     const edgeId = createEdgeId(source, target);
                     
                     if (edgeMap.has(edgeId)) {
-                        // Edge already exists, update it
                         const existingEdge = edgeMap.get(edgeId)!;
                         existingEdge.isBidirectional = true;
                         existingEdge.labels.push(choice.text);
                     } else {
-                        // Create new edge
                         edgeMap.set(edgeId, {
                             source,
                             target,
@@ -263,14 +259,27 @@ function GameEditor() {
             });
         });
 
-        // Convert to React Flow edges
+        // Convert to React Flow edges with markers
         const initialEdges: Edge[] = Array.from(edgeMap.values()).map(({ source, target, isBidirectional, labels }) => ({
             id: createEdgeId(source, target),
             source,
             target,
             animated: true,
             label: labels.join(' / '),
-            data: { isBidirectional }
+            data: { isBidirectional },
+            markerEnd: {
+                type: MarkerType.Arrow,
+                width: 20,
+                height: 20,
+            },
+            markerStart: isBidirectional ? {
+                type: MarkerType.Arrow,
+                width: 20,
+                height: 20,
+            } : undefined,
+            style: {
+                strokeWidth: 2,
+            },
         }));
         
         const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(initialNodes, initialEdges);
@@ -516,19 +525,47 @@ function GameEditor() {
         setNewChoiceConnection(null);
     };
 
-    // Add this helper function
+    // Modify the edge merging function to handle markers
     const mergeReciprocalEdges = (edges: Edge[], scenes: Record<string, Scene>): Edge[] => {
         const edgeMap = new Map<string, Edge>();
         
         edges.forEach(edge => {
             const edgeId = createEdgeId(edge.source, edge.target);
             if (edgeMap.has(edgeId)) {
-                // Merge labels if they're different
                 const existing = edgeMap.get(edgeId)!;
                 const labels = new Set([existing.label, edge.label].filter(Boolean));
                 existing.label = Array.from(labels).join(' / ');
+                // Add start marker if it becomes bidirectional
+                existing.markerStart = {
+                    type: MarkerType.Arrow,
+                    width: 20,
+                    height: 20,
+                };
             } else {
-                edgeMap.set(edgeId, { ...edge, id: edgeId });
+                const isBidirectional = edges.some(e => 
+                    e !== edge && 
+                    ((e.source === edge.target && e.target === edge.source) ||
+                     (createEdgeId(e.source, e.target) === edgeId))
+                );
+                
+                edgeMap.set(edgeId, { 
+                    ...edge, 
+                    id: edgeId,
+                    markerEnd: {
+                        type: MarkerType.Arrow,
+                        width: 20,
+                        height: 20,
+                    },
+                    markerStart: isBidirectional ? {
+                        type: MarkerType.Arrow,
+                        width: 20,
+                        height: 20,
+                    } : undefined,
+                    style: {
+                        ...edge.style,
+                        strokeWidth: 2,
+                    },
+                });
             }
         });
 
