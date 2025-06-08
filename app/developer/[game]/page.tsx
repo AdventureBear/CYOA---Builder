@@ -208,9 +208,16 @@ function GameEditor() {
 
     }, [getNodes, getEdges, setRfNodes]);
 
-    // Initial layout effect
+    // Add this helper function
+    const createEdgeId = (source: string, target: string) => {
+        // Always create edge ID with alphabetically sorted nodes to ensure consistency
+        const [first, second] = [source, target].sort();
+        return `${first}-${second}`;
+    };
+
+    // Modify the initial layout effect
     useEffect(() => {
-        if (!scenes || rfNodes.length > 0) return; // Prevent re-running after initial setup
+        if (!scenes || rfNodes.length > 0) return;
 
         const initialNodes: Node[] = Object.values(scenes).map(scene => ({
             id: scene.id,
@@ -218,24 +225,53 @@ function GameEditor() {
             position: { x: 0, y: 0 },
             data: { 
                 label: scene.id, 
-                onEdit: handleEdit, // Pass the handleEdit function itself
+                onEdit: handleEdit,
             },
         }));
 
-        const initialEdges: Edge[] = [];
+        // Track bidirectional relationships
+        const edgeMap = new Map<string, {
+            source: string;
+            target: string;
+            isBidirectional: boolean;
+            labels: string[];
+        }>();
+
+        // First pass: collect all edges
         Object.values(scenes).forEach(scene => {
             scene.choices?.forEach(choice => {
                 if (choice.nextNodeId && scenes[choice.nextNodeId]) {
-                    initialEdges.push({
-                        id: `${scene.id}-${choice.nextNodeId}`,
-                        source: scene.id,
-                        target: choice.nextNodeId,
-                        animated: true,
-                        label: choice.text,
-                    });
+                    const source = scene.id;
+                    const target = choice.nextNodeId;
+                    const edgeId = createEdgeId(source, target);
+                    
+                    if (edgeMap.has(edgeId)) {
+                        // Edge already exists, update it
+                        const existingEdge = edgeMap.get(edgeId)!;
+                        existingEdge.isBidirectional = true;
+                        existingEdge.labels.push(choice.text);
+                    } else {
+                        // Create new edge
+                        edgeMap.set(edgeId, {
+                            source,
+                            target,
+                            isBidirectional: false,
+                            labels: [choice.text]
+                        });
+                    }
                 }
             });
         });
+
+        // Convert to React Flow edges
+        const initialEdges: Edge[] = Array.from(edgeMap.values()).map(({ source, target, isBidirectional, labels }) => ({
+            id: createEdgeId(source, target),
+            source,
+            target,
+            animated: true,
+            label: labels.join(' / '),
+            data: { isBidirectional }
+        }));
         
         const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(initialNodes, initialEdges);
 
@@ -429,6 +465,7 @@ function GameEditor() {
         setShowNewChoiceModal(true);
     }, []);
 
+    // Modify the save handler to use the same edge merging logic
     const handleCreateNewChoice = async (choiceText: string) => {
         if (!newChoiceConnection || !scenes || !setScenes) return;
 
@@ -438,13 +475,20 @@ function GameEditor() {
         const sourceScene = scenes[source];
         if (!sourceScene) return;
 
+        // Check if there's already a choice going the other way
+        const targetScene = scenes[target];
+        const hasReciprocalChoice = targetScene?.choices?.some(c => c.nextNodeId === source);
+
+        // If there's already an edge between these nodes, update it instead of creating a new one
+        const existingEdgeId = createEdgeId(source, target);
+        const existingEdge = rfEdges.find(e => e.id === existingEdgeId);
+
         const newChoice: Choice = { text: choiceText, nextNodeId: target };
         const updatedScene: Scene = {
             ...sourceScene,
             choices: [...(sourceScene.choices || []), newChoice],
         };
 
-        // Save the scene and update the store
         try {
             await saveSceneAndUpdateStore({
                 form: updatedScene,
@@ -453,16 +497,42 @@ function GameEditor() {
                 scenesObj: scenes,
                 setScenes,
                 game: gameId,
-                setRfEdges,
+                setRfEdges: (edges) => {
+                    if (typeof edges === 'function') {
+                        setRfEdges(currentEdges => {
+                            const newEdges = edges(currentEdges);
+                            return mergeReciprocalEdges(newEdges, scenes);
+                        });
+                    } else {
+                        setRfEdges(mergeReciprocalEdges(edges, scenes));
+                    }
+                },
             });
         } catch (error) {
             console.error('Failed to save scene:', error);
-            // TODO: Show error toast
         }
 
-        // Reset state
         setShowNewChoiceModal(false);
         setNewChoiceConnection(null);
+    };
+
+    // Add this helper function
+    const mergeReciprocalEdges = (edges: Edge[], scenes: Record<string, Scene>): Edge[] => {
+        const edgeMap = new Map<string, Edge>();
+        
+        edges.forEach(edge => {
+            const edgeId = createEdgeId(edge.source, edge.target);
+            if (edgeMap.has(edgeId)) {
+                // Merge labels if they're different
+                const existing = edgeMap.get(edgeId)!;
+                const labels = new Set([existing.label, edge.label].filter(Boolean));
+                existing.label = Array.from(labels).join(' / ');
+            } else {
+                edgeMap.set(edgeId, { ...edge, id: edgeId });
+            }
+        });
+
+        return Array.from(edgeMap.values());
     };
 
     if (loading || !scenes) return <div className="h-screen w-full flex items-center justify-center">Loading game data...</div>;
