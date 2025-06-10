@@ -147,6 +147,12 @@ interface ActionChain {
     level: number;
 }
 
+interface SceneGroup {
+    scene: Node;
+    actions: ActionChain[];
+    isDuplicate: boolean;
+}
+
 const getLayoutedElements = (
     nodes: Node[], 
     edges: Edge[], 
@@ -154,9 +160,10 @@ const getLayoutedElements = (
     direction = 'LR'
 ) => {
     const SPACING = {
-        HORIZONTAL: 300,    // Space between action columns
-        VERTICAL: 200,      // Space between chains
+        HORIZONTAL: 300,    // Space between columns
+        VERTICAL: 200,      // Space between different action chains
         OUTCOME: 100,       // Space between outcomes
+        ACTION: 150,        // Space between actions in same scene group
     };
 
     // Debug logging
@@ -441,10 +448,160 @@ const getLayoutedElements = (
         };
     }
 
-    // Layout all chains
+    // After building all action chains, group them by source scene
+    function groupActionChainsByScene(chains: ActionChain[]): SceneGroup[] {
+        const sceneGroups = new Map<string, SceneGroup>();
+        
+        chains.forEach(chain => {
+            if (chain.sourceScene) {
+                // Use the original scene ID (before our cloning) as the key
+                const originalSceneId = chain.sourceScene.node.id.split('-for-')[0];
+                
+                if (!sceneGroups.has(originalSceneId)) {
+                    sceneGroups.set(originalSceneId, {
+                        scene: {
+                            ...chain.sourceScene.node,
+                            id: originalSceneId // Use original ID for the shared scene
+                        },
+                        actions: [],
+                        isDuplicate: chain.sourceScene.isDuplicate
+                    });
+                }
+                sceneGroups.get(originalSceneId)?.actions.push(chain);
+            } else {
+                // Handle chains without source scenes
+                sceneGroups.set(`standalone-${chain.action.id}`, {
+                    scene: null as any,
+                    actions: [chain],
+                    isDuplicate: false
+                });
+            }
+        });
+
+        return Array.from(sceneGroups.values());
+    }
+
+    function layoutSceneGroup(
+        group: SceneGroup,
+        startX: number,
+        startY: number
+    ): { width: number, height: number } {
+        let maxX = startX;
+        let maxY = startY;
+
+        // Position the shared scene if it exists
+        if (group.scene) {
+            group.scene.position = { x: startX, y: startY };
+            group.scene.targetPosition = Position.Right;
+            group.scene.sourcePosition = Position.Right;
+            newNodes.push(group.scene);
+        }
+
+        // Position each action chain in the group
+        group.actions.forEach((chain, index) => {
+            const actionY = startY + (index * SPACING.ACTION);
+            
+            // Position the action
+            chain.action.position = {
+                x: startX + SPACING.HORIZONTAL,
+                y: actionY
+            };
+            chain.action.targetPosition = Position.Left;
+            chain.action.sourcePosition = Position.Right;
+            newNodes.push(chain.action);
+
+            // Connect shared scene to action
+            if (group.scene) {
+                newEdges.push({
+                    id: `edge-${group.scene.id}-to-${chain.action.id}`,
+                    source: group.scene.id,
+                    target: chain.action.id,
+                    type: 'default',
+                    animated: true
+                });
+            }
+
+            // Position outcomes and their chains
+            let currentX = startX + SPACING.HORIZONTAL;
+            chain.outcomes.forEach((outcome, i) => {
+                const outcomeY = actionY + (i * SPACING.OUTCOME);
+                outcome.node.position = { 
+                    x: currentX + (SPACING.HORIZONTAL * 0.5), 
+                    y: outcomeY 
+                };
+                outcome.node.targetPosition = Position.Left;
+                outcome.node.sourcePosition = Position.Right;
+                newNodes.push(outcome.node);
+                
+                newEdges.push({
+                    id: `edge-${chain.action.id}-to-${outcome.node.id}`,
+                    source: chain.action.id,
+                    target: outcome.node.id,
+                    type: 'default',
+                    animated: true
+                });
+
+                // Position next actions
+                let nextX = currentX + SPACING.HORIZONTAL;
+                outcome.nextActions.forEach((nextChain, j) => {
+                    // Add edge to next action
+                    newEdges.push({
+                        id: `edge-${outcome.node.id}-to-${nextChain.action.id}`,
+                        source: outcome.node.id,
+                        target: nextChain.action.id,
+                        type: 'default',
+                        animated: true,
+                        style: {
+                            stroke: '#f59e0b' // Amber color for choice connections
+                        }
+                    });
+
+                    const { width, height } = layoutChain(
+                        nextChain,
+                        nextX,
+                        outcomeY + (j * SPACING.VERTICAL)
+                    );
+                    maxX = Math.max(maxX, nextX + width);
+                    maxY = Math.max(maxY, outcomeY + height);
+                });
+            });
+
+            // Handle destination scene
+            if (chain.destScene) {
+                chain.destScene.node.position = { 
+                    x: maxX + SPACING.HORIZONTAL, 
+                    y: actionY 
+                };
+                chain.destScene.node.targetPosition = Position.Left;
+                chain.destScene.node.sourcePosition = Position.Left;
+                newNodes.push(chain.destScene.node);
+                
+                if (chain.outcomes.length > 0) {
+                    const lastOutcome = chain.outcomes[chain.outcomes.length - 1];
+                    newEdges.push({
+                        id: `edge-${lastOutcome.node.id}-to-${chain.destScene.node.id}`,
+                        source: lastOutcome.node.id,
+                        target: chain.destScene.node.id,
+                        type: 'default',
+                        animated: true
+                    });
+                }
+            }
+        });
+
+        return {
+            width: maxX - startX,
+            height: Math.max(maxY - startY, SPACING.VERTICAL)
+        };
+    }
+
+    // Group chains by their source scene
+    const sceneGroups = groupActionChainsByScene(actionChains);
+
+    // Layout each scene group
     let currentY = 0;
-    actionChains.forEach(chain => {
-        const { height } = layoutChain(chain, 0, currentY);
+    sceneGroups.forEach(group => {
+        const { height } = layoutSceneGroup(group, 0, currentY);
         currentY += height + SPACING.VERTICAL;
     });
 
