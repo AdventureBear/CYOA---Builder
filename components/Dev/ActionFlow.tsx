@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, {  useEffect, useMemo } from 'react';
 import ReactFlow, {
     useNodesState,
     useEdgesState,
@@ -12,7 +12,7 @@ import ReactFlow, {
     ReactFlowProvider,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Action, Choice, Scene } from '@/app/types';
+import { Action, Scene, Condition } from '@/app/types';
 import ActionNode from './ActionNode';
 import ActionFlowSceneNode from './ActionFlowSceneNode';
 import ActionFlowDestinationNode from './ActionFlowDestinationNode';
@@ -37,84 +37,84 @@ const nodeTypes = {
 // Dagre graph setup
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
-const nodeWidth = 172;
+// const nodeWidth = 172;
 
-function estimateNodeHeight(node: Node): number {
-    if (node.type === 'outcome') {
-        const outcome = (node.data as any).outcome;
-        let height = 80; // Base height for header and padding
+// function estimateNodeHeight(node: Node): number {
+//     if (node.type === 'outcome') {
+//         const outcome = (node.data as any).outcome;
+//         let height = 80; // Base height for header and padding
         
-        if (outcome.conditions?.length) {
-            height += 20 + (outcome.conditions.length * 20);
-        }
-        if (outcome.description) {
-            height += 40;
-        }
-        if (outcome.stateChanges?.length) {
-            height += 20 + (outcome.stateChanges.length * 20);
-        }
-        if (outcome.nextSceneOverride) {
-            height += 20;
-        }
-        return Math.min(height, 200); // Cap at max collapsed height
-    }
+//         if (outcome.conditions?.length) {
+//             height += 20 + (outcome.conditions.length * 20);
+//         }
+//         if (outcome.description) {
+//             height += 40;
+//         }
+//         if (outcome.stateChanges?.length) {
+//             height += 20 + (outcome.stateChanges.length * 20);
+//         }
+//         if (outcome.nextSceneOverride) {
+//             height += 20;
+//         }
+//         return Math.min(height, 200); // Cap at max collapsed height
+//     }
     
-    // Default heights for other node types
-    switch (node.type) {
-        case 'action':
-            return 100;
-        case 'scene':
-            return 60;
-        case 'destination':
-            return 60;
-        default:
-            return 80;
-    }
-}
+//     // Default heights for other node types
+//     switch (node.type) {
+//         case 'action':
+//             return 100;
+//         case 'scene':
+//             return 60;
+//         case 'destination':
+//             return 60;
+//         default:
+//             return 80;
+//     }
+// }
 
-function findActionDependencies(actions: Record<string, Action>): Map<string, Set<string>> {
-    // Map of actionId -> Set of dependent actionIds
-    const dependencies = new Map<string, Set<string>>();
+// function findActionDependencies(actions: Record<string, Action>): Map<string, Set<string>> {
+//     // Map of actionId -> Set of dependent actionIds
+//     const dependencies = new Map<string, Set<string>>();
     
-    Object.values(actions).forEach(action => {
-        action.outcomes?.forEach(outcome => {
-            outcome.choices?.forEach(choice => {
-                if (choice.nextAction) {
-                    // Get or create the set of dependencies for this action
-                    if (!dependencies.has(action.id)) {
-                        dependencies.set(action.id, new Set());
-                    }
-                    dependencies.get(action.id)?.add(choice.nextAction);
-                }
-            });
-        });
-    });
+//     Object.values(actions).forEach(action => {
+//         action.outcomes?.forEach(outcome => {
+//             outcome.choices?.forEach(choice => {
+//                 if (choice.nextAction) {
+//                     // Get or create the set of dependencies for this action
+//                     if (!dependencies.has(action.id)) {
+//                         dependencies.set(action.id, new Set());
+//                     }
+//                     dependencies.get(action.id)?.add(choice.nextAction);
+//                 }
+//             });
+//         });
+//     });
     
-    return dependencies;
-}
+//     return dependencies;
+// }
 
 // Add this helper before getLayoutedElements
-function findActionParents(edges: Edge[]): Map<string, string> {
-    const parentMap = new Map<string, string>();
+// function findActionParents(edges: Edge[]): Map<string, string> {
+//     const parentMap = new Map<string, string>();
     
-    edges.forEach(edge => {
-        if (edge.source.startsWith('outcome-') && edge.target.startsWith('action-')) {
-            // Find the parent action of this outcome
-            const outcomeParentId = edge.source.split('-')[1]; // Gets the parent action ID from outcome-parentId-index
-            parentMap.set(edge.target.replace('action-', ''), outcomeParentId);
-        }
-    });
+//     edges.forEach(edge => {
+//         if (edge.source.startsWith('outcome-') && edge.target.startsWith('action-')) {
+//             // Find the parent action of this outcome
+//             const outcomeParentId = edge.source.split('-')[1]; // Gets the parent action ID from outcome-parentId-index
+//             parentMap.set(edge.target.replace('action-', ''), outcomeParentId);
+//         }
+//     });
     
-    return parentMap;
-}
+//     return parentMap;
+// }
 
-interface TreeNode {
-    node: Node;
-    children: TreeNode[];
-    width: number;  // Width of this subtree
-    depth: number;  // Depth in the tree
-    siblingIndex: number; // Position among siblings
-}
+// interface TreeNode {
+//     node: Node;
+//     children: TreeNode[];
+//     width: number;  // Width of this subtree
+//     depth: number;  // Depth in the tree
+//     siblingIndex: number; // Position among siblings
+// }
 
 interface ActionNode {
     action: Node;
@@ -134,7 +134,7 @@ interface ActionChain {
     outcomes: {
         node: Node;
         nextActions: ActionChain[];
-        conditions: string[];
+        conditions: Condition[];
     }[];
     sourceScene?: {
         node: Node;
@@ -165,6 +165,8 @@ const getLayoutedElements = (
         OUTCOME: 100,       // Space between outcomes
         ACTION: 150,        // Space between actions in same scene group
     };
+    console.log('actions', actions);
+    console.log('direction', direction);
 
     // Debug logging
     console.log('Initial nodes:', nodes.map(n => ({ id: n.id, type: n.type })));
@@ -282,7 +284,7 @@ const getLayoutedElements = (
                 outcomes.push({
                     node: outcomeNode,
                     nextActions,
-                    conditions: (outcomeNode.data as any).outcome?.conditions || []
+                    conditions: (outcomeNode.data as { outcome?: { conditions?: Condition[] } }).outcome?.conditions || []
                 });
             }
         });
@@ -397,7 +399,7 @@ const getLayoutedElements = (
             });
 
             // Position next actions
-            let nextX = startX + (SPACING.HORIZONTAL * 2);
+            const nextX = startX + (SPACING.HORIZONTAL * 2);
             outcome.nextActions.forEach((nextChain, j) => {
                 // Edge from outcome to each next action
                 newEdges.push({
@@ -471,7 +473,7 @@ const getLayoutedElements = (
             } else {
                 // Handle chains without source scenes
                 sceneGroups.set(`standalone-${chain.action.id}`, {
-                    scene: null as any,
+                    scene: null as unknown as Node,
                     actions: [chain],
                     isDuplicate: false
                 });
@@ -522,7 +524,7 @@ const getLayoutedElements = (
             }
 
             // Position outcomes and their chains
-            let currentX = startX + SPACING.HORIZONTAL;
+            const currentX = startX + SPACING.HORIZONTAL;
             chain.outcomes.forEach((outcome, i) => {
                 const outcomeY = actionY + (i * SPACING.OUTCOME);
                 outcome.node.position = { 
@@ -542,7 +544,7 @@ const getLayoutedElements = (
                 });
 
                 // Position next actions
-                let nextX = currentX + SPACING.HORIZONTAL;
+                const nextX = currentX + SPACING.HORIZONTAL;
                 outcome.nextActions.forEach((nextChain, j) => {
                     // Add edge to next action
                     newEdges.push({
@@ -611,254 +613,264 @@ const getLayoutedElements = (
     return { nodes: newNodes, edges: newEdges };
 };
 
-function findActionReferences(scenes: Record<string, Scene>, actions: Record<string, Action>): Map<string, Set<string>> {
-    // Map of actionId -> Set of sceneIds that reference it
-    const actionSceneMap = new Map<string, Set<string>>();
+// function findActionReferences(scenes: Record<string, Scene>, actions: Record<string, Action>): Map<string, Set<string>> {
+//     // Map of actionId -> Set of sceneIds that reference it
+//     const actionSceneMap = new Map<string, Set<string>>();
 
-    // Helper to add a reference
-    const addReference = (actionId: string, sceneId: string) => {
-        if (!actionSceneMap.has(actionId)) {
-            actionSceneMap.set(actionId, new Set());
-        }
-        actionSceneMap.get(actionId)?.add(sceneId);
-    };
+//     // Helper to add a reference
+//     const addReference = (actionId: string, sceneId: string) => {
+//         if (!actionSceneMap.has(actionId)) {
+//             actionSceneMap.set(actionId, new Set());
+//         }
+//         actionSceneMap.get(actionId)?.add(sceneId);
+//     };
 
-    // Check all scenes
-    Object.entries(scenes).forEach(([sceneId, scene]) => {
-        // Direct actions in scene
-        scene.actions?.forEach(actionId => {
-            addReference(actionId, sceneId);
-        });
-    });
+//     // Check all scenes
+//     Object.entries(scenes).forEach(([sceneId, scene]) => {
+//         // Direct actions in scene
+//         scene.actions?.forEach(actionId => {
+//             addReference(actionId, sceneId);
+//         });
+//     });
 
-    // Check all actions for scene overrides
-    Object.entries(actions).forEach(([actionId, action]) => {
-        action.outcomes?.forEach(outcome => {
-            // Check scene overrides
-            if (outcome.nextSceneOverride) {
-                const scene = scenes[outcome.nextSceneOverride];
-                scene?.actions?.forEach(nextActionId => {
-                    if (nextActionId) {
-                        addReference(nextActionId, outcome.nextSceneOverride!);
-                    }
-                });
-            }
-            // Check next actions in choices
-            outcome.choices?.forEach(choice => {
-                if (choice.nextAction) {
-                    // Find which scene contains this action
-                    Object.entries(scenes).forEach(([sceneId, scene]) => {
-                        if (scene.actions?.includes(choice.nextAction!) && choice.nextAction) {
-                            addReference(choice.nextAction, sceneId);
-                        }
-                    });
-                }
-            });
-        });
-    });
+//     // Check all actions for scene overrides
+//     Object.entries(actions).forEach(([actionId, action]) => {
+//         action.outcomes?.forEach(outcome => {
+//             // Check scene overrides
+//             if (outcome.nextSceneOverride) {
+//                 const scene = scenes[outcome.nextSceneOverride];
+//                 scene?.actions?.forEach(nextActionId => {
+//                     if (nextActionId) {
+//                         addReference(nextActionId, outcome.nextSceneOverride!);
+//                     }
+//                 });
+//             }
+//             // Check next actions in choices
+//             outcome.choices?.forEach(choice => {
+//                 if (choice.nextAction) {
+//                     // Find which scene contains this action
+//                     Object.entries(scenes).forEach(([sceneId, scene]) => {
+//                         if (scene.actions?.includes(choice.nextAction!) && choice.nextAction) {
+//                             addReference(choice.nextAction, sceneId);
+//                         }
+//                     });
+//                 }
+//             });
+//         });
+//     });
 
-    return actionSceneMap;
-}
+//     return actionSceneMap;
+// }
 
 function ActionFlowInner({ actions, scenes, onActionEdit, onSceneEdit }: ActionFlowProps) {
-    // First create ALL nodes before creating any edges
-    const initialNodes: Node[] = [];
-    const initialEdges: Edge[] = [];
-    const seenDestinations = new Set<string>();
+    const initialNodes: Node[] = useMemo(() => {
+        const nodes: Node[] = [];
+        const seenDestinations = new Set<string>();
 
-    // 1. Create all action nodes first
-    Object.values(actions).forEach((action) => {
-        initialNodes.push({
-            id: `action-${action.id}`,
-            type: 'action',
-            position: { x: 0, y: 0 },
-            data: {
-                action,
-                onEdit: onActionEdit ? () => onActionEdit(action.id) : undefined,
-            },
-            sourcePosition: Position.Right,
-            targetPosition: Position.Left,
-        });
-    });
-
-    // 2. Create all outcome nodes
-    Object.values(actions).forEach((action) => {
-        action.outcomes?.forEach((outcome, outcomeIndex) => {
-            const outcomeId = `outcome-${action.id}-${outcomeIndex}`;
-            initialNodes.push({
-                id: outcomeId,
-                type: 'outcome',
-                position: { x: 0, y: 0 },
-                data: { outcome },
-                sourcePosition: Position.Right,
-                targetPosition: Position.Left,
-            });
-        });
-    });
-
-    // 3. Create scene nodes
-    Object.entries(scenes).forEach(([sceneId, scene]) => {
-        if (scene.actions && scene.actions.length > 0) {
-            initialNodes.push({
-                id: `scene-${sceneId}`,
-                type: 'scene',
+        // 1. Create all action nodes first
+        Object.values(actions).forEach((action) => {
+            nodes.push({
+                id: `action-${action.id}`,
+                type: 'action',
                 position: { x: 0, y: 0 },
                 data: {
-                    label: sceneId,
-                    onEdit: onSceneEdit ? () => onSceneEdit(sceneId) : undefined,
-                },
-                style: {
-                    background: '#f0f9ff',
-                    border: '1px solid #93c5fd',
+                    action,
+                    onEdit: onActionEdit ? () => onActionEdit(action.id) : undefined,
                 },
                 sourcePosition: Position.Right,
                 targetPosition: Position.Left,
             });
-        }
-    });
+        });
 
-    // 4. Create destination nodes
-    Object.values(actions).forEach((action) => {
-        action.outcomes?.forEach((outcome, outcomeIndex) => {
-            outcome.choices?.forEach((choice) => {
-                if (choice.nextNodeId) {
-                    const destId = `dest-scene-${choice.nextNodeId}`;
-                    if (!seenDestinations.has(destId)) {
-                        seenDestinations.add(destId);
-                        initialNodes.push({
-                            id: destId,
-                            type: 'destination',
-                            position: { x: 0, y: 0 },
-                            data: {
-                                label: choice.nextNodeId,
-                                type: 'scene',
+        // 2. Create all outcome nodes
+        Object.values(actions).forEach((action) => {
+            action.outcomes?.forEach((outcome, outcomeIndex) => {
+                const outcomeId = `outcome-${action.id}-${outcomeIndex}`;
+                nodes.push({
+                    id: outcomeId,
+                    type: 'outcome',
+                    position: { x: 0, y: 0 },
+                    data: { outcome },
+                    sourcePosition: Position.Right,
+                    targetPosition: Position.Left,
+                });
+            });
+        });
+
+        // 3. Create scene nodes
+        Object.entries(scenes).forEach(([sceneId, scene]) => {
+            if (scene.actions && scene.actions.length > 0) {
+                nodes.push({
+                    id: `scene-${sceneId}`,
+                    type: 'scene',
+                    position: { x: 0, y: 0 },
+                    data: {
+                        label: sceneId,
+                        onEdit: onSceneEdit ? () => onSceneEdit(sceneId) : undefined,
+                    },
+                    style: {
+                        background: '#f0f9ff',
+                        border: '1px solid #93c5fd',
+                    },
+                    sourcePosition: Position.Right,
+                    targetPosition: Position.Left,
+                });
+            }
+        });
+
+        // 4. Create destination nodes
+        Object.values(actions).forEach((action) => {
+            action.outcomes?.forEach((outcome) => {
+                outcome.choices?.forEach((choice) => {
+                    if (choice.nextNodeId) {
+                        const destId = `dest-scene-${choice.nextNodeId}`;
+                        if (!seenDestinations.has(destId)) {
+                            seenDestinations.add(destId);
+                            nodes.push({
+                                id: destId,
+                                type: 'destination',
+                                position: { x: 0, y: 0 },
+                                data: {
+                                    label: choice.nextNodeId,
+                                    type: 'scene',
+                                },
+                                targetPosition: Position.Left,
+                            });
+                        }
+                    }
+                });
+            });
+        });
+
+        return nodes;
+    }, [actions, scenes, onActionEdit, onSceneEdit]);
+
+    const initialEdges: Edge[] = useMemo(() => {
+        const edges: Edge[] = [];
+
+        Object.values(actions).forEach((action) => {
+            if (action.conditions && action.conditions.length > 0) {
+                edges.push({
+                    id: `condition-${action.id}`,
+                    source: `action-${action.id}`,
+                    target: `action-${action.id}`,
+                    type: 'default',
+                    animated: true,
+                    style: {
+                        stroke: '#9333ea', // Purple for conditions
+                    },
+                });
+            }
+        });
+
+        Object.entries(scenes).forEach(([sceneId, scene]) => {
+            scene.actions?.forEach(actionId => {
+                edges.push({
+                    id: `scene-${sceneId}-to-action-${actionId}`,
+                    source: `scene-${sceneId}`,
+                    target: `action-${actionId}`,
+                    sourceHandle: 'source',
+                    targetHandle: 'target',
+                    animated: true,
+                    style: {
+                        strokeWidth: 2,
+                        stroke: '#93c5fd', // Blue for scene connections
+                    },
+                    markerEnd: {
+                        type: MarkerType.Arrow,
+                        width: 20,
+                        height: 20,
+                    },
+                });
+            });
+        });
+
+        Object.values(actions).forEach((action) => {
+            action.outcomes?.forEach((outcome, outcomeIndex) => {
+                const outcomeId = `outcome-${action.id}-${outcomeIndex}`;
+                
+                edges.push({
+                    id: `edge-action-${action.id}-outcome-${outcomeIndex}`,
+                    source: `action-${action.id}`,
+                    target: outcomeId,
+                    sourceHandle: 'source',
+                    targetHandle: 'target',
+                    animated: true,
+                    style: {
+                        strokeWidth: 2,
+                    },
+                    markerEnd: {
+                        type: MarkerType.Arrow,
+                        width: 20,
+                        height: 20,
+                    },
+                });
+
+                outcome.choices?.forEach((choice) => {
+                    if (choice.nextAction) {
+                        edges.push({
+                            id: `edge-${outcomeId}-to-${choice.nextAction}`,
+                            source: outcomeId,
+                            target: `action-${choice.nextAction}`,
+                            sourceHandle: 'source',
+                            targetHandle: 'target',
+                            label: choice.text || 'Next',
+                            animated: true,
+                            style: {
+                                strokeWidth: 2,
+                                stroke: '#f59e0b',
                             },
-                            targetPosition: Position.Left,
+                            markerEnd: {
+                                type: MarkerType.Arrow,
+                                width: 20,
+                                height: 20,
+                            },
+                        });
+                    } else if (choice.nextNodeId) {
+                        const destId = `dest-scene-${choice.nextNodeId}`;
+                        edges.push({
+                            id: `edge-${outcomeId}-to-${choice.nextNodeId}`,
+                            source: outcomeId,
+                            target: destId,
+                            sourceHandle: 'source',
+                            targetHandle: 'target',
+                            label: choice.text || 'Next',
+                            animated: true,
+                            style: {
+                                strokeWidth: 2,
+                            },
+                            markerEnd: {
+                                type: MarkerType.Arrow,
+                                width: 20,
+                                height: 20,
+                            },
                         });
                     }
-                }
+                });
             });
         });
-    });
 
-    // Create edges after all nodes exist
-    Object.values(actions).forEach((action) => {
-        // Add self-referential edge for conditions if they exist
-        if (action.conditions && action.conditions.length > 0) {
-            initialEdges.push({
-                id: `condition-${action.id}`,
-                source: `action-${action.id}`,
-                target: `action-${action.id}`,
-                type: 'default',
-                animated: true,
-                style: {
-                    stroke: '#9333ea', // Purple for conditions
-                },
-            });
-        }
-    });
-
-    // Add scene-to-action connections
-    Object.entries(scenes).forEach(([sceneId, scene]) => {
-        scene.actions?.forEach(actionId => {
-            initialEdges.push({
-                id: `scene-${sceneId}-to-action-${actionId}`,
-                source: `scene-${sceneId}`,
-                target: `action-${actionId}`,
-                sourceHandle: 'source',
-                targetHandle: 'target',
-                animated: true,
-                style: {
-                    strokeWidth: 2,
-                    stroke: '#93c5fd', // Blue for scene connections
-                },
-                markerEnd: {
-                    type: MarkerType.Arrow,
-                    width: 20,
-                    height: 20,
-                },
-            });
-        });
-    });
-
-    // Connect each action to its outcomes and handle their choices
-    Object.values(actions).forEach((action) => {
-        action.outcomes?.forEach((outcome, outcomeIndex) => {
-            const outcomeId = `outcome-${action.id}-${outcomeIndex}`;
-            
-            // Connect action to outcome
-            initialEdges.push({
-                id: `edge-action-${action.id}-outcome-${outcomeIndex}`,
-                source: `action-${action.id}`,
-                target: outcomeId,
-                sourceHandle: 'source',
-                targetHandle: 'target',
-                animated: true,
-                style: {
-                    strokeWidth: 2,
-                },
-                markerEnd: {
-                    type: MarkerType.Arrow,
-                    width: 20,
-                    height: 20,
-                },
-            });
-
-            // Connect outcome to its destinations (both scenes and actions)
-            outcome.choices?.forEach((choice, choiceIndex) => {
-                if (choice.nextAction) {
-                    initialEdges.push({
-                        id: `edge-${outcomeId}-to-${choice.nextAction}`,
-                        source: outcomeId,
-                        target: `action-${choice.nextAction}`,
-                        sourceHandle: 'source',
-                        targetHandle: 'target',
-                        label: choice.text || 'Next',
-                        animated: true,
-                        style: {
-                            strokeWidth: 2,
-                            stroke: '#f59e0b', // Amber color for action-to-action connections
-                        },
-                        markerEnd: {
-                            type: MarkerType.Arrow,
-                            width: 20,
-                            height: 20,
-                        },
-                    });
-                } else if (choice.nextNodeId) {
-                    const destId = `dest-scene-${choice.nextNodeId}`;
-                    initialEdges.push({
-                        id: `edge-${outcomeId}-to-${choice.nextNodeId}`,
-                        source: outcomeId,
-                        target: destId,
-                        sourceHandle: 'source',
-                        targetHandle: 'target',
-                        label: choice.text || 'Next',
-                        animated: true,
-                        style: {
-                            strokeWidth: 2,
-                        },
-                        markerEnd: {
-                            type: MarkerType.Arrow,
-                            width: 20,
-                            height: 20,
-                        },
-                    });
-                }
-            });
-        });
-    });
+        return edges;
+    }, [actions, scenes]);
 
     // Apply layout with actions passed
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+    const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(() => getLayoutedElements(
         initialNodes,
         initialEdges,
         actions,
         'LR'
-    );
+    ), [initialNodes, initialEdges, actions]);
 
     const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
+
+    useEffect(() => {
+        setNodes(layoutedNodes);
+    }, [layoutedNodes, setNodes]);
+
+    useEffect(() => {
+        setEdges(layoutedEdges);
+    }, [layoutedEdges, setEdges]);
 
     return (
         <div className="w-full h-full">

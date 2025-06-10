@@ -1,12 +1,14 @@
-export interface Choice {
-    text: string;
-    nextScene?: string;
-    nextAction?: string;
-    resultMessage?: string;
-    resultButtonText?: string;
-    alignment?: Alignment;
-    conditions?: Record<string, any>;
-}
+// export interface Choice {
+//     text: string;
+//     nextScene?: string;
+//     nextAction?: string;
+//     resultMessage?: string;
+//     resultButtonText?: string;
+//     alignment?: Alignment;
+//     conditions?: Condition[];
+// }
+
+
 
 export interface Scene {
     id: string;
@@ -47,7 +49,13 @@ export interface Choice {
     text: string;
     nextNodeId?: string;
     nextAction?: string;
+    resultMessage?: string;
+    resultButtonText?: string;
+    alignment?: Alignment;
+    conditions?: Condition[];
+    nextScene?: string;
   }
+
 
 export interface NpcRelationship {
     npcId: string;

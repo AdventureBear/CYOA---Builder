@@ -1,7 +1,7 @@
 import { NodeProps, Handle, Position } from 'reactflow';
 import React from 'react';
 import { Rabbit, Zap } from 'lucide-react';
-import { Action } from '@/app/types';
+import { Action, Condition } from '@/app/types';
 
 interface ActionNodeData {
     action: Action;
@@ -19,7 +19,7 @@ const getTriggerIcon = (trigger: string) => {
     }
 };
 
-const getConditionSummary = (conditions: any[] | undefined) => {
+const getConditionSummary = (conditions: Condition[] | undefined) => {
     if (!conditions || conditions.length === 0) return 'No conditions';
     return conditions.map(c => {
         switch (c.type) {
@@ -37,7 +37,7 @@ const getConditionSummary = (conditions: any[] | undefined) => {
     }).join(', ');
 };
 
-export default function ActionNode({ id, data, selected }: NodeProps<ActionNodeData>) {
+export default function ActionNode({  data, selected }: NodeProps<ActionNodeData>) {
     const { action, onEdit } = data;
     const TriggerIcon = getTriggerIcon(action.trigger);
     const conditions = action.conditions;

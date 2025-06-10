@@ -19,7 +19,7 @@ import ReactFlow, {
     ReactFlowInstance,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { PlusSquare, Play, CornerUpLeft, Wand2, Sparkles, Eye, EyeOff, GitBranch, GitMerge } from 'lucide-react';
+import { PlusSquare, Play, CornerUpLeft, Wand2, Eye, EyeOff, GitBranch, GitMerge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import { useLoadGameData } from '@/lib/useLoadGameData';
@@ -111,6 +111,7 @@ function GameEditor() {
     const getSceneActions = useCallback((sceneId: string): string[] => {
         if (!actions) return [];
         return Object.entries(actions)
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             .filter(([_, action]) => {
                 // Check if the action is used in the scene's choices
                 const scene = scenes?.[sceneId];
@@ -902,7 +903,7 @@ function GameEditor() {
 
         // Add action nodes if a scene is focused
         if (actionVisualization.enabled && actionVisualization.focusedScene && scenes[actionVisualization.focusedScene]) {
-            const focusedScene = scenes[actionVisualization.focusedScene];
+            // const focusedScene = scenes[actionVisualization.focusedScene];
             const sceneActions = getSceneActions(actionVisualization.focusedScene);
             const focusedNode = nodes.find(n => n.id === actionVisualization.focusedScene);
 

@@ -9,7 +9,7 @@ interface ActionFlowSceneNodeProps {
     id: string;
 }
 
-export default function ActionFlowSceneNode({ data, id }: ActionFlowSceneNodeProps) {
+export default function ActionFlowSceneNode({ data }: ActionFlowSceneNodeProps) {
     const { label, onEdit } = data;
     
     return (
