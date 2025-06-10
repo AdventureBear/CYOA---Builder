@@ -374,5 +374,20 @@
         "nextNodeId": "forest_clearing"
       }
     ]
+  },
+  "water_fountain": {
+    "id": "water_fountain",
+    "name": "",
+    "location": "water fountain",
+    "description": "A bubbling brook provides refreshing mineral water ",
+    "choices": [
+      {
+        "text": "go to the nut grove",
+        "nextNodeId": "nut_grove"
+      }
+    ],
+    "actions": [],
+    "season": "",
+    "isRequired": false
   }
 }

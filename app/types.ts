@@ -5,6 +5,7 @@ export interface Choice {
     resultMessage?: string;
     resultButtonText?: string;
     alignment?: Alignment;
+    conditions?: Record<string, any>;
 }
 
 export interface Scene {
