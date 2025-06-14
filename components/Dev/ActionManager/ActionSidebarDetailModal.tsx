@@ -52,6 +52,8 @@ export function ActionSidebarDetailModal({ action, scenesUsingAction, onClose, o
     }
   }, [isMenuOpen]);
 
+
+
   const modalHeight = 300; // estimate
   const modalWidth = 450;
   let style: React.CSSProperties;

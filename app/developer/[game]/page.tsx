@@ -94,6 +94,8 @@ function GameEditor() {
         toggleOutcomes,
         setFocusedScene,
     } = useUiStore();
+    console.log('scenes', scenes);
+    console.log('actions', actions);
     
     const [showNewChoiceModal, setShowNewChoiceModal] = useState(false);
     const [newChoiceConnection, setNewChoiceConnection] = useState<Connection | null>(null);

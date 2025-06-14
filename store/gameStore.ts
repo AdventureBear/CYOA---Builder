@@ -14,6 +14,8 @@ interface GameStore {
   resetGame: () => void;
   actions: Record<string, Action> | null;
   scenes: Record<string, Scene> | null;
+  loading: boolean;
+  error: string | null;
   setActions: (actions: Record<string, Action>) => void;
   setScenes: (scenes: Record<string, Scene>) => void;
   updateScene: (scene: Scene) => void;
@@ -38,9 +40,11 @@ const storeImpl: StateCreator<GameStore, [], [], GameStore> = (set, get) => ({
     set((state: GameStore) => ({
       gameState: { ...state.gameState, ...patch } as GameState,
     })),
-  resetGame: () => set({ gameState: initialGameState }),
+  resetGame: () => set({ gameState: initialGameState, scenes: null, actions: null }),
   actions: null,
   scenes: null,
+  loading: true,
+  error: null,
   setActions: (actions) => {
     // console.log('setActions called', actions);
     set({ actions });
@@ -82,10 +86,18 @@ const storeImpl: StateCreator<GameStore, [], [], GameStore> = (set, get) => ({
     return { scenes: newScenes };
   }),
   fetchAndSetGameData: async (gameId: string) => {
+    set({ loading: true, error: null });
     try {
-      const response = await fetch(`/api/games/${gameId}`);
-      // ... existing code ...
+      const response = await fetch(`/api/db/game/${gameId}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to fetch game data: ${response.statusText}`);
+      }
+      const data = await response.json();
+      set({ actions: data.actions, scenes: data.scenes, loading: false });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      set({ error: errorMessage, loading: false });
       console.error('Error fetching and setting game data:', error);
     }
   },
