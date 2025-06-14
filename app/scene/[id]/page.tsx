@@ -24,6 +24,8 @@ export default function Page() {
   console.log('breadcrumbs', gameState.breadcrumbs);
 
   const scenes = useGameStore((state) => state.scenes);
+
+  
   const setScenes = useGameStore((state) => state.setScenes);
 // 
 useEffect(() => {

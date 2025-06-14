@@ -1,13 +1,43 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '@/db/schema';
+import { Choice as BaseChoice } from '@/app/types';
 
 // It's better to manage the DB connection in a separate utility file, 
 // but for now, we'll instantiate it here.
 const connectionString = process.env.DATABASE_URL!;
 const client = postgres(connectionString);
 const db = drizzle(client, { schema });
+
+// --- helper types derived from Drizzle schemas ---
+type DBChoice   = typeof schema.choices.$inferSelect;
+type DBOutcome  = typeof schema.outcomes.$inferSelect;
+type DBAction   = typeof schema.actions.$inferSelect;
+type DBScene    = typeof schema.scenes.$inferSelect;
+
+export type Choice = Omit<DBChoice, 'nextSceneId' | 'nextActionId'> & {
+  nextSceneId: string | null;
+  nextActionId: string | null;
+  // legacy aliases expected by existing front-end code
+  nextNodeId?: string | null;
+  nextScene?:  string | null;
+  nextAction?: string | null;
+} & Pick<BaseChoice, Exclude<keyof BaseChoice, 'nextNodeId' | 'nextScene' | 'nextAction'>>;
+
+export interface Outcome extends DBOutcome {
+  choices: Choice[];
+}
+
+export interface Action extends DBAction {
+  outcomes: Outcome[];
+}
+
+export interface Scene extends DBScene {
+  actions: string[];
+  choices: Choice[];
+}
 
 export async function GET(
   request: Request,
@@ -27,15 +57,16 @@ export async function GET(
     const allSceneActions = await db.query.sceneActions.findMany();
 
     // --- organise choices ---
-    const sceneChoices: Record<string, any[]> = {};
-    const outcomeChoices: Record<number, any[]> = {};
+    const sceneChoices: Record<string, Choice[]> = {};
+    const outcomeChoices: Record<number, Choice[]> = {};
 
-    const toClientChoice = (row: typeof allChoices[number]) => ({
+    const toClientChoice = (row: typeof allChoices[number]): Choice => ({
       ...row,
       nextNodeId: row.nextSceneId ?? null,     // legacy alias for frontend
       nextAction: row.nextActionId ?? null,    // legacy alias for frontend
       nextScene:  row.nextSceneId ?? null,     // another legacy alias
       nextSceneId: row.nextSceneId ?? null,     // keep current name
+      nextActionId: row.nextActionId ?? null,
     });
 
     allChoices.forEach((c) => {
@@ -48,22 +79,22 @@ export async function GET(
     });
 
     // --- outcomes with nested choices ---
-    const outcomesById: Record<number, any> = {};
+    const outcomesById: Record<number, Outcome> = {};
     allOutcomes.forEach((o) => {
       outcomesById[o.id] = { ...o, choices: outcomeChoices[o.id] ?? [] };
     });
 
     // Convert arrays to the Record<string, Scene> and Record<string, Action> format
-    const actionsRecord = allActions.reduce((acc, action) => {
+    const actionsRecord = allActions.reduce<Record<string, Action>>((acc, action) => {
       const nestedOutcomes = allOutcomes
         .filter((o) => o.actionId === action.id)
         .map((o) => outcomesById[o.id]);
       acc[action.id] = { ...action, outcomes: nestedOutcomes };
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, Action>);
     
     // Create a mutable copy of scenes to add the 'actions' array
-    const scenesWithActions = allScenes.map(scene => ({
+    const scenesWithActions: Scene[] = allScenes.map(scene => ({
       ...scene,
       actions: [] as string[],
       choices: sceneChoices[scene.id] ?? [],
@@ -72,7 +103,7 @@ export async function GET(
     const scenesRecord = scenesWithActions.reduce((acc, scene) => {
         acc[scene.id] = scene;
         return acc;
-    }, {} as Record<string, (typeof scenesWithActions)[0]>);
+    }, {} as Record<string, Scene>);
 
     // Populate the actions array for each scene
     allSceneActions.forEach(sceneAction => {

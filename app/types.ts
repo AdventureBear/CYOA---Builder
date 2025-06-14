@@ -132,6 +132,9 @@ export interface Outcome {
     conditions?: Condition[];     // all must pass (AND)
     outcomes: Outcome[];          // choose first that matches its own conds, or weight/prob
     failMessage?: string;         // optional message to show if conditions fail
+    updatedAt?: Date | null;
+    createdAt?: Date | null;
+    status?: "draft" | "published";
 }
 
   type ConditionValue = string | number | boolean;

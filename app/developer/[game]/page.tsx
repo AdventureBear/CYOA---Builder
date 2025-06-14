@@ -36,6 +36,7 @@ import NewChoiceModal from '@/components/Dev/NewChoiceModal';
 import ActionNode from '@/components/Dev/ActionNode';
 import ActionModal from '@/components/Dev/ActionModal';
 import ActionFlow from '@/components/Dev/ActionFlow';
+import { useGameStore } from '@/store/gameStore'; 
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -73,8 +74,13 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'LR') => 
 function GameEditor() {
     const params = useParams();
     const gameId = params?.game as string;
-    const { scenes, actions, loading, error, setScenes, setActions } = useLoadGameData(gameId);
+    const { scenes, actions, loading, error } = useLoadGameData(gameId);
     
+    const { setScenes, setActions } = useGameStore((s) => ({
+        setScenes: s.setScenes,
+        setActions: s.setActions,
+      }));
+
     const [rfNodes, setRfNodes, onNodesChange] = useNodesState([]);
     const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState([]);
     const [isAddSceneModalOpen, setAddSceneModalOpen] = useState(false);
